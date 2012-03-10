@@ -39,6 +39,13 @@
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.Entity" />
+    <Reference Include="System.Data.SQLite, Version=1.0.79.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\lib\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -78,9 +85,19 @@
     <Compile Include="IPackage.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="IPackageManager.cs" />
     <Compile Include="LocalRepository.cs" />
+    <Compile Include="MergeEventArgs.cs" />
+    <Compile Include="MergeFlags.cs" />
+    <Compile Include="MergeOptions.cs" />
+    <Compile Include="Model\Fusion.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Fusion.edmx</DependentUpon>
+    </Compile>
     <Compile Include="MSBuildProject.cs" />
     <Compile Include="Package.cs" />
+    <Compile Include="PackageDatabase.cs" />
     <Compile Include="PackageNotFoundException.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -88,8 +105,18 @@
     <Compile Include="XmlConfiguration.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ZoneNotFoundException.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EntityDeploy Include="Model\Fusion.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>Fusion.Designer.cs</LastGenOutput>
+    </EntityDeploy>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.Config" />
+    <None Include="Properties\DataSources\Fusion.Framework.Model.Entities.datasource" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

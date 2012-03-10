@@ -1,0 +1,243 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="2.0" xmlns:edmx="http://schemas.microsoft.com/ado/2008/10/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="Model.Store" Alias="Self" Provider="System.Data.SQLite" ProviderManifestToken="ISO8601" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/02/edm/ssdl">
+        <EntityContainer Name="ModelStoreContainer">
+          <EntitySet Name="files" EntityType="Model.Store.files" store:Type="Tables" />
+          <EntitySet Name="packages" EntityType="Model.Store.packages" store:Type="Tables" />
+          <EntitySet Name="world" EntityType="Model.Store.world" store:Type="Tables" />
+          <EntitySet Name="zones" EntityType="Model.Store.zones" store:Type="Tables" />
+          <AssociationSet Name="FK_files_0_0" Association="Model.Store.FK_files_0_0">
+            <End Role="packages" EntitySet="packages" />
+            <End Role="files" EntitySet="files" />
+          </AssociationSet>
+          <AssociationSet Name="FK_packages_0_0" Association="Model.Store.FK_packages_0_0">
+            <End Role="zones" EntitySet="zones" />
+            <End Role="packages" EntitySet="packages" />
+          </AssociationSet>
+        </EntityContainer>
+        <EntityType Name="files">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="path" Type="nvarchar" Nullable="false" />
+          <Property Name="digest" Type="nvarchar" Nullable="false" />
+          <Property Name="package" Type="integer" Nullable="false" />
+        </EntityType>
+        <EntityType Name="packages">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="full_name" Type="nvarchar" Nullable="false" />
+          <Property Name="version" Type="nvarchar" Nullable="false" />
+          <Property Name="slot" Type="integer" Nullable="false" />
+          <Property Name="zone" Type="integer" Nullable="false" />
+          <Property Name="project" Type="nvarchar" />
+        </EntityType>
+        <EntityType Name="world">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="atom" Type="nvarchar" Nullable="false" />
+        </EntityType>
+        <EntityType Name="zones">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="name" Type="nvarchar" Nullable="false" />
+          <Property Name="prefix" Type="nvarchar" Nullable="false" />
+        </EntityType>
+        <Association Name="FK_files_0_0">
+          <End Role="packages" Type="Model.Store.packages" Multiplicity="1" />
+          <End Role="files" Type="Model.Store.files" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="packages">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="files">
+              <PropertyRef Name="package" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_packages_0_0">
+          <End Role="zones" Type="Model.Store.zones" Multiplicity="1" />
+          <End Role="packages" Type="Model.Store.packages" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="zones">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="packages">
+              <PropertyRef Name="zone" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="Model" Alias="Self" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+        <EntityContainer Name="Entities" annotation:LazyLoadingEnabled="true" a:TypeAccess="Internal" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+          <EntitySet Name="Files" EntityType="Model.File" />
+          <EntitySet Name="Packages" EntityType="Model.Package" />
+          <EntitySet Name="WorldSet" EntityType="Model.WorldItem" />
+          <EntitySet Name="Zones" EntityType="Model.Zone" />
+          <AssociationSet Name="FK_files_0_0" Association="Model.FK_files_0_0">
+            <End Role="packages" EntitySet="Packages" />
+            <End Role="files" EntitySet="Files" />
+          </AssociationSet>
+          <AssociationSet Name="FK_packages_0_0" Association="Model.FK_packages_0_0">
+            <End Role="zones" EntitySet="Zones" />
+            <End Role="packages" EntitySet="Packages" />
+          </AssociationSet>
+        </EntityContainer>
+        <EntityType Name="File">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Type="Int64" Name="ID" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Path" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Digest" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Type="Int64" Name="PackageID" Nullable="false" />
+          <NavigationProperty Name="Packages" Relationship="Model.FK_files_0_0" FromRole="files" ToRole="packages" />
+        </EntityType>
+        <EntityType Name="Package">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Type="Int64" Name="ID" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="FullName" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Version" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Type="Int64" Name="Slot" Nullable="false" />
+          <Property Type="Int64" Name="ZoneID" Nullable="false" />
+          <Property Type="String" Name="Project" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Files" Relationship="Model.FK_files_0_0" FromRole="packages" ToRole="files" />
+          <NavigationProperty Name="Zone" Relationship="Model.FK_packages_0_0" FromRole="packages" ToRole="zones" />
+        </EntityType>
+        <EntityType Name="WorldItem">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Type="Int64" Name="ID" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Atom" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="Zone">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Type="Int64" Name="ID" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Prefix" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Packages" Relationship="Model.FK_packages_0_0" FromRole="zones" ToRole="packages" />
+        </EntityType>
+        <Association Name="FK_files_0_0">
+          <End Type="Model.Package" Role="packages" Multiplicity="1" />
+          <End Type="Model.File" Role="files" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="packages">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="files">
+              <PropertyRef Name="PackageID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_packages_0_0">
+          <End Type="Model.Zone" Role="zones" Multiplicity="1" />
+          <End Type="Model.Package" Role="packages" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="zones">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="packages">
+              <PropertyRef Name="ZoneID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2008/09/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="ModelStoreContainer" CdmEntityContainer="Entities">
+          <EntitySetMapping Name="Files">
+            <EntityTypeMapping TypeName="Model.File">
+              <MappingFragment StoreEntitySet="files">
+                <ScalarProperty Name="Digest" ColumnName="digest" />
+                <ScalarProperty Name="PackageID" ColumnName="package" />
+                <ScalarProperty Name="Path" ColumnName="path" />
+                <ScalarProperty Name="ID" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Packages">
+            <EntityTypeMapping TypeName="Model.Package">
+              <MappingFragment StoreEntitySet="packages">
+                <ScalarProperty Name="Project" ColumnName="project" />
+                <ScalarProperty Name="ZoneID" ColumnName="zone" />
+                <ScalarProperty Name="Slot" ColumnName="slot" />
+                <ScalarProperty Name="Version" ColumnName="version" />
+                <ScalarProperty Name="FullName" ColumnName="full_name" />
+                <ScalarProperty Name="ID" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="WorldSet">
+            <EntityTypeMapping TypeName="Model.WorldItem">
+              <MappingFragment StoreEntitySet="world">
+                <ScalarProperty Name="Atom" ColumnName="atom" />
+                <ScalarProperty Name="ID" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Zones">
+            <EntityTypeMapping TypeName="Model.Zone">
+              <MappingFragment StoreEntitySet="zones">
+                <ScalarProperty Name="Prefix" ColumnName="prefix" />
+                <ScalarProperty Name="Name" ColumnName="name" />
+                <ScalarProperty Name="ID" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2008/10/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="False" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="True" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams>
+      <Diagram Name="Fusion">
+        <EntityTypeShape EntityType="Model.File" Width="1.5" PointX="5.25" PointY="1.375" Height="1.7879850260416668" />
+        <EntityTypeShape EntityType="Model.Package" Width="1.5" PointX="3" PointY="1" Height="2.5571907552083326" />
+        <EntityTypeShape EntityType="Model.WorldItem" Width="1.5" PointX="0.75" PointY="4.75" Height="1.4033821614583317" />
+        <EntityTypeShape EntityType="Model.Zone" Width="1.5" PointX="0.75" PointY="1.375" Height="1.7879850260416657" />
+        <AssociationConnector Association="Model.FK_files_0_0" >
+          <ConnectorPoint PointX="4.5" PointY="2.2689925130208333" />
+          <ConnectorPoint PointX="5.25" PointY="2.2689925130208333" />
+        </AssociationConnector>
+        <AssociationConnector Association="Model.FK_packages_0_0" >
+          <ConnectorPoint PointX="2.25" PointY="2.2689925130208328" />
+          <ConnectorPoint PointX="3" PointY="2.2689925130208328" />
+        </AssociationConnector>
+      </Diagram>
+    </Diagrams>
+  </Designer>
+</edmx:Edmx>
