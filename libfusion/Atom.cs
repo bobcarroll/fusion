@@ -237,9 +237,11 @@ namespace Fusion.Framework
         /// <returns>an atom string</returns>
         public override string ToString()
         {
+            string oper = _oper != "=" ? _oper : "";
             string slot = _slot > 0 ? ":" + _slot.ToString() : "";
+
             return _ver != null ? 
-                _oper + _pkg + "-" + _ver.ToString() + slot: 
+                oper + _pkg + "-" + _ver.ToString() + slot: 
                 _pkg;
         }
 

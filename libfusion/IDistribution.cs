@@ -30,6 +30,11 @@ namespace Fusion.Framework
         long ArchiveSize { get; }
 
         /// <summary>
+        /// The exact atom for this distribution.
+        /// </summary>
+        Atom Atom { get; }
+
+        /// <summary>
         /// Packages this distribution depends on.
         /// </summary>
         Atom[] Dependencies { get; }

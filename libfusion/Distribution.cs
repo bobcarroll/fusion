@@ -31,6 +31,7 @@ namespace Fusion.Framework
         private long _totalsz = 0;
         private uint _slot = 0;
         private bool _interactive = false;
+        private Atom _myatom;
 
         /// <summary>
         /// MSBuild XML schema URI.
@@ -47,6 +48,7 @@ namespace Fusion.Framework
             _pkgdist = dist;
             _package = pkg;
             _version = Distribution.ParseVersion(dist.Name, pkg.Name);
+            _myatom = new Atom(this);
 
             XmlDocument doc = new XmlDocument();
             doc.Load(dist.FullName);
@@ -197,6 +199,14 @@ namespace Fusion.Framework
         public long ArchiveSize
         {
             get { return _archsz; }
+        }
+
+        /// <summary>
+        /// The exact atom for this distribution.
+        /// </summary>
+        public Atom Atom
+        {
+            get { return _myatom; }
         }
 
         /// <summary>
