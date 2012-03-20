@@ -122,15 +122,14 @@ namespace Fusion.Framework
         /// <summary>
         /// Creates a distribution installer project instance.
         /// </summary>
-        /// <param name="log">system logger</param>
         /// <returns>an install project instance, or NULL if no project is found</returns>
-        public IInstallProject GetInstallProject(ILog log)
+        public IInstallProject GetInstallProject()
         {
             if (_project == null)
                 return null;
 
             XmlReader xr = new XmlNodeReader(_project);
-            return new MSBuildProject(ProjectRootElement.Create(xr), log);
+            return new MSBuildProject(ProjectRootElement.Create(xr));
         }
 
         /// <summary>

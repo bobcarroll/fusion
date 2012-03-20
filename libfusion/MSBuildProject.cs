@@ -27,14 +27,13 @@ namespace Fusion.Framework
         /// Reads an installer project from an XML stream.
         /// </summary>
         /// <param name="root">an MSBuild project root element</param>
-        /// <param name="log">system logger</param>
-        public MSBuildProject(ProjectRootElement root, ILog log)
+        public MSBuildProject(ProjectRootElement root)
         {
             Dictionary<string, string> globals = new Dictionary<string, string>();
             globals.Add("BINDIR", MSBuildProject.GetBinDir().FullName);
 
             _project = new Project(root, globals, null);
-            _log = log;
+            _log = LogManager.GetLogger(typeof(MSBuildProject));
         }
 
         /// <summary>

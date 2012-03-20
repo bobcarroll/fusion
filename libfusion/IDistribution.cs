@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using log4net;
-
 namespace Fusion.Framework
 {
     /// <summary>
@@ -15,9 +13,8 @@ namespace Fusion.Framework
         /// <summary>
         /// Creates a distribution installer project instance.
         /// </summary>
-        /// <param name="log">system logger</param>
         /// <returns>an install project instance</returns>
-        IInstallProject GetInstallProject(ILog log);
+        IInstallProject GetInstallProject();
 
         /// <summary>
         /// Fusion API revision number.
