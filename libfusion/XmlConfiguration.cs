@@ -24,21 +24,23 @@ namespace Fusion.Framework
         /// <returns>a configuration instance with loaded values</returns>
         public static XmlConfiguration LoadSeries(DirectoryInfo rootdir)
         {
-            if (!rootdir.Exists)
-                throw new DirectoryNotFoundException("PortRoot not found: " + rootdir.FullName);
+            DirectoryInfo absroot = new DirectoryInfo(Path.GetFullPath(rootdir.FullName.TrimEnd('\\')));
 
-            DirectoryInfo[] subdiarr = rootdir.GetDirectories();
+            if (!absroot.Exists)
+                throw new DirectoryNotFoundException("PortRoot not found: " + absroot.FullName);
+
+            DirectoryInfo[] subdiarr = absroot.GetDirectories();
             string[] subdirs = new string[] { "bin", "conf", "global", "tmp" };
             if (subdiarr.Select(i => i.Name).Intersect(subdirs).Count() < subdirs.Count())
-                throw new IOException("Bad PortRoot structure: " + rootdir.FullName);
+                throw new IOException("Bad PortRoot structure: " + absroot.FullName);
 
             XmlConfiguration cfg = new XmlConfiguration();
             FileInfo[] fiarr;
 
             /* these directories are required */
-            cfg.ConfDir = new DirectoryInfo(rootdir + @"\conf");
-            cfg.PortDir = new DirectoryInfo(rootdir + @"\global");
-            cfg.TmpDir = new DirectoryInfo(rootdir + @"\tmp");
+            cfg.ConfDir = new DirectoryInfo(absroot + @"\conf");
+            cfg.PortDir = new DirectoryInfo(absroot + @"\global");
+            cfg.TmpDir = new DirectoryInfo(absroot + @"\tmp");
 
             /* set defaults for optional settings */
             cfg.AcceptKeywords = new string[] { };
