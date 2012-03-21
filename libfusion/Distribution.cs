@@ -24,10 +24,8 @@ namespace Fusion.Framework
         private string[] _keywords = new string[] { };
         private bool _fetch = false;
         private XmlElement _project = null;
-        private string _srcdigest = null;
-        private Uri _srcuri = null;
+        private SourceFile[] _sources = new SourceFile[] { };
         private List<Atom> _depends = new List<Atom>();
-        private long _archsz = 0;
         private long _totalsz = 0;
         private uint _slot = 0;
         private bool _interactive = false;
@@ -66,21 +64,33 @@ namespace Fusion.Framework
                 keywords.Add(kwelem.InnerText);
             _keywords = keywords.ToArray();
 
-            XmlElement elem = (XmlElement)root.SelectSingleNode("Source/Uri");
-            if (elem != null && !String.IsNullOrEmpty(elem.InnerText)) {
-                _srcuri = new Uri(elem.InnerText);
-                _srcdigest = elem.GetAttribute("digest");
+            XmlAttribute szattr = (XmlAttribute)root.SelectSingleNode("Sources/@size");
+            _totalsz = (szattr != null) ? Convert.ToInt64(szattr.Value) : 0;
 
-                string archsz = elem.GetAttribute("size");
-                if (!String.IsNullOrEmpty(archsz))
-                    _archsz = Convert.ToInt64(archsz);
+            XmlNodeList srcnl = root.SelectNodes("Sources/File");
+            List<SourceFile> sources = new List<SourceFile>();
+            foreach (XmlElement e in srcnl) {
+                SourceFile srcfile;
+                string srctmp;
 
-                string totalsz = ((XmlElement)elem.ParentNode).GetAttribute("size");
-                if (!String.IsNullOrEmpty(totalsz))
-                    _totalsz = Convert.ToInt64(totalsz);
+                string srcdigest = e.GetAttribute("digest");
+
+                srctmp = e.GetAttribute("size");
+                long archsz = !String.IsNullOrEmpty(srctmp) ? Convert.ToInt64(srctmp) : 0;
+
+                srctmp = e.GetAttribute("uri");
+                Uri srcuri = !String.IsNullOrEmpty(srctmp) ? new Uri(srctmp) : null;
+
+                if (srcuri != null)
+                    srcfile = new WebSourceFile(srcuri, srcdigest, e.InnerText, archsz);
+                else
+                    srcfile = new SourceFile(srcdigest, e.InnerText, archsz);
+
+                sources.Add(srcfile);
             }
+            _sources = sources.ToArray();
 
-            elem = (XmlElement)root.SelectSingleNode("Restrict/Fetch");
+            XmlElement elem = (XmlElement)root.SelectSingleNode("Restrict/Fetch");
             _fetch = (elem != null) ? Convert.ToBoolean(elem.InnerText) : false;
 
             elem = (XmlElement)root.SelectSingleNode("Interactive");
@@ -97,6 +107,26 @@ namespace Fusion.Framework
             XmlNamespaceManager nsmgr = new XmlNamespaceManager(root.OwnerDocument.NameTable);
             nsmgr.AddNamespace("msbuild", MSBUILD_PROJECT_NS);
             _project = (XmlElement)root.SelectSingleNode("msbuild:Project", nsmgr);
+        }
+
+        /// <summary>
+        /// Determines if the source files exist locally.
+        /// </summary>
+        /// <param name="dist">distribution to check</param>
+        /// <param name="distdir">distributions directory</param>
+        /// <returns>true if sources exist, false otherwise</returns>
+        public static bool CheckSourcesExist(IDistribution dist, DirectoryInfo distdir)
+        {
+            bool result = true;
+
+            foreach (SourceFile src in dist.Sources) {
+                FileInfo fi = new FileInfo(distdir + @"\" + src.LocalName);
+
+                if (!fi.Exists)
+                    result = false;
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -130,23 +160,6 @@ namespace Fusion.Framework
 
             XmlReader xr = new XmlNodeReader(_project);
             return new MSBuildProject(ProjectRootElement.Create(xr));
-        }
-
-        /// <summary>
-        /// Gets the local path of the distribution archive.
-        /// </summary>
-        /// <param name="dist">the distribution to find</param>
-        /// <param name="tmpdir">a temporary directory</param>
-        /// <returns>the local path to the distpkg</returns>
-        public static FileInfo GetLocalDist(IDistribution dist, DirectoryInfo tmpdir)
-        {
-            if (dist.SourceUri == null)
-                throw new FileNotFoundException("Source URI is missing from the port.");
-
-            string filename = Path.GetFileName(dist.SourceUri.AbsolutePath);
-            FileInfo fi = new FileInfo(tmpdir.FullName + @"\" + filename);
-
-            return fi;
         }
 
         /// <summary>
@@ -190,14 +203,6 @@ namespace Fusion.Framework
         public int ApiRevision
         {
             get { return _apirev; }
-        }
-
-        /// <summary>
-        /// File size of the package archive.
-        /// </summary>
-        public long ArchiveSize
-        {
-            get { return _archsz; }
         }
 
         /// <summary>
@@ -265,19 +270,11 @@ namespace Fusion.Framework
         }
 
         /// <summary>
-        /// The md5 hash of the distribution's archive.
+        /// Package source files.
         /// </summary>
-        public string SourceDigest
+        public SourceFile[] Sources
         {
-            get { return _srcdigest; }
-        }
-
-        /// <summary>
-        /// The URI where the package can be downloaded.
-        /// </summary>
-        public Uri SourceUri
-        {
-            get { return _srcuri; }
+            get { return _sources; }
         }
 
         /// <summary>

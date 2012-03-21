@@ -22,11 +22,6 @@ namespace Fusion.Framework
         int ApiRevision { get; }
 
         /// <summary>
-        /// File size of the package archive.
-        /// </summary>
-        long ArchiveSize { get; }
-
-        /// <summary>
         /// The exact atom for this distribution.
         /// </summary>
         Atom Atom { get; }
@@ -67,14 +62,9 @@ namespace Fusion.Framework
         uint Slot { get; }
 
         /// <summary>
-        /// The md5 hash of the distribution's archive.
+        /// Package source files.
         /// </summary>
-        string SourceDigest { get; }
-
-        /// <summary>
-        /// The URI where the package can be downloaded.
-        /// </summary>
-        Uri SourceUri { get; }
+        SourceFile[] Sources { get; }
 
         /// <summary>
         /// The total uncompressed size of package files.
