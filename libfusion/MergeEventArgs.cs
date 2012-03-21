@@ -21,6 +21,16 @@ namespace Fusion.Framework
         public IDistribution Distribution;
 
         /// <summary>
+        /// Unique identifier for retrieving fetch results.
+        /// </summary>
+        public Guid FetchHandle;
+
+        /// <summary>
+        /// Flag to indicate if the package is only being fetched.
+        /// </summary>
+        public bool FetchOnly;
+
+        /// <summary>
         /// Merge status flags.
         /// </summary>
         public MergeFlags Flags;
@@ -28,7 +38,7 @@ namespace Fusion.Framework
         /// <summary>
         /// The previously installed version (if any).
         /// </summary>
-        public Version Previous;
+        public Atom Previous;
 
         /// <summary>
         /// Package was explicitly selected for merging.

@@ -20,8 +20,8 @@ namespace Fusion.Framework
     /// </summary>
     public sealed class MSBuildProject : IInstallProject
     {
-        protected Project _project;
-        protected ILog _log;
+        private Project _project;
+        private ILog _log;
         
         /// <summary>
         /// Reads an installer project from an XML stream.

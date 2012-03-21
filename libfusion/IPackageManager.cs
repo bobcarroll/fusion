@@ -11,9 +11,9 @@ namespace Fusion.Framework
     public interface IPackageManager : IDisposable
     {
         /// <summary>
-        /// Event raised before merging of any packages begins.
+        /// Event raised when parallel fetching begins.
         /// </summary>
-        event EventHandler<EventArgs> OnPreMerge;
+        event EventHandler<EventArgs> OnParallelFetch;
 
         /// <summary>
         /// Event raised for each package during a pretend merge.
@@ -21,9 +21,9 @@ namespace Fusion.Framework
         event EventHandler<MergeEventArgs> OnPretendMerge;
 
         /// <summary>
-        /// Event raised after merging of all packages finishes.
+        /// Event raised for each package at the start of a merge.
         /// </summary>
-        event EventHandler<EventArgs> OnPostMerge;
+        event EventHandler<MergeEventArgs> OnRealMerge;
 
         /// <summary>
         /// Find packages installed matching the given package atom.
