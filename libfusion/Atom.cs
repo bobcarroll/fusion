@@ -73,7 +73,20 @@ namespace Fusion.Framework
         /// </summary>
         /// <param name="dist">an existing distribution</param>
         public Atom(IDistribution dist)
-            : this("=", dist.Package.FullName, dist.Version.ToString(), dist.Slot) { }
+            : this(dist, false) { }
+
+        /// <summary>
+        /// Initialises an atom from a distribution.
+        /// </summary>
+        /// <param name="dist">an existing distribution</param>
+        /// <param name="nover">flag to omit the version</param>
+        public Atom(IDistribution dist, bool nover)
+        {
+            _oper = nover ? null : "=";
+            _pkg = dist.Package.FullName;
+            _ver = nover ? null : dist.Version;
+            _slot = nover ? 0 : dist.Slot;
+        }
 
         /// <summary>
         /// Initialises an atom.
@@ -90,8 +103,10 @@ namespace Fusion.Framework
 
             _oper = oper;
             _pkg = pkg;
-            _ver = ver != null ? new Version(ver) : null;
+            _ver = null;
             _slot = slot;
+
+            Version.TryParse(ver, out _ver);
         }
 
         /// <summary>
