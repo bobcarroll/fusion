@@ -91,6 +91,9 @@
     </Compile>
     <Compile Include="IPackageManager.cs" />
     <Compile Include="LocalRepository.cs" />
+    <Compile Include="MergeWorker.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="SourceFile.cs" />
     <Compile Include="MaskedPackageException.cs" />
     <Compile Include="Md5Sum.cs">

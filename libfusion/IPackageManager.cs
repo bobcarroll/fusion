@@ -30,42 +30,12 @@ namespace Fusion.Framework
     public interface IPackageManager : IDisposable
     {
         /// <summary>
-        /// Event raised when parallel fetching begins.
-        /// </summary>
-        event EventHandler<EventArgs> OnParallelFetch;
-
-        /// <summary>
-        /// Event raised for each package during a pretend merge.
-        /// </summary>
-        event EventHandler<MergeEventArgs> OnPretendMerge;
-
-        /// <summary>
-        /// Event raised for each package at the start of a merge.
-        /// </summary>
-        event EventHandler<MergeEventArgs> OnRealMerge;
-
-        /// <summary>
         /// Find packages installed matching the given package atom.
         /// </summary>
         /// <param name="atom">the atom to search</param>
         /// <param name="zone">ID of the zone to search</param>
         /// <returns>an array of zone packages</returns>
         Atom[] FindPackages(Atom atom, long zone);
-
-        /// <summary>
-        /// Merges the given distributions into the given zone.
-        /// </summary>
-        /// <param name="distarr">the distributions to merge</param>
-        /// <param name="zone">ID of zone to merge into</param>
-        void Merge(IDistribution[] distarr, long zone);
-
-        /// <summary>
-        /// Merges the given distributions into the given zone.
-        /// </summary>
-        /// <param name="distarr">the distributions to merge</param>
-        /// <param name="zone">ID of zone to merge into</param>
-        /// <param name="mopts">merge option flags</param>
-        void Merge(IDistribution[] distarr, long zone, MergeOptions mopts);
 
         /// <summary>
         /// Finds the installed version of the given package.
