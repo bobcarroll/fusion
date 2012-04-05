@@ -19,11 +19,20 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Threading;
+
+using Microsoft.Win32.SafeHandles;
 
 using log4net;
+
+using Fusion.Framework.Messaging;
 
 namespace Fusion.Framework
 {
@@ -32,7 +41,7 @@ namespace Fusion.Framework
     /// </summary>
     public sealed class MergeWorker
     {
-        private static ILog _log = LogManager.GetLogger(typeof(PackageDatabase));
+        private static ILog _log = LogManager.GetLogger(typeof(MergeWorker));
 
         private IPackageManager _pkgmgr;
         private XmlConfiguration _cfg;
@@ -41,6 +50,11 @@ namespace Fusion.Framework
         /// Event raised when parallel fetching begins.
         /// </summary>
         public event EventHandler<EventArgs> OnParallelFetch;
+
+        /// <summary>
+        /// Event raised when there's a merge message.
+        /// </summary>
+        public event EventHandler<MessageEventArgs> OnMergeMessage;
 
         /// <summary>
         /// Event raised for each package during a pretend merge.
@@ -191,7 +205,101 @@ namespace Fusion.Framework
                 IInstallProject installer = dist.GetInstallProject();
                 if (installer == null)
                     throw new InstallException("Encountered missing or invalid installer project.");
+
+                Guid sboxid = Guid.NewGuid();
+                DirectoryInfo sboxdir = _cfg.TmpDir.CreateSubdirectory(sboxid.ToString());
+                _log.DebugFormat("Created sandbox directory: {0}", sboxdir.FullName);
+
+                string installerbin = sboxdir + @"\installer.bin";
+                Stream stream = new FileStream(installerbin, FileMode.Create, FileAccess.Write, FileShare.Read);
+                (new BinaryFormatter()).Serialize(stream, installer);
+                stream.Close();
+
+                SafePipeHandle hpipe = NamedPipeFactory.CreateLowIntegrityPipe(sboxid.ToString(), PipeDirection.In);
+                NamedPipeServerStream npss = new NamedPipeServerStream(PipeDirection.In, true, false, hpipe);
+                npss.BeginWaitForConnection(
+                    delegate(IAsyncResult ar) {
+                        npss.EndWaitForConnection(ar);
+                    },
+                    null);
+
+                StringBuilder sb = new StringBuilder();
+                sb.Append(XmlConfiguration.BinDir + @"\xtmake.exe"); // TODO
+                sb.Append(" ");
+                sb.Append(installerbin);
+                sb.Append(" ");
+                sb.Append(sboxid.ToString());
+
+                ProcessStartInfo psi = new ProcessStartInfo();
+                psi.FileName = XmlConfiguration.BinDir + @"\sudont.exe"; // TODO
+                psi.Arguments = sb.ToString();
+
+                _log.DebugFormat("Spawning low-privileged process: {0}", psi.Arguments);
+                Process launcher = Process.Start(psi);
+                launcher.WaitForExit();
+
+                while (!npss.IsConnected)
+                    Thread.Sleep(500);
+
+                MessageDemuxer demux = new MessageDemuxer();
+                demux.SetChannelHandler(Channel.MergeMessage, MergeMessageHandler);
+                demux.SetChannelHandler(Channel.FrameworkLogger, LogHandler, _log);
+
+                MessageSink msgsink = MessageSink.Start(npss, demux);
+
+                while (true) {
+                    try {
+                        Process.GetProcessById(launcher.ExitCode);
+                    } catch (ArgumentException) {
+                        break;
+                    }
+
+                    Thread.Sleep(1000);
+                }
             }
+        }
+
+        /// <summary>
+        /// Raises a merge message event if a handler is set.
+        /// </summary>
+        /// <param name="msg">the message</param>
+        private void RaiseMergeMessage(string msg)
+        {
+            if (this.OnMergeMessage != null)
+                this.OnMergeMessage.Invoke(this, new MessageEventArgs() { Message = msg });
+        }
+
+        /// <summary>
+        /// Handles merge message events from the message sink.
+        /// </summary>
+        /// <param name="subtype">message sub-type</param>
+        /// <param name="msg">message</param>
+        /// <param name="param">not used</param>
+        private void MergeMessageHandler(SubType subtype, string msg, object param)
+        {
+            this.RaiseMergeMessage(msg);
+        }
+
+        /// <summary>
+        /// Handles log message events from the message sink.
+        /// </summary>
+        /// <param name="subtype">message sub-type</param>
+        /// <param name="msg">message</param>
+        /// <param name="param">ILog instance</param>
+        private void LogHandler(SubType subtype, string msg, object param)
+        {
+            ILog log = (ILog)param;
+
+            if (subtype == SubType.Fatal)
+                log.Fatal(msg);
+            else if (subtype == SubType.Error)
+                log.Error(msg);
+            else if (subtype == SubType.Warn)
+                log.Warn(msg);
+            else if (subtype == SubType.Info)
+                log.Info(msg);
+            else if (subtype == SubType.Debug)
+                log.Debug(msg);
         }
     }
 }

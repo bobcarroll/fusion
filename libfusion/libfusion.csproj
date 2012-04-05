@@ -38,6 +38,7 @@
     <Reference Include="Microsoft.Build" />
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Entity" />
     <Reference Include="System.Data.SQLite, Version=1.0.79.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
@@ -70,6 +71,13 @@
     </Compile>
     <Compile Include="Category.cs" />
     <Compile Include="CircularReferenceException.cs" />
+    <Compile Include="Messaging\MessageDemuxer.cs" />
+    <Compile Include="Messaging\MuxMessagePipe.cs" />
+    <Compile Include="Messaging\SubType.cs" />
+    <Compile Include="Messaging\Channel.cs" />
+    <Compile Include="Messaging\PipeAppender.cs" />
+    <Compile Include="Messaging\MessageSink.cs" />
+    <Compile Include="MessageEventArgs.cs" />
     <Compile Include="DependencyGraph.cs" />
     <Compile Include="Distribution.cs" />
     <Compile Include="DistributionNotFoundException.cs">
@@ -92,6 +100,9 @@
     <Compile Include="IPackageManager.cs" />
     <Compile Include="LocalRepository.cs" />
     <Compile Include="MergeWorker.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NamedPipeFactory.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SourceFile.cs" />
