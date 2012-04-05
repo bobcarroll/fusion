@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.IO;
+using System.Reflection;
 
 namespace Fusion.Framework
 {
@@ -33,6 +34,8 @@ namespace Fusion.Framework
     {
         public const string CURRENTFILE = "current";
         public const string PROFILEDIR = "profiles";
+
+        private static DirectoryInfo _bindir;
 
         private XmlConfiguration() { }
 
@@ -129,6 +132,23 @@ namespace Fusion.Framework
         /// Arch keywords accepted for merge.
         /// </summary>
         public string[] AcceptKeywords { get; set; }
+
+        /// <summary>
+        /// Gets the Fusion binary directory.
+        /// </summary>
+        public static DirectoryInfo BinDir
+        {
+            get
+            {
+                if (_bindir == null) {
+                    string asmpath =
+                        Assembly.GetExecutingAssembly().GetModules()[0].FullyQualifiedName;
+                    _bindir = new DirectoryInfo(Path.GetDirectoryName(asmpath));
+                }
+
+                return _bindir;
+            }
+        }
 
         /// <summary>
         /// Flag for collision detection during merge.
