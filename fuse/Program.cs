@@ -255,6 +255,8 @@ namespace fuse
                 return 1;
             }
 
+            Environment.SetEnvironmentVariable("CONSOLE", ConsoleEx.GetConsoleProcessId().ToString());
+
             try {
                 log4net.Config.XmlConfigurator.Configure();
 

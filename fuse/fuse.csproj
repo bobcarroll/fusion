@@ -35,7 +35,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="libconsole2, Version=1.0.4444.25425, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="libconsole2, Version=1.2.4642.27105, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\libconsole2.dll</HintPath>
     </Reference>
@@ -52,7 +52,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CustomConsoleAppender.cs" />
     <Compile Include="DepCleanAction.cs" />
     <Compile Include="IAction.cs" />
     <Compile Include="MergeAction.cs" />

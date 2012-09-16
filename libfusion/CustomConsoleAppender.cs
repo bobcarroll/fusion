@@ -25,12 +25,12 @@ using System.Text;
 using log4net.Appender;
 using log4net.Core;
 
-namespace fuse
+namespace libfusion
 {
     /// <summary>
     /// Decorates the ConsoleAppender for custom output.
     /// </summary>
-    class CustomConsoleAppender : ConsoleAppender
+    public sealed class CustomConsoleAppender : ConsoleAppender
     {
         /// <summary>
         /// Writes a log event to the console.
@@ -39,7 +39,13 @@ namespace fuse
         protected override void Append(LoggingEvent ev)
         {
             if (base.Target == ConsoleAppender.ConsoleOut) {
-                Console.ForegroundColor = ConsoleColor.Green;
+                if (ev.Level == Level.Error)
+                    Console.ForegroundColor = ConsoleColor.Red;
+                else if (ev.Level == Level.Warn)
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                else
+                    Console.ForegroundColor = ConsoleColor.Green;
+
                 Console.Write(" * ");
                 Console.ResetColor();
             }

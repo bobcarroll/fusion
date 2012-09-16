@@ -41,9 +41,10 @@
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Entity" />
-    <Reference Include="System.Data.SQLite, Version=1.0.79.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
+    <Reference Include="System.Data.SQLite, Version=1.0.82.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\System.Data.SQLite.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Security" />
@@ -71,12 +72,7 @@
     </Compile>
     <Compile Include="Category.cs" />
     <Compile Include="CircularReferenceException.cs" />
-    <Compile Include="Messaging\MessageDemuxer.cs" />
-    <Compile Include="Messaging\MuxMessagePipe.cs" />
-    <Compile Include="Messaging\SubType.cs" />
-    <Compile Include="Messaging\Channel.cs" />
-    <Compile Include="Messaging\PipeAppender.cs" />
-    <Compile Include="Messaging\MessageSink.cs" />
+    <Compile Include="CustomConsoleAppender.cs" />
     <Compile Include="MessageEventArgs.cs" />
     <Compile Include="DependencyGraph.cs" />
     <Compile Include="Distribution.cs" />

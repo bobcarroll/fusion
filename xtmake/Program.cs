@@ -30,15 +30,15 @@ using log4net;
 using log4net.Config;
 using log4net.Repository.Hierarchy;
 
+using libconsole2;
+
 using Fusion.Framework;
-using Fusion.Framework.Messaging;
 
 namespace xtmake
 {
     class Program
     {
         static ILog _log = LogManager.GetLogger(typeof(Program));
-        static MuxMessagePipe _mmp = null;
 
         /// <summary>
         /// Application entry-point function.
@@ -47,8 +47,14 @@ namespace xtmake
         /// <returns>an error code</returns>
         static int Main(string[] args)
         {
+            string consid = Environment.GetEnvironmentVariable("CONSOLE");
+            if (!String.IsNullOrEmpty(consid)) {
+                ConsoleEx.Detach();
+                ConsoleEx.Attach(Convert.ToUInt32(consid));
+            }
+
             if (args.Length < 1) {
-                Console.WriteLine("USAGE: xtmake <project file> [pipe name]");
+                Console.WriteLine("USAGE: xtmake <project file>");
                 return 1;
             }
 
@@ -63,22 +69,6 @@ namespace xtmake
                 Stream stream = new FileStream(args[0], FileMode.Open, FileAccess.Read, FileShare.None);
                 IInstallProject installer = (IInstallProject)(new BinaryFormatter()).Deserialize(stream);
                 stream.Close();
-
-                if (args.Length >= 2) {
-                    _log.DebugFormat("Message pipe name is {0}", args[1]);
-
-                    try {
-                        NamedPipeClientStream npcs = new NamedPipeClientStream(".", args[1], PipeDirection.Out);
-                        npcs.Connect(3000);
-                        _log.InfoFormat("Connected to message pipe");
-
-                        _mmp = new MuxMessagePipe(npcs);
-                        PipeAppender pa = new PipeAppender(_mmp, Channel.FrameworkLogger);
-                        ((Hierarchy)LogManager.GetRepository()).Root.AddAppender(pa);
-                    } catch (TimeoutException) {
-                        _log.ErrorFormat("Failed to connect to message pipe");
-                    };
-                }
             } catch (Exception ex) {
                 Func<Exception, Delegate, Exception> GetRootException = delegate(Exception outer, Delegate fn) {
                     if (outer.InnerException != null)
@@ -95,16 +85,6 @@ namespace xtmake
             }
 
             return 0;
-        }
-
-        /// <summary>
-        /// Writes a merge message to the message pipe, if one is set.
-        /// </summary>
-        /// <param name="msg">the message</param>
-        static void RaiseMergeMessage(string msg)
-        {
-            if (_mmp != null)
-                _mmp.WriteMessage(Channel.MergeMessage, msg);
         }
     }
 }

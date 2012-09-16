@@ -32,8 +32,6 @@ using Microsoft.Win32.SafeHandles;
 
 using log4net;
 
-using Fusion.Framework.Messaging;
-
 namespace Fusion.Framework
 {
     /// <summary>
@@ -215,20 +213,10 @@ namespace Fusion.Framework
                 (new BinaryFormatter()).Serialize(stream, installer);
                 stream.Close();
 
-                SafePipeHandle hpipe = NamedPipeFactory.CreateLowIntegrityPipe(sboxid.ToString(), PipeDirection.In);
-                NamedPipeServerStream npss = new NamedPipeServerStream(PipeDirection.In, true, false, hpipe);
-                npss.BeginWaitForConnection(
-                    delegate(IAsyncResult ar) {
-                        npss.EndWaitForConnection(ar);
-                    },
-                    null);
-
                 StringBuilder sb = new StringBuilder();
                 sb.Append(XmlConfiguration.BinDir + @"\xtmake.exe"); // TODO
                 sb.Append(" ");
                 sb.Append(installerbin);
-                sb.Append(" ");
-                sb.Append(sboxid.ToString());
 
                 ProcessStartInfo psi = new ProcessStartInfo();
                 psi.FileName = XmlConfiguration.BinDir + @"\sudont.exe"; // TODO
@@ -237,15 +225,6 @@ namespace Fusion.Framework
                 _log.DebugFormat("Spawning low-privileged process: {0}", psi.Arguments);
                 Process launcher = Process.Start(psi);
                 launcher.WaitForExit();
-
-                while (!npss.IsConnected)
-                    Thread.Sleep(500);
-
-                MessageDemuxer demux = new MessageDemuxer();
-                demux.SetChannelHandler(Channel.MergeMessage, MergeMessageHandler);
-                demux.SetChannelHandler(Channel.FrameworkLogger, LogHandler, _log);
-
-                MessageSink msgsink = MessageSink.Start(npss, demux);
 
                 while (true) {
                     try {
@@ -267,39 +246,6 @@ namespace Fusion.Framework
         {
             if (this.OnMergeMessage != null)
                 this.OnMergeMessage.Invoke(this, new MessageEventArgs() { Message = msg });
-        }
-
-        /// <summary>
-        /// Handles merge message events from the message sink.
-        /// </summary>
-        /// <param name="subtype">message sub-type</param>
-        /// <param name="msg">message</param>
-        /// <param name="param">not used</param>
-        private void MergeMessageHandler(SubType subtype, string msg, object param)
-        {
-            this.RaiseMergeMessage(msg);
-        }
-
-        /// <summary>
-        /// Handles log message events from the message sink.
-        /// </summary>
-        /// <param name="subtype">message sub-type</param>
-        /// <param name="msg">message</param>
-        /// <param name="param">ILog instance</param>
-        private void LogHandler(SubType subtype, string msg, object param)
-        {
-            ILog log = (ILog)param;
-
-            if (subtype == SubType.Fatal)
-                log.Fatal(msg);
-            else if (subtype == SubType.Error)
-                log.Error(msg);
-            else if (subtype == SubType.Warn)
-                log.Warn(msg);
-            else if (subtype == SubType.Info)
-                log.Info(msg);
-            else if (subtype == SubType.Debug)
-                log.Debug(msg);
         }
     }
 }
