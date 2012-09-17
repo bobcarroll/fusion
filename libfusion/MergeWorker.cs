@@ -45,6 +45,11 @@ namespace Fusion.Framework
         private XmlConfiguration _cfg;
 
         /// <summary>
+        /// Event raised for each package at the start of installation of the files.
+        /// </summary>
+        public event EventHandler<MergeEventArgs> OnInstall;
+
+        /// <summary>
         /// Event raised when parallel fetching begins.
         /// </summary>
         public event EventHandler<EventArgs> OnParallelFetch;
@@ -95,6 +100,8 @@ namespace Fusion.Framework
         {
             if (distarr.Length == 0)
                 return;
+
+            string zonedir = _pkgmgr.QueryZonePrefix(zone);
 
             DependencyGraph dg = DependencyGraph.Compute(distarr);
             IDistribution[] distdeparr = dg.SortedNodes.ToArray();
@@ -154,7 +161,6 @@ namespace Fusion.Framework
                 }
 
                 mea.FetchHandle = downloader.Enqueue(dist);
-
                 scheduled.Add(mea);
             }
 
@@ -217,6 +223,8 @@ namespace Fusion.Framework
                 sb.Append(XmlConfiguration.BinDir + @"\xtmake.exe"); // TODO
                 sb.Append(" ");
                 sb.Append(installerbin);
+                sb.Append(" ");
+                sb.Append(zonedir);
 
                 ProcessStartInfo psi = new ProcessStartInfo();
                 psi.FileName = XmlConfiguration.BinDir + @"\sudont.exe"; // TODO
@@ -235,6 +243,9 @@ namespace Fusion.Framework
 
                     Thread.Sleep(1000);
                 }
+
+                if (this.OnInstall != null)
+                    this.OnInstall.Invoke(this, mea);
             }
         }
 

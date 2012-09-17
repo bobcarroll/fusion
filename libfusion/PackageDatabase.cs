@@ -123,6 +123,24 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Retrieves the zone directory prefix for the given ID.
+        /// </summary>
+        /// <param name="id">zone id to lookup</param>
+        /// <returns>the zone directory prefix</returns>
+        public string QueryZonePrefix(long id)
+        {
+            string result = _ent.Zones
+                .Where(i => i.ID == id)
+                .Select(i => i.Prefix)
+                .SingleOrDefault();
+
+            if (result == null)
+                throw new ZoneNotFoundException(id.ToString());
+
+            return result;
+        }
+
+        /// <summary>
         /// Resolves the ID for the given zone name.
         /// </summary>
         /// <param name="zone">zone name to lookup</param>

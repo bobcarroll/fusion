@@ -46,6 +46,13 @@ namespace Fusion.Framework
         Version QueryInstalledVersion(Atom atom, long zone);
 
         /// <summary>
+        /// Retrieves the zone directory prefix for the given ID.
+        /// </summary>
+        /// <param name="id">zone id to lookup</param>
+        /// <returns>the zone directory prefix</returns>
+        string QueryZonePrefix(long id);
+
+        /// <summary>
         /// Resolves the ID for the given zone name.
         /// </summary>
         /// <param name="zone">zone name to lookup</param>

@@ -28,7 +28,6 @@ using System.Text;
 
 using log4net;
 using log4net.Config;
-using log4net.Repository.Hierarchy;
 
 using libconsole2;
 
@@ -53,8 +52,8 @@ namespace xtmake
                 ConsoleEx.Attach(Convert.ToUInt32(consid));
             }
 
-            if (args.Length < 1) {
-                Console.WriteLine("USAGE: xtmake <project file>");
+            if (args.Length != 2) {
+                Console.WriteLine("USAGE: xtmake <project file> <install root>");
                 return 1;
             }
 
@@ -63,12 +62,37 @@ namespace xtmake
                 return 1;
             }
 
+            if (!Directory.Exists(args[1])) {
+                Console.WriteLine("xtmake: install root doesn't exist!");
+                return 1;
+            }
+
+            DirectoryInfo sbox = new DirectoryInfo(Path.GetDirectoryName(args[0]));
+            GlobalContext.Properties["logfile"] = sbox.FullName + @"\build.log";
             XmlConfigurator.Configure();
 
             try {
                 Stream stream = new FileStream(args[0], FileMode.Open, FileAccess.Read, FileShare.None);
                 IInstallProject installer = (IInstallProject)(new BinaryFormatter()).Deserialize(stream);
                 stream.Close();
+
+                installer.RegisterVariable("ROOT", args[1]);
+                installer.RegisterVariable("BITNESS", Environment.Is64BitOperatingSystem ? "64" : "32");
+                installer.RegisterVariable("DISTDIR", new DirectoryInfo(sbox.FullName + @"\..\distfiles").FullName);
+                installer.RegisterVariable("WORKDIR", sbox.CreateSubdirectory("work").FullName);
+                installer.RegisterVariable("T", sbox.CreateSubdirectory("temp").FullName);
+                installer.RegisterVariable("D", sbox.CreateSubdirectory("image").FullName);
+                installer.RegisterVariable("L", sbox.CreateSubdirectory("link").FullName);
+
+                if (installer.HasSrcUnpackTarget) {
+                    Console.WriteLine("\n>>> Unpacking source...");
+                    installer.SrcUnpack();
+                }
+
+                if (installer.HasSrcInstallTarget) {
+                    Console.WriteLine("\n>>> Install {0} into {1}/image/", installer.PackageName, sbox.FullName);
+                    installer.SrcInstall();
+                }
             } catch (Exception ex) {
                 Func<Exception, Delegate, Exception> GetRootException = delegate(Exception outer, Delegate fn) {
                     if (outer.InnerException != null)

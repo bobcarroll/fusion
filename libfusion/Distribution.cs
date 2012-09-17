@@ -99,11 +99,14 @@ namespace Fusion.Framework
 
                 srctmp = e.GetAttribute("uri");
                 Uri srcuri = !String.IsNullOrEmpty(srctmp) ? new Uri(srctmp) : null;
+                string pkgname = e.InnerText.Replace(
+                    "$(P)", 
+                    String.Format("{0}-{1}", _package.Name, _version.ToString()));
 
                 if (srcuri != null)
-                    srcfile = new WebSourceFile(srcuri, srcdigest, e.InnerText, archsz);
+                    srcfile = new WebSourceFile(srcuri, srcdigest, pkgname, archsz);
                 else
-                    srcfile = new SourceFile(srcdigest, e.InnerText, archsz);
+                    srcfile = new SourceFile(srcdigest, pkgname, archsz);
 
                 sources.Add(srcfile);
             }
@@ -177,8 +180,16 @@ namespace Fusion.Framework
             if (_project == null)
                 return null;
 
+            string pkgname = String.Format("{0}-{1}", _package.Name, _version.ToString());
+
+            Dictionary<string, string> vars = new Dictionary<string, string>();
+            vars.Add("P", pkgname);
+            vars.Add("PN", _package.Name);
+            vars.Add("PV", _version.ToString());
+            vars.Add("CATEGORY", _package.Category.Name);
+
             XmlReader xr = new XmlNodeReader(_project);
-            return new MSBuildProject(ProjectRootElement.Create(xr));
+            return new MSBuildProject(pkgname, ProjectRootElement.Create(xr), vars);
         }
 
         /// <summary>

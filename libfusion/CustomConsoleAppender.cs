@@ -25,7 +25,7 @@ using System.Text;
 using log4net.Appender;
 using log4net.Core;
 
-namespace libfusion
+namespace Fusion.Framework
 {
     /// <summary>
     /// Decorates the ConsoleAppender for custom output.
@@ -39,7 +39,7 @@ namespace libfusion
         protected override void Append(LoggingEvent ev)
         {
             if (base.Target == ConsoleAppender.ConsoleOut) {
-                if (ev.Level == Level.Error)
+                if (ev.Level == Level.Fatal || ev.Level == Level.Error)
                     Console.ForegroundColor = ConsoleColor.Red;
                 else if (ev.Level == Level.Warn)
                     Console.ForegroundColor = ConsoleColor.Yellow;

@@ -56,7 +56,7 @@ namespace Fusion.Framework
                 WebClient wc = new WebClient();
                 wc.DownloadFile(_location, destdir.FullName + @"\" + this.LocalName);
             } catch (WebException ex) {
-                throw ex.InnerException;
+                throw ex;
             }
         }
 

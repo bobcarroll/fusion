@@ -33,6 +33,36 @@ namespace Fusion.Framework
     /// </summary>
     public interface IInstallProject : ISerializable
     {
+        /// <summary>
+        /// Registers a variable with the installer project.
+        /// </summary>
+        /// <param name="key">variable name</param>
+        /// <param name="value">the value</param>
+        void RegisterVariable(string key, string value);
 
+        /// <summary>
+        /// Install the source files into the destination directory.
+        /// </summary>
+        void SrcInstall();
+
+        /// <summary>
+        /// Unpack the source files into the working directory.
+        /// </summary>
+        void SrcUnpack();
+
+        /// <summary>
+        /// Indicates whether or not the installer project has a source-install target.
+        /// </summary>
+        bool HasSrcInstallTarget { get; }
+
+        /// <summary>
+        /// Indicates whether or not the installer project has a source-unpack target.
+        /// </summary>
+        bool HasSrcUnpackTarget { get; }
+
+        /// <summary>
+        /// Name of the package being installed.
+        /// </summary>
+        string PackageName { get; }
     }
 }

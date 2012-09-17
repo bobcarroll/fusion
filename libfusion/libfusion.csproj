@@ -70,6 +70,7 @@
     <Compile Include="BadAtomException.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="BuildLogRedirector.cs" />
     <Compile Include="Category.cs" />
     <Compile Include="CircularReferenceException.cs" />
     <Compile Include="CustomConsoleAppender.cs" />
