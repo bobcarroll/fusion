@@ -103,6 +103,7 @@ namespace xtmake
 
                 Exception rootex = GetRootException(ex, GetRootException);
                 _log.Fatal(rootex.Message);
+                _log.FatalFormat("See log file at {0}", GlobalContext.Properties["logfile"]);
                 _log.Debug(rootex.StackTrace);
 
                 return 1;
