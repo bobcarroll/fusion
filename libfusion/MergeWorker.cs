@@ -21,8 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Pipes;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
@@ -39,6 +39,9 @@ namespace Fusion.Framework
     /// </summary>
     public sealed class MergeWorker
     {
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool GetExitCodeProcess(IntPtr hProcess, out uint lpExitCode);
+
         private static ILog _log = LogManager.GetLogger(typeof(MergeWorker));
 
         private IPackageManager _pkgmgr;
@@ -102,6 +105,104 @@ namespace Fusion.Framework
                 return;
 
             string zonedir = _pkgmgr.QueryZonePrefix(zone);
+            Downloader downloader = new Downloader(_cfg.DistFilesDir);
+            List<MergeEventArgs> scheduled = null;
+
+            this.ScheduleMerges(distarr, mopts, downloader, zone, out scheduled);
+
+            if (this.OnParallelFetch != null)
+                this.OnParallelFetch.Invoke(this, new EventArgs());
+
+            downloader.FetchAsync();
+
+            for (int i = 0; i < scheduled.Count; i++) {
+                MergeEventArgs mea = scheduled[i];
+                mea.CurrentIter = i + 1;
+                mea.TotalMerges = scheduled.Count;
+
+                this.MergeOne(mea, mopts, downloader, zonedir);
+            }
+        }
+
+        /// <summary>
+        /// Merge a single package into the given zone.
+        /// </summary>
+        /// <param name="mea">merge event arguments</param>
+        /// <param name="mopts">merge options</param>
+        /// <param name="downloader">the downloader</param>
+        /// <param name="zonedir">zone prefix directory</param>
+        private void MergeOne(MergeEventArgs mea, MergeOptions mopts, Downloader downloader, string zonedir)
+        {
+            IDistribution dist = mea.Distribution;
+            uint rc = 0;
+
+            if (mopts.HasFlag(MergeOptions.Pretend)) {
+                if (this.OnPretendMerge != null)
+                    this.OnPretendMerge.Invoke(this, mea);
+
+                return;
+            }
+
+            if (this.OnRealMerge != null)
+                this.OnRealMerge.Invoke(this, mea);
+
+            if (dist.Sources.Length > 0) {
+                _log.Info("Fetching files in the background... please wait");
+                _log.InfoFormat("See {0} for fetch progress", downloader.LogFile);
+                downloader.WaitFor(mea.FetchHandle);
+
+                _log.InfoFormat("Checking package digests");
+
+                foreach (SourceFile src in dist.Sources) {
+                    FileInfo distfile = new FileInfo(_cfg.DistFilesDir + @"\" + src.LocalName);
+
+                    if (!Md5Sum.Check(distfile.FullName, src.Digest, Md5Sum.MD5SUMMODE.BINARY)) {
+                        _log.ErrorFormat("Digest check failed for {0}", distfile.FullName);
+                        throw new InstallException("Computed digest doesn't match expected value.");
+                    }
+                }
+            }
+
+            if (mopts.HasFlag(MergeOptions.FetchOnly))
+                return;
+
+            IInstallProject installer = dist.GetInstallProject();
+            if (installer == null)
+                throw new InstallException("Encountered missing or invalid installer project.");
+
+            Guid sboxid = Guid.NewGuid();
+            DirectoryInfo sboxdir = _cfg.TmpDir.CreateSubdirectory(sboxid.ToString());
+            _log.DebugFormat("Created sandbox directory: {0}", sboxdir.FullName);
+
+            if ((rc = this.SpawnXtMake(sboxdir, installer, zonedir)) != 0) {
+                _log.DebugFormat("xtmake return code: {0}", rc);
+                throw new InstallException("Installation failed. See previous errors.");
+            }
+
+            if (this.OnInstall != null)
+                this.OnInstall.Invoke(this, mea);
+        }
+
+        /// <summary>
+        /// Raises a merge message event if a handler is set.
+        /// </summary>
+        /// <param name="msg">the message</param>
+        private void RaiseMergeMessage(string msg)
+        {
+            if (this.OnMergeMessage != null)
+                this.OnMergeMessage.Invoke(this, new MessageEventArgs() { Message = msg });
+        }
+
+        /// <summary>
+        /// Determines the packages needed for merging, including dependencies if necessary.
+        /// </summary>
+        /// <param name="distarr">packages selected for merging</param>
+        /// <param name="mopts">merge options</param>
+        /// <param name="downloader">the downloader</param>
+        private void ScheduleMerges(IDistribution[] distarr, MergeOptions mopts, Downloader downloader, long zone, 
+            out List<MergeEventArgs> scheduled)
+        {
+            scheduled = new List<MergeEventArgs>();
 
             DependencyGraph dg = DependencyGraph.Compute(distarr);
             IDistribution[] distdeparr = dg.SortedNodes.ToArray();
@@ -117,9 +218,6 @@ namespace Fusion.Framework
                 .ToArray();
             if (conflicts.Length > 0)
                 throw new SlotConflictException(conflicts);
-
-            List<MergeEventArgs> scheduled = new List<MergeEventArgs>();
-            Downloader downloader = new Downloader(_cfg.DistFilesDir);
 
             for (int i = 0; i < distdeparr.Length; i++) {
                 IDistribution dist = distdeparr[i];
@@ -163,100 +261,60 @@ namespace Fusion.Framework
                 mea.FetchHandle = downloader.Enqueue(dist);
                 scheduled.Add(mea);
             }
-
-            if (this.OnParallelFetch != null)
-                this.OnParallelFetch.Invoke(this, new EventArgs());
-
-            downloader.FetchAsync();
-
-            for (int i = 0; i < scheduled.Count; i++) {
-                MergeEventArgs mea = scheduled[i];
-                IDistribution dist = mea.Distribution;
-
-                mea.CurrentIter = i + 1;
-                mea.TotalMerges = scheduled.Count;
-
-                if (mopts.HasFlag(MergeOptions.Pretend)) {
-                    if (this.OnPretendMerge != null)
-                        this.OnPretendMerge.Invoke(this, mea);
-
-                    continue;
-                }
-
-                if (this.OnRealMerge != null)
-                    this.OnRealMerge.Invoke(this, mea);
-
-                if (dist.Sources.Length > 0) {
-                    _log.Info("Fetching files in the background... please wait");
-                    _log.InfoFormat("See {0} for fetch progress", downloader.LogFile);
-                    downloader.WaitFor(mea.FetchHandle);
-
-                    _log.InfoFormat("Checking package digests");
-
-                    foreach (SourceFile src in dist.Sources) {
-                        FileInfo distfile = new FileInfo(_cfg.DistFilesDir + @"\" + src.LocalName);
-
-                        if (!Md5Sum.Check(distfile.FullName, src.Digest, Md5Sum.MD5SUMMODE.BINARY)) {
-                            _log.ErrorFormat("Digest check failed for {0}", distfile.FullName);
-                            throw new InstallException("Computed digest doesn't match expected value.");
-                        }
-                    }
-                }
-
-                if (mopts.HasFlag(MergeOptions.FetchOnly))
-                    continue;
-
-                IInstallProject installer = dist.GetInstallProject();
-                if (installer == null)
-                    throw new InstallException("Encountered missing or invalid installer project.");
-
-                Guid sboxid = Guid.NewGuid();
-                DirectoryInfo sboxdir = _cfg.TmpDir.CreateSubdirectory(sboxid.ToString());
-                _log.DebugFormat("Created sandbox directory: {0}", sboxdir.FullName);
-
-                string installerbin = sboxdir + @"\installer.bin";
-                Stream stream = new FileStream(installerbin, FileMode.Create, FileAccess.Write, FileShare.Read);
-                (new BinaryFormatter()).Serialize(stream, installer);
-                stream.Close();
-
-                StringBuilder sb = new StringBuilder();
-                sb.Append(XmlConfiguration.BinDir + @"\xtmake.exe"); // TODO
-                sb.Append(" ");
-                sb.Append(installerbin);
-                sb.Append(" ");
-                sb.Append(zonedir);
-
-                ProcessStartInfo psi = new ProcessStartInfo();
-                psi.FileName = XmlConfiguration.BinDir + @"\sudont.exe"; // TODO
-                psi.Arguments = sb.ToString();
-
-                _log.DebugFormat("Spawning low-privileged process: {0}", psi.Arguments);
-                Process launcher = Process.Start(psi);
-                launcher.WaitForExit();
-
-                while (true) {
-                    try {
-                        Process.GetProcessById(launcher.ExitCode);
-                    } catch (ArgumentException) {
-                        break;
-                    }
-
-                    Thread.Sleep(1000);
-                }
-
-                if (this.OnInstall != null)
-                    this.OnInstall.Invoke(this, mea);
-            }
         }
 
         /// <summary>
-        /// Raises a merge message event if a handler is set.
+        /// Launches the unprivileged xtmake process with the givne installer.
         /// </summary>
-        /// <param name="msg">the message</param>
-        private void RaiseMergeMessage(string msg)
+        /// <param name="sboxdir">sandbox root directory</param>
+        /// <param name="installer">installer project</param>
+        /// <param name="zonedir">zone prefix directory</param>
+        /// <returns>xtmake exit code</returns>
+        private uint SpawnXtMake(DirectoryInfo sboxdir, IInstallProject installer, string zonedir)
         {
-            if (this.OnMergeMessage != null)
-                this.OnMergeMessage.Invoke(this, new MessageEventArgs() { Message = msg });
+            string installerbin = sboxdir + @"\installer.bin";
+            Stream stream = new FileStream(installerbin, FileMode.Create, FileAccess.Write, FileShare.Read);
+            (new BinaryFormatter()).Serialize(stream, installer);
+            stream.Close();
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append(XmlConfiguration.BinDir + @"\xtmake.exe"); // TODO
+            sb.Append(" ");
+            sb.Append(installerbin);
+            sb.Append(" ");
+            sb.Append(zonedir);
+
+            ProcessStartInfo psi = new ProcessStartInfo();
+            psi.FileName = XmlConfiguration.BinDir + @"\sudont.exe"; // TODO
+            psi.Arguments = sb.ToString();
+
+            _log.DebugFormat("Spawning low-privileged process: {0}", psi.Arguments);
+            Process launcher = Process.Start(psi);
+            launcher.WaitForExit();
+
+            if (launcher.ExitCode == 0)
+                throw new InstallException("Failed to spawn installer process.");
+
+            Process xtinstall = null;
+            try {
+                xtinstall = Process.GetProcessById(launcher.ExitCode);
+            } catch (ArgumentException) {
+                throw new InstallException("Failed to open handle to installer process.");
+            }
+
+            IntPtr prochandle = xtinstall.Handle;
+            uint rc = 0;
+
+            while (true) {
+                if (xtinstall.HasExited) {
+                    GetExitCodeProcess(prochandle, out rc);
+                    break;
+                }
+
+                Thread.Sleep(1000);
+            }
+
+            return rc;
         }
     }
 }

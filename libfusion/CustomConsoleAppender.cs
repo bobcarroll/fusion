@@ -43,8 +43,10 @@ namespace Fusion.Framework
                     Console.ForegroundColor = ConsoleColor.Red;
                 else if (ev.Level == Level.Warn)
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                else
+                else if (ev.Level == Level.Notice || ev.Level == Level.Info)
                     Console.ForegroundColor = ConsoleColor.Green;
+                else
+                    Console.ForegroundColor = ConsoleColor.White;
 
                 Console.Write(" * ");
                 Console.ResetColor();
