@@ -143,7 +143,7 @@ namespace Fusion.Framework
         /// </summary>
         public IDistribution LatestAvailable
         {
-            get { return _dists.OrderByDescending(i => i.Version).First(); }
+            get { return _dists.OrderByDescending(i => i.Version).FirstOrDefault(); }
         }
 
         /// <summary>

@@ -82,6 +82,8 @@ namespace Fusion.Framework
                 result = pkg.LatestUnmasked;
                 if (result == null)
                     result = pkg.LatestAvailable;
+                if (result == null)
+                    throw new DistributionNotFoundException(atom.PackageName, "*");
             }
 
             return result;
