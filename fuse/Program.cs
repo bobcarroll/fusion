@@ -236,18 +236,6 @@ namespace fuse
                 return 1;
             }
 
-            string rootdir = ConfigurationManager.AppSettings["PortRoot"];
-            if (String.IsNullOrEmpty(rootdir)) {
-                error_msg("\n!!! No PortRoot defined in app settings.\n");
-                return 1;
-            }
-
-            if (!Path.IsPathRooted(rootdir)) {
-                string asmpath =
-                    Assembly.GetExecutingAssembly().GetModules()[0].FullyQualifiedName;
-                rootdir = Path.GetDirectoryName(asmpath) + @"\" + rootdir;
-            }
-
             ConnectionStringSettings css = ConfigurationManager.ConnectionStrings["PackageDB"];
             string connstr = css != null ? css.ConnectionString : null;
             if (String.IsNullOrEmpty(connstr)) {
@@ -258,6 +246,8 @@ namespace fuse
             Environment.SetEnvironmentVariable("CONSOLE", ConsoleEx.GetConsoleProcessId().ToString());
 
             try {
+                XmlConfiguration cfg = XmlConfiguration.LoadSeries();
+                GlobalContext.Properties["logdir"] = cfg.LogDir.FullName;
                 log4net.Config.XmlConfigurator.Configure();
 
                 if (opts.verbose) {
@@ -266,9 +256,7 @@ namespace fuse
                     h.RaiseConfigurationChanged(EventArgs.Empty);
                 }
 
-                XmlConfiguration cfg =
-                    XmlConfiguration.LoadSeries(new DirectoryInfo(rootdir));
-
+                connstr = connstr.Replace("$(CONFDIR)", cfg.ConfDir.FullName);
                 using (IPackageManager pkgmgr = PackageDatabase.Open(connstr, cfg)) {
                     act.Options = opts;
                     act.Execute(pkgmgr, cfg);

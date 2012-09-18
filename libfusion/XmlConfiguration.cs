@@ -42,27 +42,30 @@ namespace Fusion.Framework
         /// <summary>
         /// Loads the Fusion configuration series.
         /// </summary>
-        /// <param name="rootdir">the Fusion root directory</param>
         /// <returns>a configuration instance with loaded values</returns>
-        public static XmlConfiguration LoadSeries(DirectoryInfo rootdir)
+        public static XmlConfiguration LoadSeries()
         {
-            DirectoryInfo absroot = new DirectoryInfo(Path.GetFullPath(rootdir.FullName.TrimEnd('\\')));
-
-            if (!absroot.Exists)
-                throw new DirectoryNotFoundException("PortRoot not found: " + absroot.FullName);
-
-            DirectoryInfo[] subdiarr = absroot.GetDirectories();
-            string[] subdirs = new string[] { "bin", "conf", "global", "tmp" };
-            if (subdiarr.Select(i => i.Name).Intersect(subdirs).Count() < subdirs.Count())
-                throw new IOException("Bad PortRoot structure: " + absroot.FullName);
-
             XmlConfiguration cfg = new XmlConfiguration();
             FileInfo[] fiarr;
 
-            /* these directories are required */
-            cfg.ConfDir = new DirectoryInfo(absroot + @"\conf");
-            cfg.PortDir = new DirectoryInfo(absroot + @"\global");
-            cfg.TmpDir = new DirectoryInfo(absroot + @"\tmp");
+            string progdata = 
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + @"\Fusion";
+
+            cfg.ConfDir = new DirectoryInfo(progdata + @"\conf");
+            if (!cfg.ConfDir.Exists)
+                cfg.ConfDir.Create();
+
+            cfg.PortDir = new DirectoryInfo(progdata + @"\global");
+            if (!cfg.PortDir.Exists)
+                cfg.PortDir.Create();
+
+            cfg.LogDir = new DirectoryInfo(progdata + @"\logs");
+            if (!cfg.LogDir.Exists)
+                cfg.LogDir.Create();
+
+            cfg.TmpDir = new DirectoryInfo(Path.GetTempPath() + @"\fusion");
+            if (!cfg.TmpDir.Exists)
+                cfg.TmpDir.Create();
 
             /* set defaults for optional settings */
             cfg.AcceptKeywords = new string[] { };
@@ -72,6 +75,8 @@ namespace Fusion.Framework
 
             /* Determine the current profile */
             DirectoryInfo profileroot = new DirectoryInfo(cfg.PortDir + @"\" + PROFILEDIR);
+            if (!profileroot.Exists)
+                profileroot.Create();
             fiarr = profileroot.GetFiles(CURRENTFILE);
             if (fiarr.Length == 0)
                 throw new FileNotFoundException("No profile is selected.");
@@ -180,6 +185,10 @@ namespace Fusion.Framework
         {
             get { return new DirectoryInfo(this.TmpDir + @"\distfiles"); }
         }
+        /// <summary>
+        /// The log directory.
+        /// </summary>
+        public DirectoryInfo LogDir { get; set; }
 
         /// <summary>
         /// The local ports directory.
