@@ -174,8 +174,10 @@ namespace Fusion.Framework
         /// <summary>
         /// Creates a distribution installer project instance.
         /// </summary>
+        /// <param name="root">install directory root</param>
+        /// <param name="sbox">sandbox directory</param>
         /// <returns>an install project instance, or NULL if no project is found</returns>
-        public IInstallProject GetInstallProject()
+        public IInstallProject GetInstallProject(DirectoryInfo root, SandboxDirectory sbox)
         {
             if (_project == null)
                 return null;
@@ -187,6 +189,12 @@ namespace Fusion.Framework
             vars.Add("PN", _package.Name);
             vars.Add("PV", _version.ToString());
             vars.Add("CATEGORY", _package.Category.Name);
+            vars.Add("ROOT", root.FullName);
+            vars.Add("DISTDIR", new DirectoryInfo(sbox.Root.FullName + @"\..\distfiles").FullName);
+            vars.Add("WORKDIR", sbox.WorkDir.FullName);
+            vars.Add("T", sbox.TempDir.FullName);
+            vars.Add("D", sbox.ImageDir.FullName);
+            vars.Add("L", sbox.LinkDir.FullName);
 
             XmlReader xr = new XmlNodeReader(_project);
             return new MSBuildProject(pkgname, ProjectRootElement.Create(xr), vars);

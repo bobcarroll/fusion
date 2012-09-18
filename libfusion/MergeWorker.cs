@@ -58,11 +58,6 @@ namespace Fusion.Framework
         public event EventHandler<EventArgs> OnParallelFetch;
 
         /// <summary>
-        /// Event raised when there's a merge message.
-        /// </summary>
-        public event EventHandler<MessageEventArgs> OnMergeMessage;
-
-        /// <summary>
         /// Event raised for each package during a pretend merge.
         /// </summary>
         public event EventHandler<MergeEventArgs> OnPretendMerge;
@@ -125,6 +120,39 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Installs the package files into the given zone.
+        /// </summary>
+        /// <param name="imgdir">files directory</param>
+        /// <param name="zonedir">zone prefix directory</param>
+        /// <param name="installer">installer project</param>
+        private void MergeImage(DirectoryInfo imgdir, string zonedir, IInstallProject installer)
+        {
+            installer.PkgPreInst();
+
+            int striplev = imgdir.FullName.TrimEnd('\\').Count(i => i == '\\') + 1;
+            IEnumerable<FileSystemInfo> fsienum = imgdir
+                .GetFileSystemInfos("*", SearchOption.AllDirectories)
+                .OrderBy(i => i.FullName);
+
+            foreach (FileSystemInfo fsi in fsienum) {
+                string relpath = String.Join("\\", fsi.FullName.Split('\\').Skip(striplev));
+                string targetpath = zonedir.TrimEnd('\\') + @"\" + relpath;
+
+                if (fsi.Attributes.HasFlag(FileAttributes.Directory)) {
+                    if (!Directory.Exists(targetpath)) {
+                        Directory.CreateDirectory(targetpath);
+                        _log.InfoFormat("Created new directory: {0}", targetpath);
+                    }
+                } else {
+                    _log.InfoFormat("Moving file to {0}", targetpath);
+                    File.Move(fsi.FullName, targetpath);
+                }
+            }
+
+            installer.PkgPostInst();
+        }
+
+        /// <summary>
         /// Merge a single package into the given zone.
         /// </summary>
         /// <param name="mea">merge event arguments</param>
@@ -166,31 +194,25 @@ namespace Fusion.Framework
             if (mopts.HasFlag(MergeOptions.FetchOnly))
                 return;
 
-            IInstallProject installer = dist.GetInstallProject();
+            SandboxDirectory sbox = SandboxDirectory.Create(_cfg.TmpDir);
+            _log.DebugFormat("Created sandbox directory: {0}", sbox.Root.FullName);
+
+            IInstallProject installer = dist.GetInstallProject(new DirectoryInfo(zonedir), sbox);
             if (installer == null)
                 throw new InstallException("Encountered missing or invalid installer project.");
 
-            Guid sboxid = Guid.NewGuid();
-            DirectoryInfo sboxdir = _cfg.TmpDir.CreateSubdirectory(sboxid.ToString());
-            _log.DebugFormat("Created sandbox directory: {0}", sboxdir.FullName);
-
-            if ((rc = this.SpawnXtMake(sboxdir, installer, zonedir)) != 0) {
+            if ((rc = this.SpawnXtMake(sbox, installer, zonedir)) != 0) {
                 _log.DebugFormat("xtmake return code: {0}", rc);
                 throw new InstallException("Installation failed. See previous errors.");
             }
 
             if (this.OnInstall != null)
                 this.OnInstall.Invoke(this, mea);
-        }
 
-        /// <summary>
-        /// Raises a merge message event if a handler is set.
-        /// </summary>
-        /// <param name="msg">the message</param>
-        private void RaiseMergeMessage(string msg)
-        {
-            if (this.OnMergeMessage != null)
-                this.OnMergeMessage.Invoke(this, new MessageEventArgs() { Message = msg });
+            this.MergeImage(sbox.ImageDir, zonedir, installer);
+
+            _log.Debug("Destroying the sandbox...");
+            sbox.Delete();
         }
 
         /// <summary>
@@ -266,13 +288,13 @@ namespace Fusion.Framework
         /// <summary>
         /// Launches the unprivileged xtmake process with the givne installer.
         /// </summary>
-        /// <param name="sboxdir">sandbox root directory</param>
+        /// <param name="sboxdir">sandbox directory</param>
         /// <param name="installer">installer project</param>
         /// <param name="zonedir">zone prefix directory</param>
         /// <returns>xtmake exit code</returns>
-        private uint SpawnXtMake(DirectoryInfo sboxdir, IInstallProject installer, string zonedir)
+        private uint SpawnXtMake(SandboxDirectory sbox, IInstallProject installer, string zonedir)
         {
-            string installerbin = sboxdir + @"\installer.bin";
+            string installerbin = sbox.Root.FullName + @"\installer.bin";
             Stream stream = new FileStream(installerbin, FileMode.Create, FileAccess.Write, FileShare.Read);
             (new BinaryFormatter()).Serialize(stream, installer);
             stream.Close();

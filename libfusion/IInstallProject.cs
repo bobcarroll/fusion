@@ -34,26 +34,59 @@ namespace Fusion.Framework
     public interface IInstallProject : ISerializable
     {
         /// <summary>
-        /// Registers a variable with the installer project.
+        /// Called after image is installed to $(ROOT)
         /// </summary>
-        /// <param name="key">variable name</param>
-        /// <param name="value">the value</param>
-        void RegisterVariable(string key, string value);
+        void PkgPostInst();
 
         /// <summary>
-        /// Install the source files into the destination directory.
+        /// Called before image is installed to $(ROOT)
+        /// </summary>
+        void PkgPreInst();
+
+        /// <summary>
+        /// Configure and build the package.
+        /// </summary>
+        void SrcCompile();
+
+        /// <summary>
+        /// Install a package to $(D)
         /// </summary>
         void SrcInstall();
 
         /// <summary>
-        /// Unpack the source files into the working directory.
+        /// Run pre-install test scripts
+        /// </summary>
+        void SrcTest();
+
+        /// <summary>
+        /// Extract source packages and do any necessary patching or fixes.
         /// </summary>
         void SrcUnpack();
+
+        /// <summary>
+        /// Indicates whether or not the installer project has a package-post-install target.
+        /// </summary>
+        bool HasPkgPostInstTarget { get; }
+
+        /// <summary>
+        /// Indicates whether or not the installer project has a package-pre-install target.
+        /// </summary>
+        bool HasPkgPreInstTarget { get; }
+
+        /// <summary>
+        /// Indicates whether or not the installer project has a source-compile target.
+        /// </summary>
+        bool HasSrcCompileTarget { get; }
 
         /// <summary>
         /// Indicates whether or not the installer project has a source-install target.
         /// </summary>
         bool HasSrcInstallTarget { get; }
+
+        /// <summary>
+        /// Indicates whether or not the installer project has a source-test target.
+        /// </summary>
+        bool HasSrcTestTarget { get; }
 
         /// <summary>
         /// Indicates whether or not the installer project has a source-unpack target.

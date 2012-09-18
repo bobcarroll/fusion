@@ -114,7 +114,6 @@ namespace fuse
                 } else {
                     mw.OnRealMerge += this.MergeWorker_OnRealMerge;
                     mw.OnParallelFetch += this.MergeWorker_OnParallelFetch;
-                    mw.OnMergeMessage += this.MergeWorker_OnMergeMessage;
                     mw.OnInstall += this.MergeWorker_OnInstall;
                 }
 
@@ -164,16 +163,6 @@ namespace fuse
 
                 throw ex;
             }
-        }
-
-        /// <summary>
-        /// Handler for the MergeWorker.OnMergeMessage event.
-        /// </summary>
-        /// <param name="sender">the merge worker</param>
-        /// <param name="e">event args</param>
-        private void MergeWorker_OnMergeMessage(object sender, MessageEventArgs e)
-        {
-            Console.WriteLine(">>> {0}", e.Message);
         }
         
         /// <summary>
@@ -314,24 +303,12 @@ namespace fuse
         /// <param name="e">merge event args</param>
         public void MergeWorker_OnInstall(object sender, MergeEventArgs e)
         {
-            Console.Write("\n>>> Installing (");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write(e.CurrentIter);
-
-            Console.ResetColor();
-            Console.Write(" of ");
-
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write(e.TotalMerges);
-
-            Console.ResetColor();
-            Console.Write(") ");
-
+            Console.Write("\n>>> Installing ");
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write(e.Distribution.Atom.ToString());
 
             Console.ResetColor();
-            Console.Write("\n");
+            Console.Write(" into live file system\n");
         }
 
         /// <summary>

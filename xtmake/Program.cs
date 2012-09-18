@@ -67,8 +67,8 @@ namespace xtmake
                 return 1;
             }
 
-            DirectoryInfo sbox = new DirectoryInfo(Path.GetDirectoryName(args[0]));
-            GlobalContext.Properties["logfile"] = sbox.FullName + @"\build.log";
+            SandboxDirectory sbox = SandboxDirectory.Open(new DirectoryInfo(Path.GetDirectoryName(args[0])));
+            GlobalContext.Properties["logfile"] = sbox.Root.FullName + @"\build.log";
             XmlConfigurator.Configure();
 
             try {
@@ -76,21 +76,23 @@ namespace xtmake
                 IInstallProject installer = (IInstallProject)(new BinaryFormatter()).Deserialize(stream);
                 stream.Close();
 
-                installer.RegisterVariable("ROOT", args[1]);
-                installer.RegisterVariable("BITNESS", Environment.Is64BitOperatingSystem ? "64" : "32");
-                installer.RegisterVariable("DISTDIR", new DirectoryInfo(sbox.FullName + @"\..\distfiles").FullName);
-                installer.RegisterVariable("WORKDIR", sbox.CreateSubdirectory("work").FullName);
-                installer.RegisterVariable("T", sbox.CreateSubdirectory("temp").FullName);
-                installer.RegisterVariable("D", sbox.CreateSubdirectory("image").FullName);
-                installer.RegisterVariable("L", sbox.CreateSubdirectory("link").FullName);
-
                 if (installer.HasSrcUnpackTarget) {
                     Console.WriteLine("\n>>> Unpacking source...");
                     installer.SrcUnpack();
                 }
 
+                if (installer.HasSrcCompileTarget) {
+                    Console.WriteLine("\n>>> Compiling source in {0}", sbox.WorkDir.FullName);
+                    installer.SrcCompile();
+                }
+
+                if (installer.HasSrcTestTarget) {
+                    Console.WriteLine("\n>>> Running build tests...");
+                    installer.SrcTest();
+                }
+
                 if (installer.HasSrcInstallTarget) {
-                    Console.WriteLine("\n>>> Install {0} into {1}/image/", installer.PackageName, sbox.FullName);
+                    Console.WriteLine("\n>>> Install {0} into {1}", installer.PackageName, sbox.ImageDir.FullName);
                     installer.SrcInstall();
                 }
             } catch (Exception ex) {

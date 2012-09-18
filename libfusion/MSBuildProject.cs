@@ -40,11 +40,17 @@ namespace Fusion.Framework
     [Serializable]
     public sealed class MSBuildProject : IInstallProject
     {
+        private const string PKG_POSTINST_TARGET = "pkg_postinst";
+        private const string PKG_PREINST_TARGET = "pkg_preinst";
+        private const string SRC_COMPILE_TARGET = "src_compile";
+        private const string SRC_INSTALL_TARGET = "src_install";
+        private const string SRC_TEST_TARGET = "src_test";
+        private const string SRC_UNPACK_TARGET = "src_unpack";
+
         private string _name;
         private Project _project;
         private ILog _log;
         private Dictionary<string, string> _globals;
-        private Dictionary<string, string> _locals;
         
         /// <summary>
         /// Reads an installer project from an MSBuild project root.
@@ -56,6 +62,7 @@ namespace Fusion.Framework
         {
             Dictionary<string, string> globals = new Dictionary<string, string>();
             globals.Add("BINDIR", XmlConfiguration.BinDir.FullName);
+            globals.Add("BITNESS", Environment.Is64BitOperatingSystem ? "64" : "32");
 
             foreach (KeyValuePair<string, string> kvp in vars)
                 globals.Add(kvp.Key, kvp.Value);
@@ -63,7 +70,6 @@ namespace Fusion.Framework
             _name = pkg;
             _project = new Project(root, globals, null);
             _log = LogManager.GetLogger(typeof(MSBuildProject));
-            _locals = new Dictionary<string, string>();
             _globals = vars;
         }
 
@@ -116,9 +122,6 @@ namespace Fusion.Framework
         /// <param name="target">target name</param>
         private void Execute(ProjectInstance pi, string target)
         {
-            foreach (KeyValuePair<string, string> kvp in _locals)
-                pi.SetProperty(kvp.Key, kvp.Value);
-
             ILogger msb2l4n = new BuildLogRedirector(_log);
             if (!pi.Build(target, new ILogger[] { msb2l4n }))
                 throw new InstallException("Target '" + target + "' execution failed.");
@@ -140,13 +143,69 @@ namespace Fusion.Framework
         }
 
         /// <summary>
-        /// Registers a variable with the installer project.
+        /// Called after image is installed to $(ROOT)
         /// </summary>
-        /// <param name="key">variable name</param>
-        /// <param name="value">the value</param>
-        public void RegisterVariable(string key, string value)
+        public void PkgPostInst()
         {
-            _locals[key] = value;
+            if (!this.HasPkgPostInstTarget)
+                return;
+
+            this.Execute(_project.CreateProjectInstance(), PKG_POSTINST_TARGET);
+        }
+
+        /// <summary>
+        /// Called before image is installed to $(ROOT)
+        /// </summary>
+        public void PkgPreInst()
+        {
+            if (!this.HasPkgPreInstTarget)
+                return;
+
+            this.Execute(_project.CreateProjectInstance(), PKG_PREINST_TARGET);
+        }
+
+        /// <summary>
+        /// Configure and build the package.
+        /// </summary>
+        public void SrcCompile()
+        {
+            if (!this.HasSrcCompileTarget)
+                return;
+
+            this.Execute(_project.CreateProjectInstance(), SRC_COMPILE_TARGET);
+        }
+
+        /// <summary>
+        /// Install a package to $(D)
+        /// </summary>
+        public void SrcInstall()
+        {
+            if (!this.HasSrcInstallTarget)
+                return;
+
+            this.Execute(_project.CreateProjectInstance(), SRC_INSTALL_TARGET);
+        }
+
+        /// <summary>
+        /// Run pre-install test scripts
+        /// </summary>
+        public void SrcTest()
+        {
+            if (!this.HasSrcTestTarget)
+                return;
+
+            this.Execute(_project.CreateProjectInstance(), SRC_TEST_TARGET);
+        }
+
+        /// <summary>
+        /// Extract source packages and do any necessary patching or fixes.
+        /// </summary>
+        public void SrcUnpack()
+        {
+            if (!this.HasSrcUnpackTarget)
+                return;
+
+            this.Execute(_project.CreateProjectInstance(), SRC_UNPACK_TARGET);
         }
 
         /// <summary>
@@ -162,25 +221,27 @@ namespace Fusion.Framework
         }
 
         /// <summary>
-        /// Install the source files into the destination directory.
+        /// Indicates whether or not the installer project has a package-post-install target.
         /// </summary>
-        public void SrcInstall()
+        public bool HasPkgPostInstTarget
         {
-            if (!this.HasSrcInstallTarget)
-                return;
-
-            this.Execute(_project.CreateProjectInstance(), "src_install");
+            get { return _project.Targets.ContainsKey(PKG_POSTINST_TARGET); }
         }
 
         /// <summary>
-        /// Unpack the source files into the working directory.
+        /// Indicates whether or not the installer project has a package-pre-install target.
         /// </summary>
-        public void SrcUnpack()
+        public bool HasPkgPreInstTarget
         {
-            if (!this.HasSrcUnpackTarget)
-                return;
+            get { return _project.Targets.ContainsKey(PKG_PREINST_TARGET); }
+        }
 
-            this.Execute(_project.CreateProjectInstance(), "src_unpack");
+        /// <summary>
+        /// Indicates whether or not the installer project has a source-compile target.
+        /// </summary>
+        public bool HasSrcCompileTarget
+        {
+            get { return _project.Targets.ContainsKey(SRC_COMPILE_TARGET); }
         }
 
         /// <summary>
@@ -188,7 +249,15 @@ namespace Fusion.Framework
         /// </summary>
         public bool HasSrcInstallTarget
         {
-            get { return _project.Targets.ContainsKey("src_install"); }
+            get { return _project.Targets.ContainsKey(SRC_INSTALL_TARGET); }
+        }
+
+        /// <summary>
+        /// Indicates whether or not the installer project has a source-test target.
+        /// </summary>
+        public bool HasSrcTestTarget
+        {
+            get { return _project.Targets.ContainsKey(SRC_TEST_TARGET); }
         }
 
         /// <summary>
@@ -196,7 +265,7 @@ namespace Fusion.Framework
         /// </summary>
         public bool HasSrcUnpackTarget
         {
-            get { return _project.Targets.ContainsKey("src_unpack"); }
+            get { return _project.Targets.ContainsKey(SRC_UNPACK_TARGET); }
         }
 
         /// <summary>
