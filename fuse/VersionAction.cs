@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 using Fusion.Framework;
@@ -46,17 +47,9 @@ namespace fuse
         /// <param name="cfg">ports configuration</param>
         public void Execute(IPackageManager pkgmgr, XmlConfiguration cfg)
         {
-            long zoneid = pkgmgr.QueryZoneID(cfg.DefaultZone);
-            Version version = pkgmgr.QueryInstalledVersion(
-                Atom.Parse("sys-apps/fusion"), 
-                zoneid);
-
-            if (version == null) {
-                throw new Exception("Fusion was not found in the package database.\n" +
-                    "This should never happen.");
-            }
-
-            Console.WriteLine("Fusion {0}", version);
+            Assembly asm = Assembly.GetExecutingAssembly();
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(asm.Location);
+            Console.WriteLine("Fusion {0}", fvi.ProductVersion);
         }
 
         /// <summary>

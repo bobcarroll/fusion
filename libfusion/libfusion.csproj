@@ -128,7 +128,6 @@
     <Compile Include="XmlConfiguration.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ZoneNotFoundException.cs" />
   </ItemGroup>
   <ItemGroup>
     <EntityDeploy Include="Model\Fusion.edmx">

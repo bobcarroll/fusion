@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -70,27 +71,15 @@ namespace Fusion.Framework
         /// Find packages installed matching the given package atom.
         /// </summary>
         /// <param name="atom">the atom to search</param>
-        /// <param name="zone">ID of the zone to search</param>
-        /// <returns>an array of zone packages</returns>
-        public Atom[] FindPackages(Atom atom, long zone)
+        /// <returns>an array of installed packages</returns>
+        public Atom[] FindPackages(Atom atom)
         {
             return _ent.Packages
-                .Where(i => i.ZoneID == zone)
                 .AsEnumerable()
                 .Select(i => Atom.MakeAtomString(i.FullName, i.Version, (uint)i.Slot))
                 .Select(i => Atom.Parse(i, AtomParseOptions.VersionRequired))
                 .Where(i => atom.Match(i))
                 .ToArray();
-        }
-
-        /// <summary>
-        /// Normalises the given zone name.
-        /// </summary>
-        /// <param name="zone">raw zone name</param>
-        /// <returns>normalised zone name</returns>
-        private string NormaliseZoneName(string zone)
-        {
-            return zone.ToLower();
         }
 
         /// <summary>
@@ -108,55 +97,16 @@ namespace Fusion.Framework
         /// Finds the installed version of the given package.
         /// </summary>
         /// <param name="atom">package atom without version</param>
-        /// <param name="zone">selected zone ID</param>
         /// <returns>package version, or NULL if none is found</returns>
-        public Version QueryInstalledVersion(Atom atom, long zone)
+        public Version QueryInstalledVersion(Atom atom)
         {
             string result = _ent.Packages
-                .Where(i => i.Zone.ID == zone && 
-                            i.FullName == atom.PackageName && 
+                .Where(i => i.FullName == atom.PackageName && 
                             i.Slot == atom.Slot)
                 .Select(i => i.Version)
                 .SingleOrDefault();
 
             return result != null ? new Version(result) : null;
-        }
-
-        /// <summary>
-        /// Retrieves the zone directory prefix for the given ID.
-        /// </summary>
-        /// <param name="id">zone id to lookup</param>
-        /// <returns>the zone directory prefix</returns>
-        public string QueryZonePrefix(long id)
-        {
-            string result = _ent.Zones
-                .Where(i => i.ID == id)
-                .Select(i => i.Prefix)
-                .SingleOrDefault();
-
-            if (result == null)
-                throw new ZoneNotFoundException(id.ToString());
-
-            return result;
-        }
-
-        /// <summary>
-        /// Resolves the ID for the given zone name.
-        /// </summary>
-        /// <param name="zone">zone name to lookup</param>
-        /// <returns>zone ID</returns>
-        public long QueryZoneID(string zone)
-        {
-            string zonenorm = this.NormaliseZoneName(zone);
-            long result = _ent.Zones
-                .Where(i => i.Name == zonenorm)
-                .Select(i => i.ID)
-                .SingleOrDefault();
-
-            if (result == 0)
-                throw new ZoneNotFoundException(zonenorm);
-
-            return result;
         }
 
         /// <summary>
@@ -171,6 +121,14 @@ namespace Fusion.Framework
                     .Select(i => Atom.Parse(i.Atom, AtomParseOptions.WithoutVersion))
                     .ToArray();
             }
+        }
+
+        /// <summary>
+        /// Root directory where packages are installed.
+        /// </summary>
+        public DirectoryInfo RootDir
+        {
+            get { return _cfg.RootDir; }
         }
     }
 }

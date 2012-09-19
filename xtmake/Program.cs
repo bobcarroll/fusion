@@ -52,18 +52,13 @@ namespace xtmake
                 ConsoleEx.Attach(Convert.ToUInt32(consid));
             }
 
-            if (args.Length != 2) {
-                Console.WriteLine("USAGE: xtmake <project file> <install root>");
+            if (args.Length != 1) {
+                Console.WriteLine("USAGE: xtmake <project file>");
                 return 1;
             }
 
             if (!File.Exists(args[0])) {
                 Console.WriteLine("xtmake: project file doesn't exist!");
-                return 1;
-            }
-
-            if (!Directory.Exists(args[1])) {
-                Console.WriteLine("xtmake: install root doesn't exist!");
                 return 1;
             }
 

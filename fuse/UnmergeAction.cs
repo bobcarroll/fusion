@@ -27,7 +27,7 @@ using Fusion.Framework;
 namespace fuse
 {
     /// <summary>
-    /// Removes packages from the specified zone.
+    /// Removes packages from the system.
     /// </summary>
     class UnmergeAction : IAction
     {

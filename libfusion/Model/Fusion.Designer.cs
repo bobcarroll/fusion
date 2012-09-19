@@ -19,7 +19,6 @@ using System.Runtime.Serialization;
 #region EDM Relationship Metadata
 
 [assembly: EdmRelationshipAttribute("Model", "FK_files_0_0", "packages", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(Fusion.Framework.Model.Package), "files", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(Fusion.Framework.Model.File), true)]
-[assembly: EdmRelationshipAttribute("Model", "FK_packages_0_0", "zones", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(Fusion.Framework.Model.Zone), "packages", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(Fusion.Framework.Model.Package), true)]
 
 #endregion
 
@@ -118,22 +117,6 @@ namespace Fusion.Framework.Model
             }
         }
         private ObjectSet<WorldItem> _WorldSet;
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        public ObjectSet<Zone> Zones
-        {
-            get
-            {
-                if ((_Zones == null))
-                {
-                    _Zones = base.CreateObjectSet<Zone>("Zones");
-                }
-                return _Zones;
-            }
-        }
-        private ObjectSet<Zone> _Zones;
 
         #endregion
         #region AddTo Methods
@@ -160,14 +143,6 @@ namespace Fusion.Framework.Model
         public void AddToWorldSet(WorldItem worldItem)
         {
             base.AddObject("WorldSet", worldItem);
-        }
-    
-        /// <summary>
-        /// Deprecated Method for adding a new object to the Zones EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
-        /// </summary>
-        public void AddToZones(Zone zone)
-        {
-            base.AddObject("Zones", zone);
         }
 
         #endregion
@@ -369,15 +344,13 @@ namespace Fusion.Framework.Model
         /// <param name="fullName">Initial value of the FullName property.</param>
         /// <param name="version">Initial value of the Version property.</param>
         /// <param name="slot">Initial value of the Slot property.</param>
-        /// <param name="zoneID">Initial value of the ZoneID property.</param>
-        public static Package CreatePackage(global::System.Int64 id, global::System.String fullName, global::System.String version, global::System.Int64 slot, global::System.Int64 zoneID)
+        public static Package CreatePackage(global::System.Int64 id, global::System.String fullName, global::System.String version, global::System.Int64 slot)
         {
             Package package = new Package();
             package.ID = id;
             package.FullName = fullName;
             package.Version = version;
             package.Slot = slot;
-            package.ZoneID = zoneID;
             return package;
         }
 
@@ -486,30 +459,6 @@ namespace Fusion.Framework.Model
         /// <summary>
         /// No Metadata Documentation available.
         /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
-        [DataMemberAttribute()]
-        public global::System.Int64 ZoneID
-        {
-            get
-            {
-                return _ZoneID;
-            }
-            set
-            {
-                OnZoneIDChanging(value);
-                ReportPropertyChanging("ZoneID");
-                _ZoneID = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("ZoneID");
-                OnZoneIDChanged();
-            }
-        }
-        private global::System.Int64 _ZoneID;
-        partial void OnZoneIDChanging(global::System.Int64 value);
-        partial void OnZoneIDChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
         [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
         [DataMemberAttribute()]
         public global::System.String Project
@@ -553,44 +502,6 @@ namespace Fusion.Framework.Model
                 if ((value != null))
                 {
                     ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<File>("Model.FK_files_0_0", "files", value);
-                }
-            }
-        }
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [XmlIgnoreAttribute()]
-        [SoapIgnoreAttribute()]
-        [DataMemberAttribute()]
-        [EdmRelationshipNavigationPropertyAttribute("Model", "FK_packages_0_0", "zones")]
-        public Zone Zone
-        {
-            get
-            {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Zone>("Model.FK_packages_0_0", "zones").Value;
-            }
-            set
-            {
-                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Zone>("Model.FK_packages_0_0", "zones").Value = value;
-            }
-        }
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [BrowsableAttribute(false)]
-        [DataMemberAttribute()]
-        public EntityReference<Zone> ZoneReference
-        {
-            get
-            {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Zone>("Model.FK_packages_0_0", "zones");
-            }
-            set
-            {
-                if ((value != null))
-                {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<Zone>("Model.FK_packages_0_0", "zones", value);
                 }
             }
         }
@@ -677,138 +588,6 @@ namespace Fusion.Framework.Model
 
         #endregion
     
-    }
-    
-    /// <summary>
-    /// No Metadata Documentation available.
-    /// </summary>
-    [EdmEntityTypeAttribute(NamespaceName="Model", Name="Zone")]
-    [Serializable()]
-    [DataContractAttribute(IsReference=true)]
-    public partial class Zone : EntityObject
-    {
-        #region Factory Method
-    
-        /// <summary>
-        /// Create a new Zone object.
-        /// </summary>
-        /// <param name="id">Initial value of the ID property.</param>
-        /// <param name="name">Initial value of the Name property.</param>
-        /// <param name="prefix">Initial value of the Prefix property.</param>
-        public static Zone CreateZone(global::System.Int64 id, global::System.String name, global::System.String prefix)
-        {
-            Zone zone = new Zone();
-            zone.ID = id;
-            zone.Name = name;
-            zone.Prefix = prefix;
-            return zone;
-        }
-
-        #endregion
-        #region Primitive Properties
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
-        [DataMemberAttribute()]
-        public global::System.Int64 ID
-        {
-            get
-            {
-                return _ID;
-            }
-            set
-            {
-                if (_ID != value)
-                {
-                    OnIDChanging(value);
-                    ReportPropertyChanging("ID");
-                    _ID = StructuralObject.SetValidValue(value);
-                    ReportPropertyChanged("ID");
-                    OnIDChanged();
-                }
-            }
-        }
-        private global::System.Int64 _ID;
-        partial void OnIDChanging(global::System.Int64 value);
-        partial void OnIDChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
-        [DataMemberAttribute()]
-        public global::System.String Name
-        {
-            get
-            {
-                return _Name;
-            }
-            set
-            {
-                OnNameChanging(value);
-                ReportPropertyChanging("Name");
-                _Name = StructuralObject.SetValidValue(value, false);
-                ReportPropertyChanged("Name");
-                OnNameChanged();
-            }
-        }
-        private global::System.String _Name;
-        partial void OnNameChanging(global::System.String value);
-        partial void OnNameChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
-        [DataMemberAttribute()]
-        public global::System.String Prefix
-        {
-            get
-            {
-                return _Prefix;
-            }
-            set
-            {
-                OnPrefixChanging(value);
-                ReportPropertyChanging("Prefix");
-                _Prefix = StructuralObject.SetValidValue(value, false);
-                ReportPropertyChanged("Prefix");
-                OnPrefixChanged();
-            }
-        }
-        private global::System.String _Prefix;
-        partial void OnPrefixChanging(global::System.String value);
-        partial void OnPrefixChanged();
-
-        #endregion
-    
-        #region Navigation Properties
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [XmlIgnoreAttribute()]
-        [SoapIgnoreAttribute()]
-        [DataMemberAttribute()]
-        [EdmRelationshipNavigationPropertyAttribute("Model", "FK_packages_0_0", "packages")]
-        public EntityCollection<Package> Packages
-        {
-            get
-            {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<Package>("Model.FK_packages_0_0", "packages");
-            }
-            set
-            {
-                if ((value != null))
-                {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Package>("Model.FK_packages_0_0", "packages", value);
-                }
-            }
-        }
-
-        #endregion
     }
 
     #endregion

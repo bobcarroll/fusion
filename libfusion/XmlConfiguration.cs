@@ -95,6 +95,9 @@ namespace Fusion.Framework
             if (fiarr.Length > 0)
                 cfg.LoadSingle(fiarr[0]);
 
+            if (cfg.RootDir == null || !cfg.RootDir.Exists)
+                throw new DirectoryNotFoundException("Root directory is invalid.");
+
             return cfg;
         }
 
@@ -117,8 +120,10 @@ namespace Fusion.Framework
             elem = (XmlElement)doc.SelectSingleNode("//Configuration/CollisionDetect");
             if (elem != null && !String.IsNullOrWhiteSpace(elem.InnerText))
                 this.CollisionDetect = Convert.ToBoolean(elem.InnerText);
-            else
-                this.CollisionDetect = true;
+
+            elem = (XmlElement)doc.SelectSingleNode("//Configuration/SystemRoot");
+            if (elem != null && !String.IsNullOrWhiteSpace(elem.InnerText))
+                this.RootDir = new DirectoryInfo(elem.InnerText);
 
             nl = doc.SelectNodes("//Configuration/PortDirOverlay");
             List<DirectoryInfo> overlaylst = new List<DirectoryInfo>();
@@ -171,14 +176,6 @@ namespace Fusion.Framework
         public string CurrentProfile { get; set; }
 
         /// <summary>
-        /// Name of the default package zone.
-        /// </summary>
-        public string DefaultZone
-        {
-            get { return "default"; }
-        }
-
-        /// <summary>
         /// The distfile cache directory.
         /// </summary>
         public DirectoryInfo DistFilesDir
@@ -209,6 +206,11 @@ namespace Fusion.Framework
         /// The selected profile directory.
         /// </summary>
         public DirectoryInfo ProfileDir { get; set; }
+
+        /// <summary>
+        /// Root directory where packages are installed.
+        /// </summary>
+        public DirectoryInfo RootDir { get; set; }
 
         /// <summary>
         /// The sandbox root directory.

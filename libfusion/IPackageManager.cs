@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -33,35 +34,24 @@ namespace Fusion.Framework
         /// Find packages installed matching the given package atom.
         /// </summary>
         /// <param name="atom">the atom to search</param>
-        /// <param name="zone">ID of the zone to search</param>
-        /// <returns>an array of zone packages</returns>
-        Atom[] FindPackages(Atom atom, long zone);
+        /// <returns>an array of installed packages</returns>
+        Atom[] FindPackages(Atom atom);
 
         /// <summary>
         /// Finds the installed version of the given package.
         /// </summary>
         /// <param name="atom">package atom without version</param>
-        /// <param name="zone">selected zone ID</param>
         /// <returns>package version, or NULL if none is found</returns>
-        Version QueryInstalledVersion(Atom atom, long zone);
-
-        /// <summary>
-        /// Retrieves the zone directory prefix for the given ID.
-        /// </summary>
-        /// <param name="id">zone id to lookup</param>
-        /// <returns>the zone directory prefix</returns>
-        string QueryZonePrefix(long id);
-
-        /// <summary>
-        /// Resolves the ID for the given zone name.
-        /// </summary>
-        /// <param name="zone">zone name to lookup</param>
-        /// <returns>zone ID</returns>
-        long QueryZoneID(string zone);
+        Version QueryInstalledVersion(Atom atom);
 
         /// <summary>
         /// Items in the world favourites set.
         /// </summary>
         Atom[] WorldSet { get; }
+
+        /// <summary>
+        /// Root directory where packages are installed.
+        /// </summary>
+        DirectoryInfo RootDir { get; }
     }
 }

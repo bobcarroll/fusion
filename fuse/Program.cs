@@ -103,11 +103,6 @@ namespace fuse
                 Option = new Option() { Name = "sync", Val = 'y' },
                 Description = "Synchronise the local ports tree with a remote ports mirror.",
                 InGroup = _groups[1] },
-            new OptionExtra() {
-                Option = new Option() { Name = "zone", HasArg = ArgFlags.Required, Val = 'z' },
-                Description = "Select the NAME package container instead of the default.",
-                InGroup = _groups[2],
-                ArgLabel = "NAME" },
             new OptionExtra() { 
                 Option = new Option() { Name = "oneshot", Val = '1' },
                 Description = "Merge the package normally, but do not include the package in the world set.",
@@ -204,10 +199,6 @@ namespace fuse
                     case 'y':
                         if (!set_action(new SyncAction(), ref act))
                             return 1;
-                        break;
-
-                    case 'z':
-                        opts.zone = gopt.OptionArg;
                         break;
 
                     case '1':

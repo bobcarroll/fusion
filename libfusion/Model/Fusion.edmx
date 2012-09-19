@@ -9,14 +9,9 @@
           <EntitySet Name="files" EntityType="Model.Store.files" store:Type="Tables" />
           <EntitySet Name="packages" EntityType="Model.Store.packages" store:Type="Tables" />
           <EntitySet Name="world" EntityType="Model.Store.world" store:Type="Tables" />
-          <EntitySet Name="zones" EntityType="Model.Store.zones" store:Type="Tables" />
           <AssociationSet Name="FK_files_0_0" Association="Model.Store.FK_files_0_0">
             <End Role="packages" EntitySet="packages" />
             <End Role="files" EntitySet="files" />
-          </AssociationSet>
-          <AssociationSet Name="FK_packages_0_0" Association="Model.Store.FK_packages_0_0">
-            <End Role="zones" EntitySet="zones" />
-            <End Role="packages" EntitySet="packages" />
           </AssociationSet>
         </EntityContainer>
         <EntityType Name="files">
@@ -36,7 +31,6 @@
           <Property Name="full_name" Type="nvarchar" Nullable="false" />
           <Property Name="version" Type="nvarchar" Nullable="false" />
           <Property Name="slot" Type="integer" Nullable="false" />
-          <Property Name="zone" Type="integer" Nullable="false" />
           <Property Name="project" Type="nvarchar" />
         </EntityType>
         <EntityType Name="world">
@@ -45,14 +39,6 @@
           </Key>
           <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="atom" Type="nvarchar" Nullable="false" />
-        </EntityType>
-        <EntityType Name="zones">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="name" Type="nvarchar" Nullable="false" />
-          <Property Name="prefix" Type="nvarchar" Nullable="false" />
         </EntityType>
         <Association Name="FK_files_0_0">
           <End Role="packages" Type="Model.Store.packages" Multiplicity="1" />
@@ -66,18 +52,6 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_packages_0_0">
-          <End Role="zones" Type="Model.Store.zones" Multiplicity="1" />
-          <End Role="packages" Type="Model.Store.packages" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="zones">
-              <PropertyRef Name="id" />
-            </Principal>
-            <Dependent Role="packages">
-              <PropertyRef Name="zone" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
       </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
@@ -86,14 +60,9 @@
           <EntitySet Name="Files" EntityType="Model.File" />
           <EntitySet Name="Packages" EntityType="Model.Package" />
           <EntitySet Name="WorldSet" EntityType="Model.WorldItem" />
-          <EntitySet Name="Zones" EntityType="Model.Zone" />
           <AssociationSet Name="FK_files_0_0" Association="Model.FK_files_0_0">
             <End Role="packages" EntitySet="Packages" />
             <End Role="files" EntitySet="Files" />
-          </AssociationSet>
-          <AssociationSet Name="FK_packages_0_0" Association="Model.FK_packages_0_0">
-            <End Role="zones" EntitySet="Zones" />
-            <End Role="packages" EntitySet="Packages" />
           </AssociationSet>
         </EntityContainer>
         <EntityType Name="File">
@@ -114,10 +83,8 @@
           <Property Type="String" Name="FullName" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
           <Property Type="String" Name="Version" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
           <Property Type="Int64" Name="Slot" Nullable="false" />
-          <Property Type="Int64" Name="ZoneID" Nullable="false" />
           <Property Type="String" Name="Project" MaxLength="2147483647" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="Files" Relationship="Model.FK_files_0_0" FromRole="packages" ToRole="files" />
-          <NavigationProperty Name="Zone" Relationship="Model.FK_packages_0_0" FromRole="packages" ToRole="zones" />
         </EntityType>
         <EntityType Name="WorldItem">
           <Key>
@@ -125,15 +92,6 @@
           </Key>
           <Property Type="Int64" Name="ID" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Type="String" Name="Atom" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
-        </EntityType>
-        <EntityType Name="Zone">
-          <Key>
-            <PropertyRef Name="ID" />
-          </Key>
-          <Property Type="Int64" Name="ID" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Type="String" Name="Name" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
-          <Property Type="String" Name="Prefix" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
-          <NavigationProperty Name="Packages" Relationship="Model.FK_packages_0_0" FromRole="zones" ToRole="packages" />
         </EntityType>
         <Association Name="FK_files_0_0">
           <End Type="Model.Package" Role="packages" Multiplicity="1" />
@@ -144,18 +102,6 @@
             </Principal>
             <Dependent Role="files">
               <PropertyRef Name="PackageID" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_packages_0_0">
-          <End Type="Model.Zone" Role="zones" Multiplicity="1" />
-          <End Type="Model.Package" Role="packages" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="zones">
-              <PropertyRef Name="ID" />
-            </Principal>
-            <Dependent Role="packages">
-              <PropertyRef Name="ZoneID" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -179,7 +125,6 @@
             <EntityTypeMapping TypeName="Model.Package">
               <MappingFragment StoreEntitySet="packages">
                 <ScalarProperty Name="Project" ColumnName="project" />
-                <ScalarProperty Name="ZoneID" ColumnName="zone" />
                 <ScalarProperty Name="Slot" ColumnName="slot" />
                 <ScalarProperty Name="Version" ColumnName="version" />
                 <ScalarProperty Name="FullName" ColumnName="full_name" />
@@ -191,15 +136,6 @@
             <EntityTypeMapping TypeName="Model.WorldItem">
               <MappingFragment StoreEntitySet="world">
                 <ScalarProperty Name="Atom" ColumnName="atom" />
-                <ScalarProperty Name="ID" ColumnName="id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="Zones">
-            <EntityTypeMapping TypeName="Model.Zone">
-              <MappingFragment StoreEntitySet="zones">
-                <ScalarProperty Name="Prefix" ColumnName="prefix" />
-                <ScalarProperty Name="Name" ColumnName="name" />
                 <ScalarProperty Name="ID" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>
@@ -226,16 +162,11 @@
     <Diagrams>
       <Diagram Name="Fusion">
         <EntityTypeShape EntityType="Model.File" Width="1.5" PointX="5.25" PointY="1.375" Height="1.7879850260416668" />
-        <EntityTypeShape EntityType="Model.Package" Width="1.5" PointX="3" PointY="1" Height="2.5571907552083326" />
-        <EntityTypeShape EntityType="Model.WorldItem" Width="1.5" PointX="0.75" PointY="4.75" Height="1.4033821614583317" />
-        <EntityTypeShape EntityType="Model.Zone" Width="1.5" PointX="0.75" PointY="1.375" Height="1.7879850260416657" />
+        <EntityTypeShape EntityType="Model.Package" Width="1.5" PointX="3" PointY="1" Height="1.9210009765625" />
+        <EntityTypeShape EntityType="Model.WorldItem" Width="1.5" PointX="0.75" PointY="1.375" Height="1.2636116536458326" />
         <AssociationConnector Association="Model.FK_files_0_0" >
-          <ConnectorPoint PointX="4.5" PointY="2.2689925130208333" />
-          <ConnectorPoint PointX="5.25" PointY="2.2689925130208333" />
-        </AssociationConnector>
-        <AssociationConnector Association="Model.FK_packages_0_0" >
-          <ConnectorPoint PointX="2.25" PointY="2.2689925130208328" />
-          <ConnectorPoint PointX="3" PointY="2.2689925130208328" />
+          <ConnectorPoint PointX="4.5" PointY="2.14800048828125" />
+          <ConnectorPoint PointX="5.25" PointY="2.14800048828125" />
         </AssociationConnector>
       </Diagram>
     </Diagrams>

@@ -30,7 +30,7 @@ using Fusion.Framework;
 namespace fuse
 {
     /// <summary>
-    /// Merges packages into the specified zone.
+    /// Merges packages into the system.
     /// </summary>
     class MergeAction : IAction
     {
@@ -56,7 +56,6 @@ namespace fuse
         /// <param name="cfg">ports configuration</param>
         public void Execute(IPackageManager pkgmgr, XmlConfiguration cfg)
         {
-            long zoneid = pkgmgr.QueryZoneID(_options.zone ?? cfg.DefaultZone);
             MergeWorker mw = new MergeWorker(pkgmgr, cfg);
 
             AbstractTree tree = LocalRepository.Read(cfg);
@@ -73,7 +72,7 @@ namespace fuse
                 atomset.AddRange(Atom.ParseAll(_atomlst.ToArray()));
 
                 foreach (Atom atom in atomset) {
-                    Atom[] zparr = pkgmgr.FindPackages(atom, zoneid)
+                    Atom[] zparr = pkgmgr.FindPackages(atom)
                         .OrderBy(zp => zp.Slot)
                         .ToArray();
 
@@ -117,7 +116,7 @@ namespace fuse
                     mw.OnInstall += this.MergeWorker_OnInstall;
                 }
 
-                mw.Merge(mergeset.ToArray(), zoneid, mopts);
+                mw.Merge(mergeset.ToArray(), mopts);
 
                 if (mopts.HasFlag(MergeOptions.Pretend)) {
                     if (_repolst.Count > 0) {

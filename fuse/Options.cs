@@ -37,6 +37,5 @@ namespace fuse
         public bool pretend;
         public bool update;
         public bool verbose;
-        public string zone;
     }
 }

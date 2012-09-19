@@ -50,8 +50,6 @@ namespace fuse
         /// <param name="cfg">ports configuration</param>
         public void Execute(IPackageManager pkgmgr, XmlConfiguration cfg)
         {
-            long zoneid = pkgmgr.QueryZoneID(_options.zone ?? cfg.DefaultZone);
-
             AbstractTree tree = LocalRepository.Read(cfg);
             List<IPackage> results = tree.Search(_atom, _options.exact);
 
@@ -67,7 +65,7 @@ namespace fuse
                         fmasked = true;
                     }
 
-                    Version iv = pkgmgr.QueryInstalledVersion(new Atom(latest), zoneid);
+                    Version iv = pkgmgr.QueryInstalledVersion(new Atom(latest));
 
                     StringBuilder sizesb = new StringBuilder(11);
                     Win32.StrFormatByteSize(latest.TotalSize, sizesb, sizesb.Capacity);
