@@ -253,9 +253,20 @@ namespace fuse
                     act.Execute(pkgmgr, cfg);
                 }
             } catch (Exception ex) {
-                error_msg("\n!!! {0}", ex.Message.Replace("\n", "\n!!! "));
-                if (opts.verbose)
-                    error_msg(ex.StackTrace);
+                Func<Exception, StringBuilder, Delegate, string> walkex = delegate(Exception e, StringBuilder sb, Delegate fn) {
+                    sb.Append("\n!!! " + e.Message.Replace("\n", "\n!!! "));
+                    if (opts.verbose)
+                        sb.Append("\n" + e.StackTrace);
+
+                    if (e.InnerException != null) {
+                        sb.Append("\n");
+                        return (string)fn.DynamicInvoke(e.InnerException, sb, fn);
+                    }
+
+                    return sb.ToString();
+                };
+
+                error_msg(walkex(ex, new StringBuilder(), walkex));
                 return 1;
             } finally {
                 Console.Write("\n");
