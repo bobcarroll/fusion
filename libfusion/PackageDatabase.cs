@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -49,6 +50,9 @@ namespace Fusion.Framework
             _ent = ent;
             _cfg = cfg;
             _log = LogManager.GetLogger(typeof(PackageDatabase));
+
+            _ent.Connection.StateChange += 
+                new StateChangeEventHandler(this.OnConnectionStateChange);
         }
 
         /// <summary>
@@ -83,6 +87,19 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Handles database connection state change events.
+        /// </summary>
+        /// <param name="sender">event sender</param>
+        /// <param name="e">state change event arguments</param>
+        private void OnConnectionStateChange(object sender, StateChangeEventArgs e)
+        {
+            /* sqlite foreign keys must be enabled for each connection. Since EF will open and close
+               connections whenever it feels like it, we must ensure foreign keys are re-enabled */
+            if (e.CurrentState == ConnectionState.Open)
+                _ent.ExecuteStoreCommand("PRAGMA foreign_keys = true;");
+        }
+
+        /// <summary>
         /// Opens the local package database for read/write.
         /// </summary>
         /// <param name="connstr">database connection string</param>
@@ -107,6 +124,56 @@ namespace Fusion.Framework
                 .SingleOrDefault();
 
             return result != null ? new Version(result) : null;
+        }
+
+        /// <summary>
+        /// Records a package installation in the package database.
+        /// </summary>
+        /// <param name="dist">newly installed package</param>
+        /// <param name="files">real files and directories created by the package</param>
+        /// <param name="metadata">dictionary of package installation metadata</param>
+        /// <param name="selected">indicates if the package is a world favourite</param>
+        public void RecordPackage(IDistribution dist, Tuple<string, FileType, string>[] files, 
+            IDictionary<string, string> metadata, bool world)
+        {
+            string pf = dist.Package.FullName;
+            string ver = dist.Version.ToString();
+            uint slot = dist.Slot;
+
+            Model.Package oldpkg = _ent.Packages
+                .Where(i => i.FullName == pf && i.Version == ver && i.Slot == slot)
+                .SingleOrDefault();
+
+            if (oldpkg != null)
+                _ent.Packages.DeleteObject(oldpkg);
+
+            Model.Package newpkg = new Model.Package() {
+                FullName = pf,
+                Version = ver,
+                Slot = slot
+            };
+
+            foreach (Tuple<string, FileType, string> ft in files) {
+                newpkg.Files.Add(new Model.File() {
+                    Path = ft.Item1,
+                    Type = (int)ft.Item2,
+                    Digest = ft.Item3
+                });
+            }
+
+            foreach (KeyValuePair<string, string> kvp in metadata) {
+                newpkg.Metadata.Add(new MetadataItem() {
+                    Key = kvp.Key,
+                    Value = kvp.Value
+                });
+            }
+
+            _ent.Packages.AddObject(newpkg);
+
+            if (world && _ent.WorldSet.Where(i => i.Atom == dist.Package.FullName).Count() == 0)
+                _ent.WorldSet.AddObject(new WorldItem() { Atom = pf });
+
+            _ent.SaveChanges();
         }
 
         /// <summary>

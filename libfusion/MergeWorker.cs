@@ -32,6 +32,8 @@ using Microsoft.Win32.SafeHandles;
 
 using log4net;
 
+using FileTuple = System.Tuple<string, Fusion.Framework.FileType, string>;
+
 namespace Fusion.Framework
 {
     /// <summary>
@@ -79,6 +81,53 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Installs the package files into the system.
+        /// </summary>
+        /// <param name="imgdir">files directory</param>
+        /// <param name="rootdir">root directory</param>
+        /// <param name="installer">installer project</param>
+        private void InstallImage(DirectoryInfo imgdir, DirectoryInfo rootdir, IInstallProject installer,
+            out FileTuple[] created)
+        {
+            List<FileTuple> results = new List<FileTuple>();
+
+            installer.PkgPreInst();
+
+            int striplev = imgdir.FullName.TrimEnd('\\').Count(i => i == '\\') + 1;
+            IEnumerable<FileSystemInfo> fsienum = imgdir
+                .GetFileSystemInfos("*", SearchOption.AllDirectories)
+                .OrderBy(i => i.FullName);
+
+            foreach (FileSystemInfo fsi in fsienum) {
+                string relpath = String.Join("\\", fsi.FullName.Split('\\').Skip(striplev));
+                string targetpath = rootdir.FullName.TrimEnd('\\') + @"\" + relpath;
+                FileType type = FileType.RegularFile;
+                string digest = null;
+
+                if (fsi.Attributes.HasFlag(FileAttributes.Directory))
+                    type = FileType.Directory;
+                else if (fsi.Attributes.HasFlag(FileAttributes.ReparsePoint))
+                    type = FileType.SymbolicLink;
+
+                if (type == FileType.Directory) {
+                    if (!Directory.Exists(targetpath)) {
+                        Directory.CreateDirectory(targetpath);
+                        _log.InfoFormat("Created new directory: {0}", targetpath);
+                    }
+                } else {
+                    _log.InfoFormat("Copying file to {0}", targetpath);
+                    File.Copy(fsi.FullName, targetpath, true);
+                    digest = Md5Sum.Compute(targetpath, Md5Sum.MD5SUMMODE.BINARY);
+                }
+
+                results.Add(new Tuple<string, FileType, string>(targetpath, type, digest));
+            }
+
+            installer.PkgPostInst();
+            created = results.ToArray();
+        }
+
+        /// <summary>
         /// Merges the given distributions into the system.
         /// </summary>
         /// <param name="distarr">the distributions to merge</param>
@@ -114,39 +163,6 @@ namespace Fusion.Framework
 
                 this.MergeOne(mea, mopts, downloader, _pkgmgr.RootDir);
             }
-        }
-
-        /// <summary>
-        /// Installs the package files into the system.
-        /// </summary>
-        /// <param name="imgdir">files directory</param>
-        /// <param name="rootdir">root directory</param>
-        /// <param name="installer">installer project</param>
-        private void MergeImage(DirectoryInfo imgdir, DirectoryInfo rootdir, IInstallProject installer)
-        {
-            installer.PkgPreInst();
-
-            int striplev = imgdir.FullName.TrimEnd('\\').Count(i => i == '\\') + 1;
-            IEnumerable<FileSystemInfo> fsienum = imgdir
-                .GetFileSystemInfos("*", SearchOption.AllDirectories)
-                .OrderBy(i => i.FullName);
-
-            foreach (FileSystemInfo fsi in fsienum) {
-                string relpath = String.Join("\\", fsi.FullName.Split('\\').Skip(striplev));
-                string targetpath = rootdir.FullName.TrimEnd('\\') + @"\" + relpath;
-
-                if (fsi.Attributes.HasFlag(FileAttributes.Directory)) {
-                    if (!Directory.Exists(targetpath)) {
-                        Directory.CreateDirectory(targetpath);
-                        _log.InfoFormat("Created new directory: {0}", targetpath);
-                    }
-                } else {
-                    _log.InfoFormat("Moving file to {0}", targetpath);
-                    File.Move(fsi.FullName, targetpath);
-                }
-            }
-
-            installer.PkgPostInst();
         }
 
         /// <summary>
@@ -206,7 +222,13 @@ namespace Fusion.Framework
             if (this.OnInstall != null)
                 this.OnInstall.Invoke(this, mea);
 
-            this.MergeImage(sbox.ImageDir, rootdir, installer);
+            FileTuple[] files = null;
+            this.InstallImage(sbox.ImageDir, rootdir, installer, out files);
+
+            Dictionary<string, string> metadata = new Dictionary<string, string>();
+            metadata.Add("repository", dist.PortsTree.Repository);
+
+            _pkgmgr.RecordPackage(dist, files, metadata, mea.Selected);
 
             _log.Debug("Destroying the sandbox...");
             sbox.Delete();

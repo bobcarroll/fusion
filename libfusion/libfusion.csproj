@@ -74,6 +74,7 @@
     <Compile Include="Category.cs" />
     <Compile Include="CircularReferenceException.cs" />
     <Compile Include="CustomConsoleAppender.cs" />
+    <Compile Include="FileType.cs" />
     <Compile Include="MessageEventArgs.cs" />
     <Compile Include="DependencyGraph.cs" />
     <Compile Include="Distribution.cs" />

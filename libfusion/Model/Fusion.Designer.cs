@@ -19,6 +19,7 @@ using System.Runtime.Serialization;
 #region EDM Relationship Metadata
 
 [assembly: EdmRelationshipAttribute("Model", "FK_files_0_0", "packages", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(Fusion.Framework.Model.Package), "files", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(Fusion.Framework.Model.File), true)]
+[assembly: EdmRelationshipAttribute("Model", "FK_metadata_0_0", "Package", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(Fusion.Framework.Model.Package), "metadata", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(Fusion.Framework.Model.MetadataItem), true)]
 
 #endregion
 
@@ -117,6 +118,22 @@ namespace Fusion.Framework.Model
             }
         }
         private ObjectSet<WorldItem> _WorldSet;
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        public ObjectSet<MetadataItem> metadata
+        {
+            get
+            {
+                if ((_metadata == null))
+                {
+                    _metadata = base.CreateObjectSet<MetadataItem>("metadata");
+                }
+                return _metadata;
+            }
+        }
+        private ObjectSet<MetadataItem> _metadata;
 
         #endregion
         #region AddTo Methods
@@ -144,6 +161,14 @@ namespace Fusion.Framework.Model
         {
             base.AddObject("WorldSet", worldItem);
         }
+    
+        /// <summary>
+        /// Deprecated Method for adding a new object to the metadata EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// </summary>
+        public void AddTometadata(MetadataItem metadataItem)
+        {
+            base.AddObject("metadata", metadataItem);
+        }
 
         #endregion
     }
@@ -168,14 +193,14 @@ namespace Fusion.Framework.Model
         /// </summary>
         /// <param name="id">Initial value of the ID property.</param>
         /// <param name="path">Initial value of the Path property.</param>
-        /// <param name="digest">Initial value of the Digest property.</param>
+        /// <param name="type">Initial value of the Type property.</param>
         /// <param name="packageID">Initial value of the PackageID property.</param>
-        public static File CreateFile(global::System.Int64 id, global::System.String path, global::System.String digest, global::System.Int64 packageID)
+        public static File CreateFile(global::System.Int64 id, global::System.String path, global::System.Int64 type, global::System.Int64 packageID)
         {
             File file = new File();
             file.ID = id;
             file.Path = path;
-            file.Digest = digest;
+            file.Type = type;
             file.PackageID = packageID;
             return file;
         }
@@ -239,6 +264,30 @@ namespace Fusion.Framework.Model
         /// </summary>
         [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
         [DataMemberAttribute()]
+        public global::System.Int64 Type
+        {
+            get
+            {
+                return _Type;
+            }
+            set
+            {
+                OnTypeChanging(value);
+                ReportPropertyChanging("Type");
+                _Type = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("Type");
+                OnTypeChanged();
+            }
+        }
+        private global::System.Int64 _Type;
+        partial void OnTypeChanging(global::System.Int64 value);
+        partial void OnTypeChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
         public global::System.String Digest
         {
             get
@@ -249,7 +298,7 @@ namespace Fusion.Framework.Model
             {
                 OnDigestChanging(value);
                 ReportPropertyChanging("Digest");
-                _Digest = StructuralObject.SetValidValue(value, false);
+                _Digest = StructuralObject.SetValidValue(value, true);
                 ReportPropertyChanged("Digest");
                 OnDigestChanged();
             }
@@ -293,7 +342,7 @@ namespace Fusion.Framework.Model
         [SoapIgnoreAttribute()]
         [DataMemberAttribute()]
         [EdmRelationshipNavigationPropertyAttribute("Model", "FK_files_0_0", "packages")]
-        public Package Packages
+        public Package Package
         {
             get
             {
@@ -309,7 +358,7 @@ namespace Fusion.Framework.Model
         /// </summary>
         [BrowsableAttribute(false)]
         [DataMemberAttribute()]
-        public EntityReference<Package> PackagesReference
+        public EntityReference<Package> PackageReference
         {
             get
             {
@@ -320,6 +369,180 @@ namespace Fusion.Framework.Model
                 if ((value != null))
                 {
                     ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<Package>("Model.FK_files_0_0", "packages", value);
+                }
+            }
+        }
+
+        #endregion
+    }
+    
+    /// <summary>
+    /// No Metadata Documentation available.
+    /// </summary>
+    [EdmEntityTypeAttribute(NamespaceName="Model", Name="MetadataItem")]
+    [Serializable()]
+    [DataContractAttribute(IsReference=true)]
+    public partial class MetadataItem : EntityObject
+    {
+        #region Factory Method
+    
+        /// <summary>
+        /// Create a new MetadataItem object.
+        /// </summary>
+        /// <param name="id">Initial value of the ID property.</param>
+        /// <param name="key">Initial value of the Key property.</param>
+        /// <param name="value">Initial value of the Value property.</param>
+        /// <param name="packageID">Initial value of the PackageID property.</param>
+        public static MetadataItem CreateMetadataItem(global::System.Int64 id, global::System.String key, global::System.String value, global::System.Int64 packageID)
+        {
+            MetadataItem metadataItem = new MetadataItem();
+            metadataItem.ID = id;
+            metadataItem.Key = key;
+            metadataItem.Value = value;
+            metadataItem.PackageID = packageID;
+            return metadataItem;
+        }
+
+        #endregion
+        #region Primitive Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int64 ID
+        {
+            get
+            {
+                return _ID;
+            }
+            set
+            {
+                if (_ID != value)
+                {
+                    OnIDChanging(value);
+                    ReportPropertyChanging("ID");
+                    _ID = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("ID");
+                    OnIDChanged();
+                }
+            }
+        }
+        private global::System.Int64 _ID;
+        partial void OnIDChanging(global::System.Int64 value);
+        partial void OnIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String Key
+        {
+            get
+            {
+                return _Key;
+            }
+            set
+            {
+                OnKeyChanging(value);
+                ReportPropertyChanging("Key");
+                _Key = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("Key");
+                OnKeyChanged();
+            }
+        }
+        private global::System.String _Key;
+        partial void OnKeyChanging(global::System.String value);
+        partial void OnKeyChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String Value
+        {
+            get
+            {
+                return _Value;
+            }
+            set
+            {
+                OnValueChanging(value);
+                ReportPropertyChanging("Value");
+                _Value = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("Value");
+                OnValueChanged();
+            }
+        }
+        private global::System.String _Value;
+        partial void OnValueChanging(global::System.String value);
+        partial void OnValueChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int64 PackageID
+        {
+            get
+            {
+                return _PackageID;
+            }
+            set
+            {
+                OnPackageIDChanging(value);
+                ReportPropertyChanging("PackageID");
+                _PackageID = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("PackageID");
+                OnPackageIDChanged();
+            }
+        }
+        private global::System.Int64 _PackageID;
+        partial void OnPackageIDChanging(global::System.Int64 value);
+        partial void OnPackageIDChanged();
+
+        #endregion
+    
+        #region Navigation Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("Model", "FK_metadata_0_0", "Package")]
+        public Package Package
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Package>("Model.FK_metadata_0_0", "Package").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Package>("Model.FK_metadata_0_0", "Package").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<Package> PackageReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Package>("Model.FK_metadata_0_0", "Package");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<Package>("Model.FK_metadata_0_0", "Package", value);
                 }
             }
         }
@@ -502,6 +725,28 @@ namespace Fusion.Framework.Model
                 if ((value != null))
                 {
                     ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<File>("Model.FK_files_0_0", "files", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("Model", "FK_metadata_0_0", "metadata")]
+        public EntityCollection<MetadataItem> Metadata
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<MetadataItem>("Model.FK_metadata_0_0", "metadata");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<MetadataItem>("Model.FK_metadata_0_0", "metadata", value);
                 }
             }
         }

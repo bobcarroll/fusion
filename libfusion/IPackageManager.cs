@@ -45,6 +45,17 @@ namespace Fusion.Framework
         Version QueryInstalledVersion(Atom atom);
 
         /// <summary>
+        /// Records a package installation in the package database.
+        /// </summary>
+        /// <param name="dist">newly installed package</param>
+        /// <param name="files">real files and directories created by the package</param>
+        /// <param name="metadata">dictionary of package installation metadata</param>
+        /// <param name="selected">indicates if the package is a world favourite</param>
+        /// <remarks>The files tuple should be (absolute file path, file type, digest).</remarks>
+        void RecordPackage(IDistribution dist, Tuple<string, FileType, string>[] files, 
+            IDictionary<string, string> metadata, bool world);
+
+        /// <summary>
         /// Items in the world favourites set.
         /// </summary>
         Atom[] WorldSet { get; }

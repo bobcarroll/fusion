@@ -7,11 +7,16 @@
     <Schema Namespace="Model.Store" Alias="Self" Provider="System.Data.SQLite" ProviderManifestToken="ISO8601" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/02/edm/ssdl">
         <EntityContainer Name="ModelStoreContainer">
           <EntitySet Name="files" EntityType="Model.Store.files" store:Type="Tables" />
+          <EntitySet Name="metadata" EntityType="Model.Store.metadata" store:Type="Tables" />
           <EntitySet Name="packages" EntityType="Model.Store.packages" store:Type="Tables" />
           <EntitySet Name="world" EntityType="Model.Store.world" store:Type="Tables" />
           <AssociationSet Name="FK_files_0_0" Association="Model.Store.FK_files_0_0">
             <End Role="packages" EntitySet="packages" />
             <End Role="files" EntitySet="files" />
+          </AssociationSet>
+          <AssociationSet Name="FK_metadata_0_0" Association="Model.Store.FK_metadata_0_0">
+            <End Role="packages" EntitySet="packages" />
+            <End Role="metadata" EntitySet="metadata" />
           </AssociationSet>
         </EntityContainer>
         <EntityType Name="files">
@@ -20,7 +25,17 @@
           </Key>
           <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="path" Type="nvarchar" Nullable="false" />
-          <Property Name="digest" Type="nvarchar" Nullable="false" />
+          <Property Name="type" Type="integer" Nullable="false" />
+          <Property Name="digest" Type="nvarchar" />
+          <Property Name="package" Type="integer" Nullable="false" />
+        </EntityType>
+        <EntityType Name="metadata">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="key" Type="nvarchar" Nullable="false" />
+          <Property Name="value" Type="nvarchar" Nullable="false" />
           <Property Name="package" Type="integer" Nullable="false" />
         </EntityType>
         <EntityType Name="packages">
@@ -52,6 +67,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_metadata_0_0">
+          <End Role="packages" Type="Model.Store.packages" Multiplicity="1" />
+          <End Role="metadata" Type="Model.Store.metadata" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="packages">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="metadata">
+              <PropertyRef Name="package" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
@@ -64,6 +91,11 @@
             <End Role="packages" EntitySet="Packages" />
             <End Role="files" EntitySet="Files" />
           </AssociationSet>
+          <EntitySet Name="metadata" EntityType="Model.MetadataItem" />
+          <AssociationSet Name="FK_metadata_0_0" Association="Model.FK_metadata_0_0">
+            <End Role="Package" EntitySet="Packages" />
+            <End Role="metadata" EntitySet="metadata" />
+          </AssociationSet>
         </EntityContainer>
         <EntityType Name="File">
           <Key>
@@ -71,9 +103,10 @@
           </Key>
           <Property Type="Int64" Name="ID" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Type="String" Name="Path" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
-          <Property Type="String" Name="Digest" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Type="Int64" Name="Type" Nullable="false" />
+          <Property Type="String" Name="Digest" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="true" />
           <Property Type="Int64" Name="PackageID" Nullable="false" />
-          <NavigationProperty Name="Packages" Relationship="Model.FK_files_0_0" FromRole="files" ToRole="packages" />
+          <NavigationProperty Name="Package" Relationship="Model.FK_files_0_0" FromRole="files" ToRole="packages" />
         </EntityType>
         <EntityType Name="Package">
           <Key>
@@ -85,6 +118,7 @@
           <Property Type="Int64" Name="Slot" Nullable="false" />
           <Property Type="String" Name="Project" MaxLength="2147483647" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="Files" Relationship="Model.FK_files_0_0" FromRole="packages" ToRole="files" />
+          <NavigationProperty Name="Metadata" Relationship="Model.FK_metadata_0_0" FromRole="Package" ToRole="metadata" />
         </EntityType>
         <EntityType Name="WorldItem">
           <Key>
@@ -94,13 +128,39 @@
           <Property Type="String" Name="Atom" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
         </EntityType>
         <Association Name="FK_files_0_0">
-          <End Type="Model.Package" Role="packages" Multiplicity="1" />
+          <End Type="Model.Package" Role="packages" Multiplicity="1" >
+            <OnDelete Action="Cascade" />
+          </End>
           <End Type="Model.File" Role="files" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="packages">
               <PropertyRef Name="ID" />
             </Principal>
             <Dependent Role="files">
+              <PropertyRef Name="PackageID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="MetadataItem">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Type="Int64" Name="ID" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Key" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Value" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Type="Int64" Name="PackageID" Nullable="false" />
+          <NavigationProperty Name="Package" Relationship="Model.FK_metadata_0_0" FromRole="metadata" ToRole="Package" />
+        </EntityType>
+        <Association Name="FK_metadata_0_0">
+          <End Type="Model.Package" Role="Package" Multiplicity="1" >
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="Model.MetadataItem" Role="metadata" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Package">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="metadata">
               <PropertyRef Name="PackageID" />
             </Dependent>
           </ReferentialConstraint>
@@ -117,6 +177,7 @@
                 <ScalarProperty Name="Digest" ColumnName="digest" />
                 <ScalarProperty Name="PackageID" ColumnName="package" />
                 <ScalarProperty Name="Path" ColumnName="path" />
+                <ScalarProperty Name="Type" ColumnName="type" />
                 <ScalarProperty Name="ID" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>
@@ -136,6 +197,16 @@
             <EntityTypeMapping TypeName="Model.WorldItem">
               <MappingFragment StoreEntitySet="world">
                 <ScalarProperty Name="Atom" ColumnName="atom" />
+                <ScalarProperty Name="ID" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="metadata">
+            <EntityTypeMapping TypeName="Model.MetadataItem">
+              <MappingFragment StoreEntitySet="metadata">
+                <ScalarProperty Name="PackageID" ColumnName="package" />
+                <ScalarProperty Name="Value" ColumnName="value" />
+                <ScalarProperty Name="Key" ColumnName="key" />
                 <ScalarProperty Name="ID" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>
@@ -165,8 +236,13 @@
         <EntityTypeShape EntityType="Model.Package" Width="1.5" PointX="3" PointY="1" Height="1.9210009765625" />
         <EntityTypeShape EntityType="Model.WorldItem" Width="1.5" PointX="0.75" PointY="1.375" Height="1.2636116536458326" />
         <AssociationConnector Association="Model.FK_files_0_0" >
-          <ConnectorPoint PointX="4.5" PointY="2.14800048828125" />
-          <ConnectorPoint PointX="5.25" PointY="2.14800048828125" />
+          <ConnectorPoint PointX="4.5" PointY="2.3699446614583328" />
+          <ConnectorPoint PointX="5.25" PointY="2.3699446614583328" />
+        </AssociationConnector>
+        <EntityTypeShape EntityType="Model.MetadataItem" Width="1.5" PointX="3" PointY="4.125" Height="1.9802864583333335" />
+        <AssociationConnector Association="Model.FK_metadata_0_0" >
+          <ConnectorPoint PointX="3.75" PointY="3.3648893229166661" />
+          <ConnectorPoint PointX="3.75" PointY="4.125" />
         </AssociationConnector>
       </Diagram>
     </Diagrams>
