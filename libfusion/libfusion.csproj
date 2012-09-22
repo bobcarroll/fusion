@@ -104,6 +104,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SandboxDirectory.cs" />
+    <Compile Include="Security.cs" />
     <Compile Include="SourceFile.cs" />
     <Compile Include="MaskedPackageException.cs" />
     <Compile Include="Md5Sum.cs">

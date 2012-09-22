@@ -46,26 +46,18 @@ namespace Fusion.Framework
         public static XmlConfiguration LoadSeries()
         {
             XmlConfiguration cfg = new XmlConfiguration();
+            bool isadmin = Security.IsNTAdmin();
             FileInfo[] fiarr;
 
             string progdata = 
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + @"\Fusion";
 
             cfg.ConfDir = new DirectoryInfo(progdata + @"\conf");
-            if (!cfg.ConfDir.Exists)
-                cfg.ConfDir.Create();
-
             cfg.PortDir = new DirectoryInfo(progdata + @"\global");
-            if (!cfg.PortDir.Exists)
-                cfg.PortDir.Create();
-
-            cfg.LogDir = new DirectoryInfo(progdata + @"\logs");
-            if (!cfg.LogDir.Exists)
-                cfg.LogDir.Create();
-
+            cfg.LogDir = isadmin ?
+                new DirectoryInfo(progdata + @"\logs") :
+                new DirectoryInfo(Path.GetTempPath());
             cfg.TmpDir = new DirectoryInfo(Path.GetTempPath() + @"\fusion");
-            if (!cfg.TmpDir.Exists)
-                cfg.TmpDir.Create();
 
             /* set defaults for optional settings */
             cfg.AcceptKeywords = new string[] { };

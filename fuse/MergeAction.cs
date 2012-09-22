@@ -115,6 +115,8 @@ namespace fuse
                     mw.OnParallelFetch += this.MergeWorker_OnParallelFetch;
                     mw.OnInstall += this.MergeWorker_OnInstall;
                     mw.OnAutoClean += this.MergeWorker_OnAutoClean;
+
+                    Security.DemandNTAdmin();
                 }
 
                 mw.Merge(mergeset.ToArray(), mopts);
