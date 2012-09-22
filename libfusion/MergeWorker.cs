@@ -159,7 +159,8 @@ namespace Fusion.Framework
             if (this.OnParallelFetch != null)
                 this.OnParallelFetch.Invoke(this, new EventArgs());
 
-            downloader.FetchAsync();
+            if (!mopts.HasFlag(MergeOptions.Pretend))
+                downloader.FetchAsync();
 
             for (int i = 0; i < scheduled.Count; i++) {
                 MergeEventArgs mea = scheduled[i];
