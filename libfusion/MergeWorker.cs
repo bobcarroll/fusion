@@ -151,6 +151,15 @@ namespace Fusion.Framework
             if (distarr.Length == 0)
                 return;
 
+            if (!_cfg.TmpDir.Exists) {
+                _cfg.TmpDir.Create();
+                Security.SetFileMandatoryLabel(
+                    _cfg.TmpDir.FullName,
+                    Security.AceFlags.ContainerInherit,
+                    Security.MandatoryPolicy.NoWriteUp,
+                    Security.MandatoryLabel.LowIntegrity);
+            }
+
             Downloader downloader = new Downloader(_cfg.DistFilesDir);
             List<MergeEventArgs> scheduled = null;
 
