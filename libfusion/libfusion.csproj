@@ -125,6 +125,7 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SlotConflictException.cs" />
+    <Compile Include="TrashWorker.cs" />
     <Compile Include="WebSourceFile.cs" />
     <Compile Include="XmlConfiguration.cs">
       <SubType>Code</SubType>

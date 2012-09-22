@@ -23,6 +23,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
+using FileTuple = System.Tuple<string, Fusion.Framework.FileType, string>;
+using MetadataPair = System.Collections.Generic.KeyValuePair<string, string>;
+
 namespace Fusion.Framework
 {
     /// <summary>
@@ -30,6 +33,20 @@ namespace Fusion.Framework
     /// </summary>
     public interface IPackageManager : IDisposable
     {
+        /// <summary>
+        /// Determines if the given path is in use by another package.
+        /// </summary>
+        /// <param name="path">absolute path to check</param>
+        /// <param name="includedirs">flag to include directories</param>
+        /// <returns>true on collision, false otherwise</returns>
+        bool CheckFileCollision(string path, bool includedirs);
+
+        /// <summary>
+        /// Removes the given items from the trash.
+        /// </summary>
+        /// <param name="patharr">absolute file paths in the trash</param>
+        void DeleteTrashItems(string[] patharr);
+
         /// <summary>
         /// Find packages installed matching the given package atom.
         /// </summary>
@@ -42,18 +59,38 @@ namespace Fusion.Framework
         /// </summary>
         /// <param name="atom">package atom without version</param>
         /// <returns>package version, or NULL if none is found</returns>
+        /// <remarks>This will query the same slot of the given atom.</remarks>
         Version QueryInstalledVersion(Atom atom);
+
+        /// <summary>
+        /// Finds all files associated with the given installed package.
+        /// </summary>
+        /// <param name="atom">package atom with version and slot</param>
+        /// <returns>files tuple for all installed files</returns>
+        FileTuple[] QueryPackageFiles(Atom atom);
 
         /// <summary>
         /// Records a package installation in the package database.
         /// </summary>
         /// <param name="dist">newly installed package</param>
+        /// <param name="installer">serialised installer project</param>
         /// <param name="files">real files and directories created by the package</param>
         /// <param name="metadata">dictionary of package installation metadata</param>
-        /// <param name="selected">indicates if the package is a world favourite</param>
+        /// <param name="world">indicates if the package is a world favourite</param>
         /// <remarks>The files tuple should be (absolute file path, file type, digest).</remarks>
-        void RecordPackage(IDistribution dist, Tuple<string, FileType, string>[] files, 
-            IDictionary<string, string> metadata, bool world);
+        void RecordPackage(IDistribution dist, string installer, FileTuple[] files, 
+            MetadataPair[] metadata, bool world);
+
+        /// <summary>
+        /// Adds an item to the trash for later clean-up.
+        /// </summary>
+        /// <param name="path">absolute path of the file</param>
+        void TrashFile(string path);
+
+        /// <summary>
+        /// The contents of the file trash.
+        /// </summary>
+        string[] Trash { get; }
 
         /// <summary>
         /// Items in the world favourites set.

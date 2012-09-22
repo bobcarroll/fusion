@@ -9,6 +9,7 @@
           <EntitySet Name="files" EntityType="Model.Store.files" store:Type="Tables" />
           <EntitySet Name="metadata" EntityType="Model.Store.metadata" store:Type="Tables" />
           <EntitySet Name="packages" EntityType="Model.Store.packages" store:Type="Tables" />
+          <EntitySet Name="trash" EntityType="Model.Store.trash" store:Type="Tables" />
           <EntitySet Name="world" EntityType="Model.Store.world" store:Type="Tables" />
           <AssociationSet Name="FK_files_0_0" Association="Model.Store.FK_files_0_0">
             <End Role="packages" EntitySet="packages" />
@@ -47,6 +48,13 @@
           <Property Name="version" Type="nvarchar" Nullable="false" />
           <Property Name="slot" Type="integer" Nullable="false" />
           <Property Name="project" Type="nvarchar" />
+        </EntityType>
+        <EntityType Name="trash">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="path" Type="nvarchar" Nullable="false" />
         </EntityType>
         <EntityType Name="world">
           <Key>
@@ -91,11 +99,12 @@
             <End Role="packages" EntitySet="Packages" />
             <End Role="files" EntitySet="Files" />
           </AssociationSet>
-          <EntitySet Name="metadata" EntityType="Model.MetadataItem" />
+          <EntitySet Name="Metadata" EntityType="Model.MetadataItem" />
           <AssociationSet Name="FK_metadata_0_0" Association="Model.FK_metadata_0_0">
             <End Role="Package" EntitySet="Packages" />
-            <End Role="metadata" EntitySet="metadata" />
+            <End Role="metadata" EntitySet="Metadata" />
           </AssociationSet>
+          <EntitySet Name="Trash" EntityType="Model.TrashItem" />
         </EntityContainer>
         <EntityType Name="File">
           <Key>
@@ -165,6 +174,13 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <EntityType Name="TrashItem">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Type="Int64" Name="ID" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Path" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+        </EntityType>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -201,12 +217,20 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="metadata">
+          <EntitySetMapping Name="Metadata">
             <EntityTypeMapping TypeName="Model.MetadataItem">
               <MappingFragment StoreEntitySet="metadata">
                 <ScalarProperty Name="PackageID" ColumnName="package" />
                 <ScalarProperty Name="Value" ColumnName="value" />
                 <ScalarProperty Name="Key" ColumnName="key" />
+                <ScalarProperty Name="ID" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Trash">
+            <EntityTypeMapping TypeName="Model.TrashItem">
+              <MappingFragment StoreEntitySet="trash">
+                <ScalarProperty Name="Path" ColumnName="path" />
                 <ScalarProperty Name="ID" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>
@@ -244,6 +268,7 @@
           <ConnectorPoint PointX="3.75" PointY="3.3648893229166661" />
           <ConnectorPoint PointX="3.75" PointY="4.125" />
         </AssociationConnector>
+        <EntityTypeShape EntityType="Model.TrashItem" Width="1.5" PointX="5.625" PointY="4.5" Height="1.4033821614583317" />
       </Diagram>
     </Diagrams>
   </Designer>

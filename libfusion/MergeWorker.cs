@@ -50,6 +50,11 @@ namespace Fusion.Framework
         private XmlConfiguration _cfg;
 
         /// <summary>
+        /// Event raised when auto-cleaning of packages begins.
+        /// </summary>
+        public event EventHandler<EventArgs> OnAutoClean;
+
+        /// <summary>
         /// Event raised for each package at the start of installation of the files.
         /// </summary>
         public event EventHandler<MergeEventArgs> OnInstall;
@@ -120,7 +125,7 @@ namespace Fusion.Framework
                     digest = Md5Sum.Compute(targetpath, Md5Sum.MD5SUMMODE.BINARY);
                 }
 
-                results.Add(new Tuple<string, FileType, string>(targetpath, type, digest));
+                results.Add(new FileTuple(targetpath, type, digest));
             }
 
             installer.PkgPostInst();
@@ -163,6 +168,11 @@ namespace Fusion.Framework
 
                 this.MergeOne(mea, mopts, downloader, _pkgmgr.RootDir);
             }
+
+            if (this.OnAutoClean != null)
+                this.OnAutoClean.Invoke(this, new EventArgs());
+
+            TrashWorker.Purge(_pkgmgr);
         }
 
         /// <summary>
@@ -222,13 +232,25 @@ namespace Fusion.Framework
             if (this.OnInstall != null)
                 this.OnInstall.Invoke(this, mea);
 
-            FileTuple[] files = null;
+            _log.Debug("Trashing files from previous installation");
+            FileTuple[] files = _pkgmgr.QueryPackageFiles(dist.Atom);
+            foreach (FileTuple ft in files)
+                TrashWorker.AddFile(ft.Item1, _pkgmgr);
+
+            files = null;
             this.InstallImage(sbox.ImageDir, rootdir, installer, out files);
+
+            MemoryStream ms = new MemoryStream();
+            (new BinaryFormatter()).Serialize(ms, installer);
+            string installerstr = Convert.ToBase64String(ms.ToArray());
+            ms.Close();
 
             Dictionary<string, string> metadata = new Dictionary<string, string>();
             metadata.Add("repository", dist.PortsTree.Repository);
 
-            _pkgmgr.RecordPackage(dist, files, metadata, mea.Selected);
+            if (mea.Selected)
+                _log.InfoFormat("Recording {0} in world favourites", dist.Package.FullName);
+            _pkgmgr.RecordPackage(dist, installerstr, files, metadata.ToArray(), mea.Selected);
 
             _log.Debug("Destroying the sandbox...");
             sbox.Delete();
@@ -265,6 +287,7 @@ namespace Fusion.Framework
                 IDistribution dist = distdeparr[i];
                 Atom current = _pkgmgr
                     .FindPackages(new Atom(dist, true))
+                    .Where(n => n.Slot == dist.Slot)
                     .SingleOrDefault();
 
                 MergeEventArgs mea = new MergeEventArgs();

@@ -28,6 +28,9 @@ using log4net;
 
 using Fusion.Framework.Model;
 
+using FileTuple = System.Tuple<string, Fusion.Framework.FileType, string>;
+using MetadataPair = System.Collections.Generic.KeyValuePair<string, string>;
+
 namespace Fusion.Framework
 {
     /// <summary>
@@ -69,6 +72,36 @@ namespace Fusion.Framework
         public void Dispose()
         {
             _ent.Dispose();
+        }
+
+        /// <summary>
+        /// Determines if the given path is in use by another package.
+        /// </summary>
+        /// <param name="path">absolute path to check</param>
+        /// <param name="includedirs">flag to include directories</param>
+        /// <returns>true on collision, false otherwise</returns>
+        public bool CheckFileCollision(string path, bool includedirs)
+        {
+            return _ent.Files
+                .AsEnumerable()
+                .Where(i => i.Path.TrimEnd('\\') == path.TrimEnd('\\'))
+                .Where(i => ((FileType)i.Type == FileType.Directory && includedirs) ||
+                            ((FileType)i.Type != FileType.Directory))
+                .Count() > 0;
+        }
+
+        /// <summary>
+        /// Removes the given items from the trash.
+        /// </summary>
+        /// <param name="patharr">absolute file paths in the trash</param>
+        public void DeleteTrashItems(string[] patharr)
+        {
+            foreach (TrashItem ti in _ent.Trash.OrderBy(i => i.Path)) {
+                if (patharr.Contains(ti.Path))
+                    _ent.Trash.DeleteObject(ti);
+            }
+
+            _ent.SaveChanges();
         }
 
         /// <summary>
@@ -115,6 +148,7 @@ namespace Fusion.Framework
         /// </summary>
         /// <param name="atom">package atom without version</param>
         /// <returns>package version, or NULL if none is found</returns>
+        /// <remarks>This will query the same slot of the given atom.</remarks>
         public Version QueryInstalledVersion(Atom atom)
         {
             string result = _ent.Packages
@@ -127,14 +161,36 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Finds all files associated with the given installed package.
+        /// </summary>
+        /// <param name="atom">package atom with version and slot</param>
+        /// <returns>files tuple for all installed files</returns>
+        public FileTuple[] QueryPackageFiles(Atom atom)
+        {
+            if (!atom.IsFullName || !atom.HasVersion())
+                throw new ArgumentException("Cannot query files without full package atom with version");
+
+            return _ent.Files
+                .AsEnumerable()
+                .Where(i => i.Package.FullName == atom.PackageName &&
+                             i.Package.Version == atom.Version.ToString() &&
+                             i.Package.Slot == atom.Slot)
+                .OrderBy(i => i.Path)
+                .Select(i => new FileTuple(i.Path, (FileType)i.Type, i.Digest))
+                .ToArray();
+        }
+
+        /// <summary>
         /// Records a package installation in the package database.
         /// </summary>
         /// <param name="dist">newly installed package</param>
+        /// <param name="installer">serialised installer project</param>
         /// <param name="files">real files and directories created by the package</param>
         /// <param name="metadata">dictionary of package installation metadata</param>
-        /// <param name="selected">indicates if the package is a world favourite</param>
-        public void RecordPackage(IDistribution dist, Tuple<string, FileType, string>[] files, 
-            IDictionary<string, string> metadata, bool world)
+        /// <param name="world">indicates if the package is a world favourite</param>
+        /// <remarks>The files tuple should be (absolute file path, file type, digest).</remarks>
+        public void RecordPackage(IDistribution dist, string installer, FileTuple[] files, 
+            MetadataPair[] metadata, bool world)
         {
             string pf = dist.Package.FullName;
             string ver = dist.Version.ToString();
@@ -150,10 +206,11 @@ namespace Fusion.Framework
             Model.Package newpkg = new Model.Package() {
                 FullName = pf,
                 Version = ver,
-                Slot = slot
+                Slot = slot,
+                Project = installer
             };
 
-            foreach (Tuple<string, FileType, string> ft in files) {
+            foreach (FileTuple ft in files) {
                 newpkg.Files.Add(new Model.File() {
                     Path = ft.Item1,
                     Type = (int)ft.Item2,
@@ -174,6 +231,29 @@ namespace Fusion.Framework
                 _ent.WorldSet.AddObject(new WorldItem() { Atom = pf });
 
             _ent.SaveChanges();
+        }
+
+        /// <summary>
+        /// Adds an item to the trash for later clean-up.
+        /// </summary>
+        /// <param name="path">absolute path of the file</param>
+        public void TrashFile(string path)
+        {
+            _ent.Trash.AddObject(new TrashItem() { Path = path });
+            _ent.SaveChanges();
+        }
+
+        /// <summary>
+        /// The contents of the file trash.
+        /// </summary>
+        public string[] Trash
+        {
+            get
+            {
+                return _ent.Trash
+                    .Select(i => i.Path)
+                    .ToArray();
+            }
         }
 
         /// <summary>

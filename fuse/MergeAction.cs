@@ -114,6 +114,7 @@ namespace fuse
                     mw.OnRealMerge += this.MergeWorker_OnRealMerge;
                     mw.OnParallelFetch += this.MergeWorker_OnParallelFetch;
                     mw.OnInstall += this.MergeWorker_OnInstall;
+                    mw.OnAutoClean += this.MergeWorker_OnAutoClean;
                 }
 
                 mw.Merge(mergeset.ToArray(), mopts);
@@ -137,7 +138,8 @@ namespace fuse
                         "Total: {0} package(s), Size of download(s): {1}",
                         _numpkgs,
                         sb.ToString());
-                }
+                } else
+                    Console.Write("\n");
             } catch (MaskedPackageException ex) {
                 Program.error_msg("\n!!! All ports that could satisfy '{0}' have been masked.", ex.Package);
             } catch (SlotConflictException ex) {
@@ -308,6 +310,16 @@ namespace fuse
 
             Console.ResetColor();
             Console.Write(" into live file system\n");
+        }
+
+        /// <summary>
+        /// Handler for the MergeWorker.OnAutoClean event.
+        /// </summary>
+        /// <param name="sender">the merge worker</param>
+        /// <param name="e">event args</param>
+        public void MergeWorker_OnAutoClean(object sender, EventArgs e)
+        {
+            Console.Write("\n>>> Auto-cleaning packages...");
         }
 
         /// <summary>

@@ -122,18 +122,34 @@ namespace Fusion.Framework.Model
         /// <summary>
         /// No Metadata Documentation available.
         /// </summary>
-        public ObjectSet<MetadataItem> metadata
+        public ObjectSet<MetadataItem> Metadata
         {
             get
             {
-                if ((_metadata == null))
+                if ((_Metadata == null))
                 {
-                    _metadata = base.CreateObjectSet<MetadataItem>("metadata");
+                    _Metadata = base.CreateObjectSet<MetadataItem>("Metadata");
                 }
-                return _metadata;
+                return _Metadata;
             }
         }
-        private ObjectSet<MetadataItem> _metadata;
+        private ObjectSet<MetadataItem> _Metadata;
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        public ObjectSet<TrashItem> Trash
+        {
+            get
+            {
+                if ((_Trash == null))
+                {
+                    _Trash = base.CreateObjectSet<TrashItem>("Trash");
+                }
+                return _Trash;
+            }
+        }
+        private ObjectSet<TrashItem> _Trash;
 
         #endregion
         #region AddTo Methods
@@ -163,11 +179,19 @@ namespace Fusion.Framework.Model
         }
     
         /// <summary>
-        /// Deprecated Method for adding a new object to the metadata EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// Deprecated Method for adding a new object to the Metadata EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
         /// </summary>
-        public void AddTometadata(MetadataItem metadataItem)
+        public void AddToMetadata(MetadataItem metadataItem)
         {
-            base.AddObject("metadata", metadataItem);
+            base.AddObject("Metadata", metadataItem);
+        }
+    
+        /// <summary>
+        /// Deprecated Method for adding a new object to the Trash EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// </summary>
+        public void AddToTrash(TrashItem trashItem)
+        {
+            base.AddObject("Trash", trashItem);
         }
 
         #endregion
@@ -752,6 +776,87 @@ namespace Fusion.Framework.Model
         }
 
         #endregion
+    }
+    
+    /// <summary>
+    /// No Metadata Documentation available.
+    /// </summary>
+    [EdmEntityTypeAttribute(NamespaceName="Model", Name="TrashItem")]
+    [Serializable()]
+    [DataContractAttribute(IsReference=true)]
+    public partial class TrashItem : EntityObject
+    {
+        #region Factory Method
+    
+        /// <summary>
+        /// Create a new TrashItem object.
+        /// </summary>
+        /// <param name="id">Initial value of the ID property.</param>
+        /// <param name="path">Initial value of the Path property.</param>
+        public static TrashItem CreateTrashItem(global::System.Int64 id, global::System.String path)
+        {
+            TrashItem trashItem = new TrashItem();
+            trashItem.ID = id;
+            trashItem.Path = path;
+            return trashItem;
+        }
+
+        #endregion
+        #region Primitive Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int64 ID
+        {
+            get
+            {
+                return _ID;
+            }
+            set
+            {
+                if (_ID != value)
+                {
+                    OnIDChanging(value);
+                    ReportPropertyChanging("ID");
+                    _ID = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("ID");
+                    OnIDChanged();
+                }
+            }
+        }
+        private global::System.Int64 _ID;
+        partial void OnIDChanging(global::System.Int64 value);
+        partial void OnIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String Path
+        {
+            get
+            {
+                return _Path;
+            }
+            set
+            {
+                OnPathChanging(value);
+                ReportPropertyChanging("Path");
+                _Path = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("Path");
+                OnPathChanged();
+            }
+        }
+        private global::System.String _Path;
+        partial void OnPathChanging(global::System.String value);
+        partial void OnPathChanged();
+
+        #endregion
+    
     }
     
     /// <summary>
