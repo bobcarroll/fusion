@@ -233,7 +233,7 @@ namespace Fusion.Framework
                 this.OnInstall.Invoke(this, mea);
 
             _log.Debug("Trashing files from previous installation");
-            FileTuple[] files = _pkgmgr.QueryPackageFiles(dist.Atom);
+            FileTuple[] files = _pkgmgr.QueryPackageFiles(mea.Previous);
             foreach (FileTuple ft in files)
                 TrashWorker.AddFile(ft.Item1, _pkgmgr);
 

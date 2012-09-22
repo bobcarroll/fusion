@@ -195,7 +195,7 @@ namespace Fusion.Framework
             uint slot = dist.Slot;
 
             Model.Package oldpkg = _ent.Packages
-                .Where(i => i.FullName == pf && i.Version == ver && i.Slot == slot)
+                .Where(i => i.FullName == pf && i.Slot == slot)
                 .SingleOrDefault();
 
             if (oldpkg != null)
