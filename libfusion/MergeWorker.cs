@@ -78,11 +78,10 @@ namespace Fusion.Framework
         /// Initialises the merge worker.
         /// </summary>
         /// <param name="pkgmgr">package manager instance</param>
-        /// <param name="cfg">ports configuration</param>
-        public MergeWorker(IPackageManager pkgmgr, XmlConfiguration cfg)
+        public MergeWorker(IPackageManager pkgmgr)
         {
             _pkgmgr = pkgmgr;
-            _cfg = cfg;
+            _cfg = XmlConfiguration.LoadSeries();
         }
 
         /// <summary>
@@ -151,15 +150,6 @@ namespace Fusion.Framework
             if (distarr.Length == 0)
                 return;
 
-            if (!_cfg.TmpDir.Exists) {
-                _cfg.TmpDir.Create();
-                Security.SetFileMandatoryLabel(
-                    _cfg.TmpDir.FullName,
-                    Security.AceFlags.ContainerInherit,
-                    Security.MandatoryPolicy.NoWriteUp,
-                    Security.MandatoryLabel.LowIntegrity);
-            }
-
             Downloader downloader = new Downloader(_cfg.DistFilesDir);
             List<MergeEventArgs> scheduled = null;
 
@@ -227,10 +217,10 @@ namespace Fusion.Framework
             if (mopts.HasFlag(MergeOptions.FetchOnly))
                 return;
 
-            SandboxDirectory sbox = SandboxDirectory.Create(_cfg.TmpDir);
+            SandboxDirectory sbox = SandboxDirectory.Create();
             _log.DebugFormat("Created sandbox directory: {0}", sbox.Root.FullName);
 
-            IInstallProject installer = dist.GetInstallProject(rootdir, sbox);
+            IInstallProject installer = dist.GetInstallProject(sbox);
             if (installer == null)
                 throw new InstallException("Encountered missing or invalid installer project.");
 

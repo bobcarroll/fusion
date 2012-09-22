@@ -248,9 +248,9 @@ namespace fuse
                 }
 
                 connstr = connstr.Replace("$(CONFDIR)", cfg.ConfDir.FullName);
-                using (IPackageManager pkgmgr = PackageDatabase.Open(connstr, cfg)) {
+                using (IPackageManager pkgmgr = PackageDatabase.Open(connstr)) {
                     act.Options = opts;
-                    act.Execute(pkgmgr, cfg);
+                    act.Execute(pkgmgr);
                 }
             } catch (Exception ex) {
                 Func<Exception, StringBuilder, Delegate, string> walkex = delegate(Exception e, StringBuilder sb, Delegate fn) {

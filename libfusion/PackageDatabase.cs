@@ -47,11 +47,10 @@ namespace Fusion.Framework
         /// Initialises the package manager instance.
         /// </summary>
         /// <param name="ent">entity container</param>
-        /// <param name="cfg">ports configuration</param>
-        private PackageDatabase(Entities ent, XmlConfiguration cfg)
+        private PackageDatabase(Entities ent)
         {
             _ent = ent;
-            _cfg = cfg;
+            _cfg = XmlConfiguration.LoadSeries();
             _log = LogManager.GetLogger(typeof(PackageDatabase));
 
             _ent.Connection.StateChange += 
@@ -136,11 +135,10 @@ namespace Fusion.Framework
         /// Opens the local package database for read/write.
         /// </summary>
         /// <param name="connstr">database connection string</param>
-        /// <param name="cfg">ports configuration</param>
         /// <returns>package manager instance</returns>
-        public static IPackageManager Open(string connstr, XmlConfiguration cfg)
+        public static IPackageManager Open(string connstr)
         {
-            return new PackageDatabase(new Entities(connstr), cfg);
+            return new PackageDatabase(new Entities(connstr));
         }
 
         /// <summary>

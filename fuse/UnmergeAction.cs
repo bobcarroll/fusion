@@ -46,8 +46,7 @@ namespace fuse
         /// Executes this action.
         /// </summary>
         /// <param name="pkgmgr">package manager instance</param>
-        /// <param name="cfg">ports configuration</param>
-        public void Execute(IPackageManager pkgmgr, XmlConfiguration cfg)
+        public void Execute(IPackageManager pkgmgr)
         {
             /* TODO */
             throw new NotImplementedException();

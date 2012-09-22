@@ -47,10 +47,9 @@ namespace fuse
         /// Executes this action.
         /// </summary>
         /// <param name="pkgmgr">package manager instance</param>
-        /// <param name="cfg">ports configuration</param>
-        public void Execute(IPackageManager pkgmgr, XmlConfiguration cfg)
+        public void Execute(IPackageManager pkgmgr)
         {
-            AbstractTree tree = LocalRepository.Read(cfg);
+            AbstractTree tree = LocalRepository.Read();
             List<IPackage> results = tree.Search(_atom, _options.exact);
 
             Console.WriteLine("\n[ Packages found: {0} ]", results.Count);

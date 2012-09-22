@@ -39,10 +39,9 @@ namespace Fusion.Framework
         /// <summary>
         /// Initialises the ports tree from a PortDir structure.
         /// </summary>
-        /// <param name="xmlconf">ports config</param>
-        private LocalRepository(XmlConfiguration xmlconf)
+        private LocalRepository()
         {
-            _xmlconf = xmlconf;
+            _xmlconf = XmlConfiguration.LoadSeries();
             _categories = new List<ICategory>(Category.Enumerate(this));
             _hdmasked = this.GetMaskedPackages();
             _unmasked = this.GetUnmaskedPackages();
@@ -197,11 +196,10 @@ namespace Fusion.Framework
         /// <summary>
         /// Loads the given ports tree from disk.
         /// </summary>
-        /// <param name="xmlconf">ports config</param>
         /// <returns>the ports tree root node</returns>
-        public static LocalRepository Read(XmlConfiguration xmlconf)
+        public static LocalRepository Read()
         {
-            return new LocalRepository(xmlconf);
+            return new LocalRepository();
         }
 
         /// <summary>

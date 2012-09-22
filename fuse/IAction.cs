@@ -35,8 +35,7 @@ namespace fuse
         /// Executes this action.
         /// </summary>
         /// <param name="pkgmgr">package manager instance</param>
-        /// <param name="cfg">ports configuration</param>
-        void Execute(IPackageManager pkgmgr, XmlConfiguration cfg);
+        void Execute(IPackageManager pkgmgr);
         
         /// <summary>
         /// Command options structure.

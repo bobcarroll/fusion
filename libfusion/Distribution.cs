@@ -174,23 +174,23 @@ namespace Fusion.Framework
         /// <summary>
         /// Creates a distribution installer project instance.
         /// </summary>
-        /// <param name="root">install directory root</param>
         /// <param name="sbox">sandbox directory</param>
         /// <returns>an install project instance, or NULL if no project is found</returns>
-        public IInstallProject GetInstallProject(DirectoryInfo root, SandboxDirectory sbox)
+        public IInstallProject GetInstallProject(SandboxDirectory sbox)
         {
             if (_project == null)
                 return null;
 
             string pkgname = String.Format("{0}-{1}", _package.Name, _version.ToString());
+            XmlConfiguration cfg = XmlConfiguration.LoadSeries();
 
             Dictionary<string, string> vars = new Dictionary<string, string>();
             vars.Add("P", pkgname);
             vars.Add("PN", _package.Name);
             vars.Add("PV", _version.ToString());
             vars.Add("CATEGORY", _package.Category.Name);
-            vars.Add("ROOT", root.FullName);
-            vars.Add("DISTDIR", new DirectoryInfo(sbox.Root.FullName + @"\..\distfiles").FullName);
+            vars.Add("ROOT", cfg.RootDir.FullName);
+            vars.Add("DISTDIR", cfg.DistFilesDir.FullName);
             vars.Add("WORKDIR", sbox.WorkDir.FullName);
             vars.Add("T", sbox.TempDir.FullName);
             vars.Add("D", sbox.ImageDir.FullName);

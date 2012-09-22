@@ -33,10 +33,9 @@ namespace Fusion.Framework
         /// <summary>
         /// Creates a distribution installer project instance.
         /// </summary>
-        /// <param name="root">install directory root</param>
         /// <param name="sbox">sandbox directory</param>
         /// <returns>an install project instance</returns>
-        IInstallProject GetInstallProject(DirectoryInfo root, SandboxDirectory sbox);
+        IInstallProject GetInstallProject(SandboxDirectory sbox);
 
         /// <summary>
         /// Fusion API revision number.

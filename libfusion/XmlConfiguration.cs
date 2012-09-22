@@ -36,6 +36,7 @@ namespace Fusion.Framework
         public const string PROFILEDIR = "profiles";
 
         private static DirectoryInfo _bindir;
+        private static XmlConfiguration _instance;
 
         private XmlConfiguration() { }
 
@@ -45,52 +46,65 @@ namespace Fusion.Framework
         /// <returns>a configuration instance with loaded values</returns>
         public static XmlConfiguration LoadSeries()
         {
-            XmlConfiguration cfg = new XmlConfiguration();
+            return XmlConfiguration.LoadSeries(false);
+        }
+
+        /// <summary>
+        /// Loads the Fusion configuration series.
+        /// </summary>
+        /// <param name="reload">flag to reload configuration</param>
+        /// <returns>a configuration instance with loaded values</returns>
+        public static XmlConfiguration LoadSeries(bool reload)
+        {
+            if (_instance != null && !reload)
+                return _instance;
+
+            _instance = new XmlConfiguration();
             bool isadmin = Security.IsNTAdmin();
             FileInfo[] fiarr;
 
             string progdata = 
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + @"\Fusion";
 
-            cfg.ConfDir = new DirectoryInfo(progdata + @"\conf");
-            cfg.PortDir = new DirectoryInfo(progdata + @"\global");
-            cfg.LogDir = isadmin ?
+            _instance.ConfDir = new DirectoryInfo(progdata + @"\conf");
+            _instance.DistFilesDir = new DirectoryInfo(progdata + @"\distfiles");
+            _instance.PortDir = new DirectoryInfo(progdata + @"\global");
+            _instance.LogDir = isadmin ?
                 new DirectoryInfo(progdata + @"\logs") :
                 new DirectoryInfo(Path.GetTempPath());
-            cfg.TmpDir = new DirectoryInfo(Path.GetTempPath() + @"\fusion");
 
             /* set defaults for optional settings */
-            cfg.AcceptKeywords = new string[] { };
-            cfg.CollisionDetect = false;
-            cfg.PortDirOverlays = new DirectoryInfo[] { };
-            cfg.PortMirrors = new Uri[] { };
+            _instance.AcceptKeywords = new string[] { };
+            _instance.CollisionDetect = false;
+            _instance.PortDirOverlays = new DirectoryInfo[] { };
+            _instance.PortMirrors = new Uri[] { };
 
             /* Determine the current profile */
-            DirectoryInfo profileroot = new DirectoryInfo(cfg.PortDir + @"\" + PROFILEDIR);
+            DirectoryInfo profileroot = new DirectoryInfo(_instance.PortDir + @"\" + PROFILEDIR);
             if (!profileroot.Exists)
                 profileroot.Create();
             fiarr = profileroot.GetFiles(CURRENTFILE);
             if (fiarr.Length == 0)
                 throw new FileNotFoundException("No profile is selected.");
-            cfg.CurrentProfile = File.ReadAllText(profileroot + @"\current").TrimEnd('\r', '\n', ' ');
-            cfg.ProfileDir = new DirectoryInfo(profileroot + @"\" + cfg.CurrentProfile);
-            if (String.IsNullOrWhiteSpace(cfg.CurrentProfile) || !cfg.ProfileDir.Exists)
-                throw new DirectoryNotFoundException("No profile found for '" + cfg.CurrentProfile + "'.");
+            _instance.CurrentProfile = File.ReadAllText(profileroot + @"\current").TrimEnd('\r', '\n', ' ');
+            _instance.ProfileDir = new DirectoryInfo(profileroot + @"\" + _instance.CurrentProfile);
+            if (String.IsNullOrWhiteSpace(_instance.CurrentProfile) || !_instance.ProfileDir.Exists)
+                throw new DirectoryNotFoundException("No profile found for '" + _instance.CurrentProfile + "'.");
 
             /* load profile config */
-            fiarr = cfg.ProfileDir.GetFiles("global.xml");
+            fiarr = _instance.ProfileDir.GetFiles("global.xml");
             if (fiarr.Length > 0)
-                cfg.LoadSingle(fiarr[0]);
+                _instance.LoadSingle(fiarr[0]);
 
             /* load machine config */
-            fiarr = cfg.ConfDir.GetFiles("local.xml");
+            fiarr = _instance.ConfDir.GetFiles("local.xml");
             if (fiarr.Length > 0)
-                cfg.LoadSingle(fiarr[0]);
+                _instance.LoadSingle(fiarr[0]);
 
-            if (cfg.RootDir == null || !cfg.RootDir.Exists)
+            if (_instance.RootDir == null || !_instance.RootDir.Exists)
                 throw new DirectoryNotFoundException("Root directory is invalid.");
 
-            return cfg;
+            return _instance;
         }
 
         /// <summary>
@@ -170,10 +184,8 @@ namespace Fusion.Framework
         /// <summary>
         /// The distfile cache directory.
         /// </summary>
-        public DirectoryInfo DistFilesDir
-        {
-            get { return new DirectoryInfo(this.TmpDir + @"\distfiles"); }
-        }
+        public DirectoryInfo DistFilesDir { get; set; }
+
         /// <summary>
         /// The log directory.
         /// </summary>
@@ -203,10 +215,5 @@ namespace Fusion.Framework
         /// Root directory where packages are installed.
         /// </summary>
         public DirectoryInfo RootDir { get; set; }
-
-        /// <summary>
-        /// The sandbox root directory.
-        /// </summary>
-        public DirectoryInfo TmpDir { get; set; }
     }
 }

@@ -52,14 +52,19 @@ namespace Fusion.Framework
         /// <summary>
         /// Creates a new sandbox.
         /// </summary>
-        /// <param name="tmpdir">temp directory to create in</param>
         /// <returns>the new sandbox directory</returns>
-        public static SandboxDirectory Create(DirectoryInfo tmpdir)
+        public static SandboxDirectory Create()
         {
             DirectoryInfo sboxdir = 
-                new DirectoryInfo(tmpdir.FullName + @"\" + Guid.NewGuid().ToString());
+                new DirectoryInfo(Path.GetTempPath() + @"\" + Guid.NewGuid().ToString());
             if (!sboxdir.Exists)
                 sboxdir.Create();
+
+            Security.SetFileMandatoryLabel(
+                sboxdir.FullName,
+                Security.AceFlags.ContainerInherit,
+                Security.MandatoryPolicy.NoWriteUp,
+                Security.MandatoryLabel.LowIntegrity);
 
             return SandboxDirectory.Open(new DirectoryInfo(sboxdir.FullName));
         }

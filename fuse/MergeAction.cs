@@ -53,12 +53,11 @@ namespace fuse
         /// Executes this action.
         /// </summary>
         /// <param name="pkgmgr">package manager instance</param>
-        /// <param name="cfg">ports configuration</param>
-        public void Execute(IPackageManager pkgmgr, XmlConfiguration cfg)
+        public void Execute(IPackageManager pkgmgr)
         {
-            MergeWorker mw = new MergeWorker(pkgmgr, cfg);
+            MergeWorker mw = new MergeWorker(pkgmgr);
 
-            AbstractTree tree = LocalRepository.Read(cfg);
+            AbstractTree tree = LocalRepository.Read();
             List<IDistribution> mergeset = new List<IDistribution>();
             List<Atom> atomset = new List<Atom>();
 
@@ -88,7 +87,7 @@ namespace fuse
             } catch (AmbiguousMatchException ex) {
                 SearchAction sa = new SearchAction(ex.Atom);
                 sa.Options = new Options() { exact = true };
-                sa.Execute(pkgmgr, cfg);
+                sa.Execute(pkgmgr);
 
                 throw ex;
             }
