@@ -44,6 +44,16 @@ namespace Fusion.Framework
         void PkgPreInst();
 
         /// <summary>
+        /// Called after package is removed from $(ROOT)
+        /// </summary>
+        void PkgPostRm();
+
+        /// <summary>
+        /// Called before package is removed from $(ROOT)
+        /// </summary>
+        void PkgPreRm();
+
+        /// <summary>
         /// Configure and build the package.
         /// </summary>
         void SrcCompile();
@@ -72,6 +82,16 @@ namespace Fusion.Framework
         /// Indicates whether or not the installer project has a package-pre-install target.
         /// </summary>
         bool HasPkgPreInstTarget { get; }
+
+        /// <summary>
+        /// Indicates whether or not the installer project has a package-post-remove target.
+        /// </summary>
+        bool HasPkgPostRmTarget { get; }
+
+        /// <summary>
+        /// Indicates whether or not the installer project has a package-pre-remove target.
+        /// </summary>
+        bool HasPkgPreRmTarget { get; }
 
         /// <summary>
         /// Indicates whether or not the installer project has a source-compile target.

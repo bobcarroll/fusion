@@ -42,10 +42,22 @@ namespace Fusion.Framework
         bool CheckFileCollision(string path, bool includedirs);
 
         /// <summary>
+        /// Removes the given package from the database.
+        /// </summary>
+        /// <param name="atom">package atom with version and slot</param>
+        void DeletePackage(Atom atom);
+
+        /// <summary>
         /// Removes the given items from the trash.
         /// </summary>
         /// <param name="patharr">absolute file paths in the trash</param>
         void DeleteTrashItems(string[] patharr);
+
+        /// <summary>
+        /// Removes the given package atom from the world favourites.
+        /// </summary>
+        /// <param name="atom">package atom without version</param>
+        void DeselectPackage(Atom atom);
 
         /// <summary>
         /// Find packages installed matching the given package atom.
@@ -53,6 +65,13 @@ namespace Fusion.Framework
         /// <param name="atom">the atom to search</param>
         /// <returns>an array of installed packages</returns>
         Atom[] FindPackages(Atom atom);
+
+        /// <summary>
+        /// Gets the installer blob for the given atom.
+        /// </summary>
+        /// <param name="atom">package atom with version and slot</param>
+        /// <returns>string blob of the installer project</returns>
+        string GetPackageInstaller(Atom atom);
 
         /// <summary>
         /// Determines if the given package is protected by profile.

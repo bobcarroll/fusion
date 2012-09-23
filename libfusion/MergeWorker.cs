@@ -75,6 +75,11 @@ namespace Fusion.Framework
         public event EventHandler<MergeEventArgs> OnRealMerge;
 
         /// <summary>
+        /// Event raised for each package at the start of unmerge.
+        /// </summary>
+        public event EventHandler<UnmergeEventArgs> OnUnmerge;
+
+        /// <summary>
         /// Initialises the merge worker.
         /// </summary>
         /// <param name="pkgmgr">package manager instance</param>
@@ -381,6 +386,72 @@ namespace Fusion.Framework
             }
 
             return rc;
+        }
+
+        /// <summary>
+        /// Unmerges the packages matching the given atoms.
+        /// </summary>
+        /// <param name="atomarr">package atoms for unmerging</param>
+        public void Unmerge(Atom[] atomarr)
+        {
+            foreach (Atom atom in atomarr) {
+                UnmergeEventArgs uae = new UnmergeEventArgs();
+                uae.Package = atom;
+
+                if (_pkgmgr.IsProtected(atom))
+                    throw new ProtectedPackageException(atom.ToString());
+
+                if (this.OnUnmerge != null)
+                    this.OnUnmerge.Invoke(this, uae);
+
+                IInstallProject installer = null;
+                string instblob = _pkgmgr.GetPackageInstaller(atom);
+
+                if (!String.IsNullOrEmpty(instblob)) {
+                    byte[] buf = Convert.FromBase64String(instblob);
+
+                    MemoryStream ms = new MemoryStream();
+                    ms.Write(buf, 0, buf.Length);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    installer = (IInstallProject)(new BinaryFormatter()).Deserialize(ms);
+                    ms.Close();
+
+                    installer.PkgPreRm();
+                } else
+                    _log.WarnFormat("Missing installer project for {0}", atom.ToString());
+
+                FileTuple[] files = _pkgmgr.QueryPackageFiles(atom)
+                    .OrderByDescending(i => i.Item1)
+                    .ToArray();
+
+                foreach (FileTuple ft in files) {
+                    try {
+                        if (ft.Item2 == FileType.Directory) {
+                            if (Directory.GetFiles(ft.Item1).Length > 0)
+                                throw new IOException();
+
+                            Directory.Delete(ft.Item1);
+                        } else
+                            File.Delete(ft.Item1);
+
+                        _log.InfoFormat("Delete file {0}", ft.Item1);
+                    } catch {
+                        TrashWorker.AddFile(ft.Item1, _pkgmgr);
+                        _log.WarnFormat("Trash file {0}", ft.Item1);
+                    }
+                }
+
+                if (installer != null)
+                    installer.PkgPostRm();
+
+                _pkgmgr.DeletePackage(atom);
+
+                Atom worlatom = Atom.Parse(atom.PackageName, AtomParseOptions.WithoutVersion);
+                if (_pkgmgr.FindPackages(worlatom).Length == 0)
+                    _pkgmgr.DeselectPackage(worlatom);
+            }
+
+            TrashWorker.Purge(_pkgmgr);
         }
     }
 }

@@ -73,6 +73,8 @@
     <Compile Include="BuildLogRedirector.cs" />
     <Compile Include="Category.cs" />
     <Compile Include="CircularReferenceException.cs" />
+    <Compile Include="ProtectedPackageException.cs" />
+    <Compile Include="UnmergeEventArgs.cs" />
     <Compile Include="CustomConsoleAppender.cs" />
     <Compile Include="FileType.cs" />
     <Compile Include="MessageEventArgs.cs" />

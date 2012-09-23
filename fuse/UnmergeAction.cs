@@ -48,8 +48,92 @@ namespace fuse
         /// <param name="pkgmgr">package manager instance</param>
         public void Execute(IPackageManager pkgmgr)
         {
-            /* TODO */
-            throw new NotImplementedException();
+            Security.DemandNTAdmin();
+
+            List<Atom> atomlst = Atom.ParseAll(_atomlst.ToArray()).ToList();
+            List<Atom> uninstlst = new List<Atom>();
+
+            foreach (Atom atom in atomlst) {
+                Atom[] instatoms = pkgmgr.FindPackages(atom);
+
+                if (instatoms.Length == 0) {
+                    throw new PackageNotFoundException(atom.ToString());
+                } else if (instatoms.Length == 1) {
+                    uninstlst.Add(instatoms[0]);
+                } else if (instatoms.Length > 1) {
+                    Console.WriteLine("\nInstalled packages matching the given atom:");
+                    foreach (Atom ia in instatoms) {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.Write("\n * ");
+                        Console.ResetColor();
+                        Console.Write(ia.ToString());
+                    }
+                    Console.Write("\n");
+
+                    throw new AmbiguousMatchException(atom.ToString());
+                }
+            }
+
+            Atom[] protectpkg = uninstlst.Where(i => pkgmgr.IsProtected(i)).ToArray();
+            if (protectpkg.Length > 0) {
+                Console.Write("\nThe following package(s) are ");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write("protected");
+                Console.ResetColor();
+                Console.Write(" and will NOT be removed:\n");
+
+                foreach (Atom atom in protectpkg) {
+                    uninstlst.Remove(atom);
+
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write("\n * ");
+                    Console.ResetColor();
+                    Console.Write(atom.ToString());
+                }
+                Console.Write("\n");
+
+                if (uninstlst.Count == 0) {
+                    Console.WriteLine("\nNothing to do, exitting...");
+                    return;
+                }
+            }
+
+            Console.WriteLine("\nThe following package(s) will be removed:");
+            foreach (Atom atom in uninstlst) {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write("\n * ");
+                Console.ResetColor();
+                Console.Write(atom.ToString());
+            }
+
+            Console.WriteLine("\n\n>>> Waiting 5 seconds before starting...");
+            Console.WriteLine(">>> Press Control-C to abort");
+            Console.Write(">>> Unmerging in ");
+
+            for (int i = 5; i > 0; i--) {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write("{0} ", i);
+                Console.ResetColor();
+
+                Console.Beep();
+                System.Threading.Thread.Sleep(1000);
+            }
+            Console.Write("\n");
+
+            MergeWorker mw = new MergeWorker(pkgmgr);
+            mw.OnUnmerge += this.MergeWorker_OnUnmerge;
+
+            mw.Unmerge(uninstlst.ToArray());
+        }
+
+        /// <summary>
+        /// Handler for the MergeWorker.OnUnmerge event.
+        /// </summary>
+        /// <param name="sender">the merge worker</param>
+        /// <param name="e">event args</param>
+        public void MergeWorker_OnUnmerge(object sender, UnmergeEventArgs e)
+        {
+            Console.WriteLine("\n>>> Unmerging {0}", e.Package.ToString());
         }
 
         /// <summary>

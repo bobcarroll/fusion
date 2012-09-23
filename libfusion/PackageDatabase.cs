@@ -92,6 +92,26 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Removes the given package from the database.
+        /// </summary>
+        /// <param name="atom">package atom with version and slot</param>
+        public void DeletePackage(Atom atom)
+        {
+            Model.Package mp = _ent.Packages
+                .AsEnumerable()
+                .Where(i => i.FullName == atom.PackageName &&
+                             i.Version == atom.Version.ToString() &&
+                             i.Slot == atom.Slot)
+                .SingleOrDefault();
+
+            if (mp == null)
+                return;
+
+            _ent.Packages.DeleteObject(mp);
+            _ent.SaveChanges();
+        }
+
+        /// <summary>
         /// Removes the given items from the trash.
         /// </summary>
         /// <param name="patharr">absolute file paths in the trash</param>
@@ -102,6 +122,24 @@ namespace Fusion.Framework
                     _ent.Trash.DeleteObject(ti);
             }
 
+            _ent.SaveChanges();
+        }
+
+        /// <summary>
+        /// Removes the given package atom from the world favourites.
+        /// </summary>
+        /// <param name="atom">package atom without version</param>
+        public void DeselectPackage(Atom atom)
+        {
+            WorldItem wi = _ent.WorldSet
+                .AsEnumerable()
+                .Where(i => i.Atom == atom.PackageName)
+                .SingleOrDefault();
+
+            if (wi == null)
+                return;
+
+            _ent.WorldSet.DeleteObject(wi);
             _ent.SaveChanges();
         }
 
@@ -118,6 +156,25 @@ namespace Fusion.Framework
                 .Select(i => Atom.Parse(i, AtomParseOptions.VersionRequired))
                 .Where(i => atom.Match(i))
                 .ToArray();
+        }
+
+        /// <summary>
+        /// Gets the installer blob for the given atom.
+        /// </summary>
+        /// <param name="atom">package atom with version and slot</param>
+        /// <returns>string blob of the installer project</returns>
+        public string GetPackageInstaller(Atom atom)
+        {
+            if (!atom.IsFullName || !atom.HasVersion)
+                throw new ArgumentException("Cannot get installer project without full package atom with version");
+
+            return _ent.Packages
+                .AsEnumerable()
+                .Where(i => i.FullName == atom.PackageName &&
+                             i.Version == atom.Version.ToString() &&
+                             i.Slot == atom.Slot)
+                .Select(i => i.Project)
+                .SingleOrDefault();
         }
 
         /// <summary>

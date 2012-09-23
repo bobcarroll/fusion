@@ -42,6 +42,8 @@ namespace Fusion.Framework
     {
         private const string PKG_POSTINST_TARGET = "pkg_postinst";
         private const string PKG_PREINST_TARGET = "pkg_preinst";
+        private const string PKG_POSTRM_TARGET = "pkg_postrm";
+        private const string PKG_PRERM_TARGET = "pkg_prerm";
         private const string SRC_COMPILE_TARGET = "src_compile";
         private const string SRC_INSTALL_TARGET = "src_install";
         private const string SRC_TEST_TARGET = "src_test";
@@ -165,6 +167,28 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Called after package is removed from $(ROOT)
+        /// </summary>
+        public void PkgPostRm()
+        {
+            if (!this.HasPkgPostRmTarget)
+                return;
+
+            this.Execute(_project.CreateProjectInstance(), PKG_POSTRM_TARGET);
+        }
+
+        /// <summary>
+        /// Called before package is removed from $(ROOT)
+        /// </summary>
+        public void PkgPreRm()
+        {
+            if (!this.HasPkgPreRmTarget)
+                return;
+
+            this.Execute(_project.CreateProjectInstance(), PKG_PRERM_TARGET);
+        }
+
+        /// <summary>
         /// Configure and build the package.
         /// </summary>
         public void SrcCompile()
@@ -234,6 +258,22 @@ namespace Fusion.Framework
         public bool HasPkgPreInstTarget
         {
             get { return _project.Targets.ContainsKey(PKG_PREINST_TARGET); }
+        }
+
+        /// <summary>
+        /// Indicates whether or not the installer project has a package-post-remove target.
+        /// </summary>
+        public bool HasPkgPostRmTarget
+        {
+            get { return _project.Targets.ContainsKey(PKG_POSTRM_TARGET); }
+        }
+
+        /// <summary>
+        /// Indicates whether or not the installer project has a package-pre-remove target.
+        /// </summary>
+        public bool HasPkgPreRmTarget
+        {
+            get { return _project.Targets.ContainsKey(PKG_PRERM_TARGET); }
         }
 
         /// <summary>
