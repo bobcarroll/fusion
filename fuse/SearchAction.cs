@@ -64,7 +64,7 @@ namespace fuse
                         fmasked = true;
                     }
 
-                    Version iv = pkgmgr.QueryInstalledVersion(new Atom(latest));
+                    Version iv = pkgmgr.QueryInstalledVersion(latest.Atom);
 
                     StringBuilder sizesb = new StringBuilder(11);
                     Win32.StrFormatByteSize(latest.TotalSize, sizesb, sizesb.Capacity);

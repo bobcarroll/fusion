@@ -65,7 +65,6 @@ namespace Fusion.Framework
             _pkgdist = dist;
             _package = pkg;
             _version = Distribution.ParseVersion(dist.Name, pkg.Name);
-            _myatom = new Atom(this);
 
             XmlDocument doc = new XmlDocument();
             doc.Load(dist.FullName);
@@ -129,6 +128,10 @@ namespace Fusion.Framework
             XmlNamespaceManager nsmgr = new XmlNamespaceManager(root.OwnerDocument.NameTable);
             nsmgr.AddNamespace("msbuild", MSBUILD_PROJECT_NS);
             _project = (XmlElement)root.SelectSingleNode("msbuild:Project", nsmgr);
+
+            _myatom = Atom.Parse(
+                Atom.MakeAtomString(_package.FullName, _version.ToString(), _slot),
+                AtomParseOptions.VersionRequired);
         }
 
         /// <summary>

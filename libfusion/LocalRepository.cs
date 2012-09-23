@@ -156,7 +156,7 @@ namespace Fusion.Framework
             Dictionary<Atom, string[]> kwdict = this.GetPackageKeywords();
 
             foreach (KeyValuePair<Atom, string[]> kvp in kwdict) {
-                if (kvp.Key.Match(new Atom(dist)) && kvp.Value.Intersect(dist.Keywords).Count() > 0) {
+                if (kvp.Key.Match(dist.Atom) && kvp.Value.Intersect(dist.Keywords).Count() > 0) {
                     result = false;
                     break;
                 }
@@ -176,7 +176,7 @@ namespace Fusion.Framework
 
             /* look in hard-masked packages */
             foreach (Atom a in _hdmasked) {
-                if (a.Match(new Atom(dist))) {
+                if (a.Match(dist.Atom)) {
                     fmasked = true;
                     break;
                 }
@@ -184,7 +184,7 @@ namespace Fusion.Framework
 
             /* look in unmasked packages */
             foreach (Atom a in _unmasked) {
-                if (a.Match(new Atom(dist))) {
+                if (a.Match(dist.Atom)) {
                     fmasked = false;
                     break;
                 }

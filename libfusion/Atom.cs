@@ -59,7 +59,7 @@ namespace Fusion.Framework
         /// <summary>
         /// Regular expression for matching the slot number.
         /// </summary>
-        public const string SLOT_FMT = ":[0-9]";
+        public const string SLOT_FMT = ":[1-9]";
 
         /// <summary>
         /// Initialises an atom from a package name.
@@ -67,26 +67,6 @@ namespace Fusion.Framework
         /// <param name="pkg">the package name</param>
         private Atom(string pkg)
             : this(null, pkg, null, 0) { }
-
-        /// <summary>
-        /// Initialises an atom from a distribution.
-        /// </summary>
-        /// <param name="dist">an existing distribution</param>
-        public Atom(IDistribution dist)
-            : this(dist, false) { }
-
-        /// <summary>
-        /// Initialises an atom from a distribution.
-        /// </summary>
-        /// <param name="dist">an existing distribution</param>
-        /// <param name="nover">flag to omit the version</param>
-        public Atom(IDistribution dist, bool nover)
-        {
-            _oper = nover ? null : "=";
-            _pkg = dist.Package.FullName;
-            _ver = nover ? null : dist.Version;
-            _slot = nover ? 0 : dist.Slot;
-        }
 
         /// <summary>
         /// Initialises an atom.
@@ -110,15 +90,6 @@ namespace Fusion.Framework
         }
 
         /// <summary>
-        /// Determines if the atom has a version.
-        /// </summary>
-        /// <returns>true if it has a version, false otherwise</returns>
-        public bool HasVersion()
-        {
-            return _ver != null;
-        }
-
-        /// <summary>
         /// Makes an atom string from the given parameters.
         /// </summary>
         /// <param name="fullname">full package name (in the form of category/package)</param>
@@ -128,7 +99,7 @@ namespace Fusion.Framework
         public static string MakeAtomString(string fullname, string version, uint slot)
         {
             if (slot > 0)
-                return String.Format("{0}-{1}:{3}", fullname, version, slot);
+                return String.Format("{0}-{1}:{2}", fullname, version, slot);
             else
                 return String.Format("{0}-{1}", fullname, version);
         }
@@ -145,43 +116,48 @@ namespace Fusion.Framework
         }
 
         /// <summary>
-        /// Determines if the given atom matches this atom.
+        /// Determines if the given atom matches the constraints of this atom.
         /// </summary>
-        /// <param name="atom">the atom to compare to</param>
+        /// <param name="left">the atom to compare to</param>
         /// <returns>true on match, false otherwise</returns>
-        public bool Match(Atom atom)
+        /// <remarks>
+        /// Evaluation uses the input as the left side of the equation and this
+        /// instance as the right side.
+        /// 
+        /// Example:
+        ///     "this" is >=foo/bar-123
+        ///     "left" is foo/bar-124
+        /// 
+        ///     foo/bar-124 >= foo/bar-123
+        ///    
+        /// In this case the match will succeed. If "this" doesn't have a
+        /// comparison operator set, then the package names are compared
+        /// for equality and version is ignored. The comparison operator for
+        /// "left" is always ignored.
+        /// 
+        /// If either atom doesn't have a version then version matching is
+        /// skipped. Slots are never compared.
+        /// </remarks>
+        public bool Match(Atom left)
         {
-            return this.Match(atom, false);
-        }
-
-        /// <summary>
-        /// Determines if the given atom matches this atom.
-        /// </summary>
-        /// <param name="atom">the atom to compare to</param>
-        /// <param name="nover">flag to ignore versions when matching</param>
-        /// <returns>true on match, false otherwise</returns>
-        public bool Match(Atom atom, bool nover)
-        {
-            if (this.IsFullName && atom.IsFullName && atom.PackageName != _pkg)
+            if (this.IsFullName && left.IsFullName && left.PackageName != _pkg)
                 return false;
-            else if (atom.PackagePart != this.PackagePart)
-                return false;
-            else if (!nover && atom.Slot != _slot)
+            else if (left.PackagePart != this.PackagePart)
                 return false;
 
-            if (nover || _oper == null || _ver == null)
+            if (!left.HasVersion || _oper == null || _ver == null)
                 return true;
-            else if (_oper == "=" && atom.Version.CompareTo(_ver) == 0)
+            else if (_oper == "=" && left.Version.CompareTo(_ver) == 0)
                 return true;
-            else if (_oper == "<" && atom.Version.CompareTo(_ver) < 0)
+            else if (_oper == "<" && left.Version.CompareTo(_ver) < 0)
                 return true;
-            else if (_oper == "<=" && atom.Version.CompareTo(_ver) <= 0)
+            else if (_oper == "<=" && left.Version.CompareTo(_ver) <= 0)
                 return true;
-            else if (_oper == ">" && atom.Version.CompareTo(_ver) > 0)
+            else if (_oper == ">" && left.Version.CompareTo(_ver) > 0)
                 return true;
-            else if (_oper == ">=" && atom.Version.CompareTo(_ver) >= 0)
+            else if (_oper == ">=" && left.Version.CompareTo(_ver) >= 0)
                 return true;
-            else if (_oper == "!=" && atom.Version.CompareTo(_ver) != 0)
+            else if (_oper == "!=" && left.Version.CompareTo(_ver) != 0)
                 return true;
 
             return false;
@@ -208,7 +184,7 @@ namespace Fusion.Framework
             Match m;
             uint slot = 0;
 
-            /* full package atom with implicit equals: =(category/package)-(version):slot */
+            /* full package atom with implicit equals: =(category/package)-(version):(slot) */
             m = Regex.Match(
                 atom.ToLower(),
                 "^(?:=?)(" + CATEGORY_NAME_FMT + "/" + PACKAGE_NAME_FMT + ")-(" + VERSION_FMT + ")(" + SLOT_FMT + ")?$");
@@ -217,7 +193,16 @@ namespace Fusion.Framework
                 return new Atom("=", m.Groups[1].Value, m.Groups[2].Value, slot);
             }
 
-            /* full package atom: (operator)(category/package)-(version) */
+            /* package short name with version and implicit equals: =(package)-(version):(slot) */
+            m = Regex.Match(
+                atom.ToLower(),
+                "^(?:=?)(" + PACKAGE_NAME_FMT + ")-(" + VERSION_FMT + ")(" + SLOT_FMT + ")?$");
+            if (opts != AtomParseOptions.WithoutVersion && m.Success) {
+                UInt32.TryParse(m.Groups[3].Value.TrimStart(':'), out slot);
+                return new Atom("=", m.Groups[1].Value, m.Groups[2].Value, slot);
+            }
+
+            /* full package atom: (operator)(category/package)-(version):(slot) */
             m = Regex.Match(
                 atom.ToLower(),
                 "^(" + CMP_OPERATOR_FMT + ")(" + CATEGORY_NAME_FMT + "/" + PACKAGE_NAME_FMT + ")-(" + VERSION_FMT + ")(" + SLOT_FMT + ")?$");
@@ -298,6 +283,15 @@ namespace Fusion.Framework
         public string Comparison
         {
             get { return _oper; }
+        }
+
+        /// <summary>
+        /// Determines if the atom has a version.
+        /// </summary>
+        /// <returns>true if it has a version, false otherwise</returns>
+        public bool HasVersion
+        {
+            get { return _ver != null; }
         }
 
         /// <summary>

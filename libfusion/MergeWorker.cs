@@ -232,12 +232,16 @@ namespace Fusion.Framework
             if (this.OnInstall != null)
                 this.OnInstall.Invoke(this, mea);
 
-            _log.Debug("Trashing files from previous installation");
-            FileTuple[] files = _pkgmgr.QueryPackageFiles(mea.Previous);
-            foreach (FileTuple ft in files)
-                TrashWorker.AddFile(ft.Item1, _pkgmgr);
+            FileTuple[] files = null;
 
-            files = null;
+            if (mea.Previous != null) {
+                _log.Debug("Trashing files from previous installation");
+                files = _pkgmgr.QueryPackageFiles(mea.Previous);
+
+                foreach (FileTuple ft in files)
+                    TrashWorker.AddFile(ft.Item1, _pkgmgr);
+            }
+
             this.InstallImage(sbox.ImageDir, rootdir, installer, out files);
 
             MemoryStream ms = new MemoryStream();
@@ -286,7 +290,7 @@ namespace Fusion.Framework
             for (int i = 0; i < distdeparr.Length; i++) {
                 IDistribution dist = distdeparr[i];
                 Atom current = _pkgmgr
-                    .FindPackages(new Atom(dist, true))
+                    .FindPackages(Atom.Parse(dist.Package.FullName, AtomParseOptions.WithoutVersion))
                     .Where(n => n.Slot == dist.Slot)
                     .SingleOrDefault();
 

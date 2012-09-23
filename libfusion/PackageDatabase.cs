@@ -165,7 +165,7 @@ namespace Fusion.Framework
         /// <returns>files tuple for all installed files</returns>
         public FileTuple[] QueryPackageFiles(Atom atom)
         {
-            if (!atom.IsFullName || !atom.HasVersion())
+            if (!atom.IsFullName || !atom.HasVersion)
                 throw new ArgumentException("Cannot query files without full package atom with version");
 
             return _ent.Files

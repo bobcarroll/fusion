@@ -58,9 +58,9 @@ namespace Fusion.Framework
             if (pkg == null)
                 throw new PackageNotFoundException(atom.PackageName);
 
-            if (atom.HasVersion()) {        /* find a specific version */
+            if (atom.HasVersion) {        /* find a specific version */
                 IDistribution[] matcharr = pkg.Distributions
-                    .Where(i => atom.Match(new Atom(i)))
+                    .Where(i => atom.Match(i.Atom))
                     .OrderBy(i => i.Version)
                     .ToArray();
                 if (matcharr.Length == 0)

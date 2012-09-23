@@ -70,16 +70,28 @@ namespace fuse
 
                 atomset.AddRange(Atom.ParseAll(_atomlst.ToArray()));
 
+                /* slot number not allowed here */
+                Atom slotatom = atomset.Where(i => i.Slot > 0).FirstOrDefault();
+                if (slotatom != null)
+                    throw new BadAtomException(slotatom.ToString());
+
                 foreach (Atom atom in atomset) {
-                    Atom[] zparr = pkgmgr.FindPackages(atom)
-                        .OrderBy(zp => zp.Slot)
+                    /* first find all installed packages matching the given atom */
+                    Atom[] instarr = pkgmgr.FindPackages(atom).ToArray();
+
+                    /* then find unique installed packages, and slotted packages with the
+                       highest version number */
+                    Atom[] latestinst = instarr
+                        .Where(i => instarr.Where(n => n.PackageName == i.PackageName).Count() == 1 ||
+                                    instarr.Where(n => n.PackageName == i.PackageName)
+                                           .Max(n => n.Version.ToString()) == i.Version.ToString())
                         .ToArray();
 
                     /* if we're not updating, no version was specified, and there's a version
                      * already installed then select the installed version */
                     IDistribution[] distarr =
-                        (!_options.update && !atom.HasVersion() && zparr.Length > 0) ?
-                            tree.LookupAll(zparr) :
+                        (!_options.update && !atom.HasVersion && latestinst.Length > 0) ?
+                            tree.LookupAll(latestinst) :
                             tree.LookupAll(new Atom[] { atom });
 
                     mergeset.AddRange(distarr);
