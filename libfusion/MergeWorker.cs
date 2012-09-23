@@ -451,6 +451,9 @@ namespace Fusion.Framework
                     _pkgmgr.DeselectPackage(worlatom);
             }
 
+            if (this.OnAutoClean != null)
+                this.OnAutoClean.Invoke(this, new EventArgs());
+
             TrashWorker.Purge(_pkgmgr);
         }
     }
