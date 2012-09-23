@@ -42,6 +42,7 @@ namespace Fusion.Framework
 
         private Entities _ent;
         private XmlConfiguration _cfg;
+        private Atom[] _protected;
 
         /// <summary>
         /// Initialises the package manager instance.
@@ -52,6 +53,7 @@ namespace Fusion.Framework
             _ent = ent;
             _cfg = XmlConfiguration.LoadSeries();
             _log = LogManager.GetLogger(typeof(PackageDatabase));
+            _protected = this.GetProtectedPackages();
 
             _ent.Connection.StateChange += 
                 new StateChangeEventHandler(this.OnConnectionStateChange);
@@ -116,6 +118,41 @@ namespace Fusion.Framework
                 .Select(i => Atom.Parse(i, AtomParseOptions.VersionRequired))
                 .Where(i => atom.Match(i))
                 .ToArray();
+        }
+
+        /// <summary>
+        /// Reads atoms from the profile packages.protect file.
+        /// </summary>
+        /// <returns>an array of package atoms</returns>
+        public Atom[] GetProtectedPackages()
+        {
+            List<Atom> alst = new List<Atom>();
+
+            FileInfo fi = new FileInfo(_cfg.ProfileDir + @"\package.protect");
+            if (fi.Exists) {
+                string[] inarr = System.IO.File.ReadAllLines(fi.FullName);
+
+                foreach (string s in inarr) {
+                    try {
+                        if (s.StartsWith("#")) continue;
+                        alst.Add(Atom.Parse(s, AtomParseOptions.WithoutVersion));
+                    } catch (BadAtomException) {
+                        throw new BadAtomException("Bad package atom '" + s + "' in package.protect file.");
+                    }
+                }
+            }
+
+            return alst.ToArray();
+        }
+
+        /// <summary>
+        /// Determines if the given package is protected by profile.
+        /// </summary>
+        /// <param name="atom">the package to check</param>
+        /// <returns>true if protected, false otherwise</returns>
+        public bool IsProtected(Atom atom)
+        {
+            return _protected.Where(i => i.Match(atom)).Count() > 0;
         }
 
         /// <summary>

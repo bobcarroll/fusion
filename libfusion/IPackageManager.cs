@@ -55,6 +55,13 @@ namespace Fusion.Framework
         Atom[] FindPackages(Atom atom);
 
         /// <summary>
+        /// Determines if the given package is protected by profile.
+        /// </summary>
+        /// <param name="atom">the package to check</param>
+        /// <returns>true if protected, false otherwise</returns>
+        bool IsProtected(Atom atom);
+
+        /// <summary>
         /// Finds the installed version of the given package.
         /// </summary>
         /// <param name="atom">package atom without version</param>

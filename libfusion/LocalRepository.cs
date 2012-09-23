@@ -69,7 +69,7 @@ namespace Fusion.Framework
                         if (s.StartsWith("#")) continue;
                         alst.Add(Atom.Parse(s, AtomParseOptions.VersionRequired));
                     } catch (BadAtomException) {
-                        throw new BadAtomException("Bad package atom '" + s + "' in profile package.mask.");
+                        throw new BadAtomException("Bad package atom '" + s + "' in package.mask file.");
                     }
                 }
             }
@@ -108,7 +108,7 @@ namespace Fusion.Framework
 
                         dict.Add(a, brarr);
                     } catch (BadAtomException) {
-                        throw new BadAtomException("Bad package atom '" + s + "' in profile package.keywords.");
+                        throw new BadAtomException("Bad package atom '" + s + "' in package.keywords file.");
                     }
                 }
             }
@@ -133,7 +133,7 @@ namespace Fusion.Framework
                         if (s.StartsWith("#")) continue;
                         alst.Add(Atom.Parse(s, AtomParseOptions.VersionRequired));
                     } catch (BadAtomException) {
-                        throw new BadAtomException("Bad package atom '" + s + "' in package.unmask.");
+                        throw new BadAtomException("Bad package atom '" + s + "' in package.unmask file.");
                     }
                 }
             }
