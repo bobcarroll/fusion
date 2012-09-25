@@ -63,7 +63,7 @@ namespace Fusion.Framework
                 try {
                     if (File.Exists(p))
                         File.Delete(p);
-                    else if (Directory.Exists(p) && pkgmgr.CheckFileCollision(p, true)) {
+                    else if (Directory.Exists(p) && pkgmgr.CheckPathOwned(p)) {
                         /* this can be removed from the trash */
                     } else if (Directory.Exists(p) && Directory.GetFiles(p).Length > 0)
                         continue;

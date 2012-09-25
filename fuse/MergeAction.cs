@@ -154,7 +154,7 @@ namespace fuse
                 } else
                     Console.Write("\n");
             } catch (MaskedPackageException ex) {
-                Program.error_msg("\n!!! All ports that could satisfy '{0}' have been masked.", ex.Package);
+                Program.error_msg("\n!!! All packages that could satisfy '{0}' have been masked.", ex.Package);
             } catch (SlotConflictException ex) {
                 Dictionary<string, List<IDistribution>> distdict = new Dictionary<string, List<IDistribution>>();
 

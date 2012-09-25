@@ -76,18 +76,31 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Determines if the given paths are in use by another package.
+        /// </summary>
+        /// <param name="patharr">absolute paths to check</param>
+        /// <param name="owner">package atom that should own the files</param>
+        /// <returns>paths owned by another package</returns>
+        public string[] CheckFilesOwner(string[] patharr, Atom owner)
+        {
+            return _ent.Files
+                .AsEnumerable()
+                .Where(i => i.Package.FullName == owner.PackageName)
+                .Select(i => i.Path.TrimEnd('\\'))
+                .Intersect(patharr.Select(i => i.TrimEnd('\\')))
+                .ToArray();
+        }
+
+        /// <summary>
         /// Determines if the given path is in use by another package.
         /// </summary>
         /// <param name="path">absolute path to check</param>
-        /// <param name="includedirs">flag to include directories</param>
-        /// <returns>true on collision, false otherwise</returns>
-        public bool CheckFileCollision(string path, bool includedirs)
+        /// <returns>true if the path is owned, false otherwise</returns>
+        public bool CheckPathOwned(string path)
         {
             return _ent.Files
                 .AsEnumerable()
                 .Where(i => i.Path.TrimEnd('\\') == path.TrimEnd('\\'))
-                .Where(i => ((FileType)i.Type == FileType.Directory && includedirs) ||
-                            ((FileType)i.Type != FileType.Directory))
                 .Count() > 0;
         }
 

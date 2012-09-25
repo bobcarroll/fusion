@@ -90,6 +90,30 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Determines if files in the image directory would collide with existing
+        /// files owned by other packages.
+        /// </summary>
+        /// <param name="imgdir">image directory</param>
+        /// <param name="atom">package atom to test</param>
+        /// <returns>true if collisions are detected, false otherwise</returns>
+        private bool DetectCollisions(DirectoryInfo imgdir, Atom atom)
+        {
+            int striplev = imgdir.FullName.TrimEnd('\\').Count(i => i == '\\') + 1;
+            string[] files = imgdir
+                .GetFileSystemInfos("*", SearchOption.AllDirectories)
+                .Where(i => (i.Attributes & FileAttributes.Directory) != FileAttributes.Directory)
+                .Select(i => String.Join("\\", i.FullName.Split('\\').Skip(striplev)))
+                .Select(i => _cfg.RootDir.FullName.TrimEnd('\\') + @"\" + i)
+                .ToArray();
+            string[] collisions = _pkgmgr.CheckFilesOwner(files, atom);
+
+            foreach (string file in collisions)
+                _log.ErrorFormat("File already owned: {0}", file);
+
+            return (collisions.Length > 0);
+        }
+
+        /// <summary>
         /// Installs the package files into the system.
         /// </summary>
         /// <param name="imgdir">files directory</param>
@@ -237,6 +261,9 @@ namespace Fusion.Framework
             if (this.OnInstall != null)
                 this.OnInstall.Invoke(this, mea);
 
+            if (_cfg.CollisionDetect && this.DetectCollisions(sbox.ImageDir, dist.Atom))
+                throw new InstallException("File collision(s) were detected.");
+
             FileTuple[] files = null;
 
             if (mea.Previous != null) {
@@ -305,7 +332,7 @@ namespace Fusion.Framework
                 mea.Distribution = dist;
                 mea.FetchOnly = mopts.HasFlag(MergeOptions.FetchOnly);
 
-                if (current == null || mopts.HasFlag(MergeOptions.EmptyTree))
+                if (current == null)
                     mea.Flags |= MergeFlags.New;
                 if (!mea.Flags.HasFlag(MergeFlags.New) && current.Version.CompareTo(dist.Version) == 0)
                     mea.Flags |= MergeFlags.Replacing;
@@ -324,7 +351,8 @@ namespace Fusion.Framework
                 else if (dist.FetchRestriction)
                     mea.Flags |= MergeFlags.FetchNeeded;
 
-                if (mea.Flags.HasFlag(MergeFlags.Replacing) && (!mea.Selected || mopts.HasFlag(MergeOptions.NoReplace)))
+                if (mea.Flags.HasFlag(MergeFlags.Replacing) && 
+                        (!mea.Selected || mopts.HasFlag(MergeOptions.NoReplace)) && !mopts.HasFlag(MergeOptions.EmptyTree))
                     continue;
 
                 if (mea.Flags.HasFlag(MergeFlags.FetchNeeded) && !mopts.HasFlag(MergeOptions.Pretend)) {

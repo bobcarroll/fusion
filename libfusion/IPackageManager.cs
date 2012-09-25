@@ -34,12 +34,19 @@ namespace Fusion.Framework
     public interface IPackageManager : IDisposable
     {
         /// <summary>
+        /// Determines if the given paths are in use by another package.
+        /// </summary>
+        /// <param name="patharr">absolute paths to check</param>
+        /// <param name="owner">package atom that should own the files</param>
+        /// <returns>paths owned by another package</returns>
+        string[] CheckFilesOwner(string[] patharr, Atom owner);
+
+        /// <summary>
         /// Determines if the given path is in use by another package.
         /// </summary>
         /// <param name="path">absolute path to check</param>
-        /// <param name="includedirs">flag to include directories</param>
-        /// <returns>true on collision, false otherwise</returns>
-        bool CheckFileCollision(string path, bool includedirs);
+        /// <returns>true if the path is owned, false otherwise</returns>
+        bool CheckPathOwned(string path);
 
         /// <summary>
         /// Removes the given package from the database.
