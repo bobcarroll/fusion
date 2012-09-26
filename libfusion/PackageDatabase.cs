@@ -85,7 +85,7 @@ namespace Fusion.Framework
         {
             return _ent.Files
                 .AsEnumerable()
-                .Where(i => i.Package.FullName == owner.PackageName)
+                .Where(i => i.Package.FullName != owner.PackageName)
                 .Select(i => i.Path.TrimEnd('\\'))
                 .Intersect(patharr.Select(i => i.TrimEnd('\\')))
                 .ToArray();
