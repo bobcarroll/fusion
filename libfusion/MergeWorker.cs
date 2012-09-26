@@ -148,8 +148,8 @@ namespace Fusion.Framework
                         _log.InfoFormat("Created new directory: {0}", targetpath);
                     }
                 } else {
-                    _log.InfoFormat("Copying file to {0}", targetpath);
-                    File.Copy(fsi.FullName, targetpath, true);
+                    _log.InfoFormat("Moving file to {0}", targetpath);
+                    File.Move(fsi.FullName, targetpath);
                     digest = Md5Sum.Compute(targetpath, Md5Sum.MD5SUMMODE.BINARY);
                 }
 
