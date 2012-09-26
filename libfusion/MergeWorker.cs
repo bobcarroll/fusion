@@ -227,10 +227,12 @@ namespace Fusion.Framework
                 this.OnRealMerge.Invoke(this, mea);
 
             if (dist.Sources.Length > 0) {
-                _log.Info("Fetching files in the background... please wait");
-                _log.InfoFormat("See {0} for fetch progress", downloader.LogFile);
-                downloader.WaitFor(mea.FetchHandle);
+                if (!downloader.Peek(mea.FetchHandle)) {
+                    _log.Info("Fetching files in the background... please wait");
+                    _log.InfoFormat("See {0} for fetch progress", downloader.LogFile);
+                }
 
+                downloader.WaitFor(mea.FetchHandle);
                 _log.InfoFormat("Checking package digests");
 
                 foreach (SourceFile src in dist.Sources) {

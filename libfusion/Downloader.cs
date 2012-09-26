@@ -89,6 +89,22 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Quickly checks to see if the given fetch handle has finished.
+        /// </summary>
+        /// <param name="handle">fetch handle</param>
+        /// <returns>true if the download is finished, false otherwise</returns>
+        public bool Peek(Guid handle)
+        {
+            bool result;
+
+            lock (_finished) {
+                result = _finished.Contains(handle);
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Download thread procedure.
         /// </summary>
         /// <param name="pv">not used</param>
