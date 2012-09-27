@@ -118,13 +118,10 @@ namespace Fusion.Framework
         /// </summary>
         /// <param name="imgdir">files directory</param>
         /// <param name="rootdir">root directory</param>
-        /// <param name="installer">installer project</param>
-        private void InstallImage(DirectoryInfo imgdir, DirectoryInfo rootdir, IInstallProject installer,
-            out FileTuple[] created)
+        /// <param name="created">output list of files created</param>
+        private void InstallImage(DirectoryInfo imgdir, DirectoryInfo rootdir, out FileTuple[] created)
         {
             List<FileTuple> results = new List<FileTuple>();
-
-            installer.PkgPreInst();
 
             int striplev = imgdir.FullName.TrimEnd('\\').Count(i => i == '\\') + 1;
             IEnumerable<FileSystemInfo> fsienum = imgdir
@@ -145,18 +142,17 @@ namespace Fusion.Framework
                 if (type == FileType.Directory) {
                     if (!Directory.Exists(targetpath)) {
                         Directory.CreateDirectory(targetpath);
-                        _log.InfoFormat("Created new directory: {0}", targetpath);
+                        _log.InfoFormat("Created directory '{0}'", targetpath);
                     }
                 } else {
-                    _log.InfoFormat("Moving file to {0}", targetpath);
                     File.Move(fsi.FullName, targetpath);
                     digest = Md5Sum.Compute(targetpath, Md5Sum.MD5SUMMODE.BINARY);
+                    _log.InfoFormat("Moved file to '{0}'", targetpath);
                 }
 
                 results.Add(new FileTuple(targetpath, type, digest));
             }
 
-            installer.PkgPostInst();
             created = results.ToArray();
         }
 
@@ -266,17 +262,27 @@ namespace Fusion.Framework
             if (_cfg.CollisionDetect && this.DetectCollisions(sbox.ImageDir, dist.Atom))
                 throw new InstallException("File collision(s) were detected.");
 
-            FileTuple[] files = null;
-
             if (mea.Previous != null) {
                 _log.Debug("Trashing files from previous installation");
-                files = _pkgmgr.QueryPackageFiles(mea.Previous);
+                FileTuple[] oldfiles = _pkgmgr.QueryPackageFiles(mea.Previous);
 
-                foreach (FileTuple ft in files)
+                foreach (FileTuple ft in oldfiles)
                     TrashWorker.AddFile(ft.Item1, _pkgmgr);
             }
 
-            this.InstallImage(sbox.ImageDir, rootdir, installer, out files);
+            FileTuple[] files = null;
+            FileTuple[] shortcuts = null;
+            FileTuple[] allfiles = null;
+
+            installer.PkgPreInst();
+            this.InstallImage(sbox.ImageDir, rootdir, out files);
+            this.InstallImage(
+                sbox.LinkDir, 
+                new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)), 
+                out shortcuts);
+            installer.PkgPostInst();
+
+            allfiles = files.Union(shortcuts).ToArray();
 
             MemoryStream ms = new MemoryStream();
             (new BinaryFormatter()).Serialize(ms, installer);
@@ -288,7 +294,7 @@ namespace Fusion.Framework
 
             if (mea.Selected)
                 _log.InfoFormat("Recording {0} in world favourites", dist.Package.FullName);
-            _pkgmgr.RecordPackage(dist, installerstr, files, metadata.ToArray(), mea.Selected);
+            _pkgmgr.RecordPackage(dist, installerstr, allfiles, metadata.ToArray(), mea.Selected);
 
             _log.Debug("Destroying the sandbox...");
             sbox.Delete();
@@ -461,13 +467,14 @@ namespace Fusion.Framework
                                 throw new IOException();
 
                             Directory.Delete(ft.Item1);
-                        } else
+                            _log.InfoFormat("Deleted directory '{0}'", ft.Item1);
+                        } else {
                             File.Delete(ft.Item1);
-
-                        _log.InfoFormat("Delete file {0}", ft.Item1);
+                            _log.InfoFormat("Deleted file '{0}'", ft.Item1);
+                        }
                     } catch {
                         TrashWorker.AddFile(ft.Item1, _pkgmgr);
-                        _log.WarnFormat("Trash file {0}", ft.Item1);
+                        _log.WarnFormat("Marked '{0}' for future removal", ft.Item1);
                     }
                 }
 
