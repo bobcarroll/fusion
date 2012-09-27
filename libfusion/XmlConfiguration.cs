@@ -32,7 +32,6 @@ namespace Fusion.Framework
     /// </summary>
     public sealed class XmlConfiguration
     {
-        public const string CURRENTFILE = "current";
         public const string PROFILEDIR = "profiles";
 
         private static DirectoryInfo _bindir;
@@ -66,12 +65,13 @@ namespace Fusion.Framework
             string progdata = 
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + @"\Fusion";
 
-            _instance.ConfDir = new DirectoryInfo(progdata + @"\conf");
+            _instance.ConfDir = new DirectoryInfo(progdata + @"\etc");
             _instance.DistFilesDir = new DirectoryInfo(progdata + @"\distfiles");
             _instance.PortDir = new DirectoryInfo(progdata + @"\global");
             _instance.LogDir = isadmin ?
                 new DirectoryInfo(progdata + @"\logs") :
                 new DirectoryInfo(Path.GetTempPath());
+            _instance.ProfileDir = new DirectoryInfo(progdata + @"\profile");
 
             /* set defaults for optional settings */
             _instance.AcceptKeywords = new string[] { };
@@ -79,27 +79,15 @@ namespace Fusion.Framework
             _instance.PortDirOverlays = new DirectoryInfo[] { };
             _instance.PortMirrors = new Uri[] { };
 
-            /* Determine the current profile */
-            DirectoryInfo profileroot = new DirectoryInfo(_instance.PortDir + @"\" + PROFILEDIR);
-            if (!profileroot.Exists)
-                profileroot.Create();
-            fiarr = profileroot.GetFiles(CURRENTFILE);
-            if (fiarr.Length == 0)
-                throw new FileNotFoundException("No profile is selected.");
-            _instance.CurrentProfile = File.ReadAllText(profileroot + @"\current").TrimEnd('\r', '\n', ' ');
-            _instance.ProfileDir = new DirectoryInfo(profileroot + @"\" + _instance.CurrentProfile);
-            if (String.IsNullOrWhiteSpace(_instance.CurrentProfile) || !_instance.ProfileDir.Exists)
-                throw new DirectoryNotFoundException("No profile found for '" + _instance.CurrentProfile + "'.");
-
             /* load profile config */
-            fiarr = _instance.ProfileDir.GetFiles("global.xml");
-            if (fiarr.Length > 0)
-                _instance.LoadSingle(fiarr[0]);
+            FileInfo profcfg = new FileInfo(_instance.ProfileDir.FullName + @"\config.xml");
+            if (profcfg.Exists)
+                _instance.LoadSingle(profcfg);
 
             /* load machine config */
-            fiarr = _instance.ConfDir.GetFiles("local.xml");
-            if (fiarr.Length > 0)
-                _instance.LoadSingle(fiarr[0]);
+            FileInfo localcfg = new FileInfo(_instance.ConfDir.FullName + @"\config.xml");
+            if (localcfg.Exists)
+                _instance.LoadSingle(localcfg);
 
             if (_instance.RootDir == null || !_instance.RootDir.Exists)
                 throw new DirectoryNotFoundException("Root directory is invalid.");
@@ -175,11 +163,6 @@ namespace Fusion.Framework
         /// The local configuration directory.
         /// </summary>
         public DirectoryInfo ConfDir { get; set; }
-
-        /// <summary>
-        /// The name of the selected profile.
-        /// </summary>
-        public string CurrentProfile { get; set; }
 
         /// <summary>
         /// The distfile cache directory.
