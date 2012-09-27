@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
 using log4net;
@@ -172,22 +174,36 @@ namespace Fusion.Framework
         }
 
         /// <summary>
-        /// Gets the installer blob for the given atom.
+        /// Gets the installer project for the given atom.
         /// </summary>
         /// <param name="atom">package atom with version and slot</param>
-        /// <returns>string blob of the installer project</returns>
-        public string GetPackageInstaller(Atom atom)
+        /// <returns>installer project</returns>
+        public IInstallProject GetPackageInstaller(Atom atom)
         {
             if (!atom.IsFullName || !atom.HasVersion)
                 throw new ArgumentException("Cannot get installer project without full package atom with version");
 
-            return _ent.Packages
+            string instblob = _ent.Packages
                 .AsEnumerable()
                 .Where(i => i.FullName == atom.PackageName &&
                              i.Version == atom.Version.ToString() &&
                              i.Slot == atom.Slot)
                 .Select(i => i.Project)
                 .SingleOrDefault();
+
+            if (String.IsNullOrEmpty(instblob))
+                return null;
+
+            byte[] buf = Convert.FromBase64String(instblob);
+            IInstallProject installer;
+
+            MemoryStream ms = new MemoryStream();
+            ms.Write(buf, 0, buf.Length);
+            ms.Seek(0, SeekOrigin.Begin);
+            installer = (IInstallProject)(new BinaryFormatter()).Deserialize(ms);
+            ms.Close();
+
+            return installer;
         }
 
         /// <summary>
@@ -289,17 +305,22 @@ namespace Fusion.Framework
         /// Records a package installation in the package database.
         /// </summary>
         /// <param name="dist">newly installed package</param>
-        /// <param name="installer">serialised installer project</param>
+        /// <param name="installer">installer project</param>
         /// <param name="files">real files and directories created by the package</param>
         /// <param name="metadata">dictionary of package installation metadata</param>
         /// <param name="world">indicates if the package is a world favourite</param>
         /// <remarks>The files tuple should be (absolute file path, file type, digest).</remarks>
-        public void RecordPackage(IDistribution dist, string installer, FileTuple[] files, 
+        public void RecordPackage(IDistribution dist, IInstallProject installer, FileTuple[] files, 
             MetadataPair[] metadata, bool world)
         {
             string pf = dist.Package.FullName;
             string ver = dist.Version.ToString();
             uint slot = dist.Slot;
+
+            MemoryStream ms = new MemoryStream();
+            (new BinaryFormatter()).Serialize(ms, installer);
+            string installerblob = Convert.ToBase64String(ms.ToArray());
+            ms.Close();
 
             Model.Package oldpkg = _ent.Packages
                 .Where(i => i.FullName == pf && i.Slot == slot)
@@ -312,7 +333,7 @@ namespace Fusion.Framework
                 FullName = pf,
                 Version = ver,
                 Slot = slot,
-                Project = installer
+                Project = installerblob
             };
 
             foreach (FileTuple ft in files) {

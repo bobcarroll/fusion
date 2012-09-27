@@ -74,11 +74,11 @@ namespace Fusion.Framework
         Atom[] FindPackages(Atom atom);
 
         /// <summary>
-        /// Gets the installer blob for the given atom.
+        /// Gets the installer project for the given atom.
         /// </summary>
         /// <param name="atom">package atom with version and slot</param>
-        /// <returns>string blob of the installer project</returns>
-        string GetPackageInstaller(Atom atom);
+        /// <returns>the installer project</returns>
+        IInstallProject GetPackageInstaller(Atom atom);
 
         /// <summary>
         /// Determines if the given package is protected by profile.
@@ -106,12 +106,12 @@ namespace Fusion.Framework
         /// Records a package installation in the package database.
         /// </summary>
         /// <param name="dist">newly installed package</param>
-        /// <param name="installer">serialised installer project</param>
+        /// <param name="installer">installer project</param>
         /// <param name="files">real files and directories created by the package</param>
         /// <param name="metadata">dictionary of package installation metadata</param>
         /// <param name="world">indicates if the package is a world favourite</param>
         /// <remarks>The files tuple should be (absolute file path, file type, digest).</remarks>
-        void RecordPackage(IDistribution dist, string installer, FileTuple[] files, 
+        void RecordPackage(IDistribution dist, IInstallProject installer, FileTuple[] files, 
             MetadataPair[] metadata, bool world);
 
         /// <summary>

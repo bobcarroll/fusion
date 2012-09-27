@@ -272,7 +272,6 @@ namespace Fusion.Framework
 
             FileTuple[] files = null;
             FileTuple[] shortcuts = null;
-            FileTuple[] allfiles = null;
 
             installer.PkgPreInst();
             this.InstallImage(sbox.ImageDir, rootdir, out files);
@@ -282,19 +281,13 @@ namespace Fusion.Framework
                 out shortcuts);
             installer.PkgPostInst();
 
-            allfiles = files.Union(shortcuts).ToArray();
-
-            MemoryStream ms = new MemoryStream();
-            (new BinaryFormatter()).Serialize(ms, installer);
-            string installerstr = Convert.ToBase64String(ms.ToArray());
-            ms.Close();
-
+            FileTuple[] allfiles = files.Union(shortcuts).ToArray();
             Dictionary<string, string> metadata = new Dictionary<string, string>();
             metadata.Add("repository", dist.PortsTree.Repository);
 
             if (mea.Selected)
                 _log.InfoFormat("Recording {0} in world favourites", dist.Package.FullName);
-            _pkgmgr.RecordPackage(dist, installerstr, allfiles, metadata.ToArray(), mea.Selected);
+            _pkgmgr.RecordPackage(dist, installer, allfiles, metadata.ToArray(), mea.Selected);
 
             _log.Debug("Destroying the sandbox...");
             sbox.Delete();
@@ -440,21 +433,10 @@ namespace Fusion.Framework
                 if (this.OnUnmerge != null)
                     this.OnUnmerge.Invoke(this, uae);
 
-                IInstallProject installer = null;
-                string instblob = _pkgmgr.GetPackageInstaller(atom);
+                IInstallProject installer = _pkgmgr.GetPackageInstaller(atom);
 
-                if (!String.IsNullOrEmpty(instblob)) {
-                    byte[] buf = Convert.FromBase64String(instblob);
-
-                    MemoryStream ms = new MemoryStream();
-                    ms.Write(buf, 0, buf.Length);
-                    ms.Seek(0, SeekOrigin.Begin);
-                    installer = (IInstallProject)(new BinaryFormatter()).Deserialize(ms);
-                    ms.Close();
-
+                if (installer != null)
                     installer.PkgPreRm();
-                } else
-                    _log.WarnFormat("Missing installer project for {0}", atom.ToString());
 
                 FileTuple[] files = _pkgmgr.QueryPackageFiles(atom)
                     .OrderByDescending(i => i.Item1)
