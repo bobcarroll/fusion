@@ -143,8 +143,19 @@ namespace Fusion.Framework
             this.RsyncMirrors = mlst.ToArray();
 
             elem = (XmlElement)doc.SelectSingleNode("//Configuration/HelperBinaries/rsync");
-            if (elem != null && !String.IsNullOrWhiteSpace(elem.InnerText))
-                this.RsyncBinPath = new FileInfo(elem.InnerText);
+            string helper = elem.InnerText.Replace("$(BINPATH)", XmlConfiguration.BinDir.FullName);
+            if (elem != null && !String.IsNullOrWhiteSpace(helper))
+                this.RsyncBinPath = new FileInfo(helper);
+
+            elem = (XmlElement)doc.SelectSingleNode("//Configuration/HelperBinaries/sudont");
+            helper = elem.InnerText.Replace("$(BINPATH)", XmlConfiguration.BinDir.FullName);
+            if (elem != null && !String.IsNullOrWhiteSpace(helper))
+                this.SudontBinPath = new FileInfo(helper);
+
+            elem = (XmlElement)doc.SelectSingleNode("//Configuration/HelperBinaries/xtmake");
+            helper = elem.InnerText.Replace("$(BINPATH)", XmlConfiguration.BinDir.FullName);
+            if (elem != null && !String.IsNullOrWhiteSpace(helper))
+                this.XtmakeBinPath = new FileInfo(helper);
         }
 
         /// <summary>
@@ -246,5 +257,15 @@ namespace Fusion.Framework
         /// Root directory where packages are installed.
         /// </summary>
         public DirectoryInfo RootDir { get; set; }
+
+        /// <summary>
+        /// Absolute path of the sudont binary.
+        /// </summary>
+        public FileInfo SudontBinPath { get; set; }
+
+        /// <summary>
+        /// Absolute path of the xtmake binary.
+        /// </summary>
+        public FileInfo XtmakeBinPath { get; set; }
     }
 }

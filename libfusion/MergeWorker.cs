@@ -434,12 +434,12 @@ namespace Fusion.Framework
             stream.Close();
 
             StringBuilder sb = new StringBuilder();
-            sb.Append(XmlConfiguration.BinDir + @"\xtmake.exe"); // TODO
+            sb.Append(_cfg.XtmakeBinPath.FullName);
             sb.Append(" ");
             sb.Append(installerbin);
 
             ProcessStartInfo psi = new ProcessStartInfo();
-            psi.FileName = XmlConfiguration.BinDir + @"\sudont.exe"; // TODO
+            psi.FileName = _cfg.SudontBinPath.FullName;
             psi.Arguments = sb.ToString();
 
             _log.DebugFormat("Spawning low-privileged process: {0}", psi.Arguments);
