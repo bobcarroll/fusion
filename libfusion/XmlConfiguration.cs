@@ -143,19 +143,22 @@ namespace Fusion.Framework
             this.RsyncMirrors = mlst.ToArray();
 
             elem = (XmlElement)doc.SelectSingleNode("//Configuration/HelperBinaries/rsync");
-            string helper = elem.InnerText.Replace("$(BINPATH)", XmlConfiguration.BinDir.FullName);
-            if (elem != null && !String.IsNullOrWhiteSpace(helper))
+            if (elem != null && !String.IsNullOrWhiteSpace(elem.InnerText)) {
+                string helper = elem.InnerText.Replace("$(BINPATH)", XmlConfiguration.BinDir.FullName);
                 this.RsyncBinPath = new FileInfo(helper);
+            }
 
             elem = (XmlElement)doc.SelectSingleNode("//Configuration/HelperBinaries/sudont");
-            helper = elem.InnerText.Replace("$(BINPATH)", XmlConfiguration.BinDir.FullName);
-            if (elem != null && !String.IsNullOrWhiteSpace(helper))
+            if (elem != null && !String.IsNullOrWhiteSpace(elem.InnerText)) {
+                string helper = elem.InnerText.Replace("$(BINPATH)", XmlConfiguration.BinDir.FullName);
                 this.SudontBinPath = new FileInfo(helper);
+            }
 
             elem = (XmlElement)doc.SelectSingleNode("//Configuration/HelperBinaries/xtmake");
-            helper = elem.InnerText.Replace("$(BINPATH)", XmlConfiguration.BinDir.FullName);
-            if (elem != null && !String.IsNullOrWhiteSpace(helper))
+            if (elem != null && !String.IsNullOrWhiteSpace(elem.InnerText)) {
+                string helper = elem.InnerText.Replace("$(BINPATH)", XmlConfiguration.BinDir.FullName);
                 this.XtmakeBinPath = new FileInfo(helper);
+            }
         }
 
         /// <summary>
