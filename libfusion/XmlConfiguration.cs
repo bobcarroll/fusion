@@ -144,19 +144,19 @@ namespace Fusion.Framework
 
             elem = (XmlElement)doc.SelectSingleNode("//Configuration/HelperBinaries/rsync");
             if (elem != null && !String.IsNullOrWhiteSpace(elem.InnerText)) {
-                string helper = elem.InnerText.Replace("$(BINPATH)", XmlConfiguration.BinDir.FullName);
+                string helper = elem.InnerText.Replace("$(BINDIR)", XmlConfiguration.BinDir.FullName);
                 this.RsyncBinPath = new FileInfo(helper);
             }
 
             elem = (XmlElement)doc.SelectSingleNode("//Configuration/HelperBinaries/sudont");
             if (elem != null && !String.IsNullOrWhiteSpace(elem.InnerText)) {
-                string helper = elem.InnerText.Replace("$(BINPATH)", XmlConfiguration.BinDir.FullName);
+                string helper = elem.InnerText.Replace("$(BINDIR)", XmlConfiguration.BinDir.FullName);
                 this.SudontBinPath = new FileInfo(helper);
             }
 
             elem = (XmlElement)doc.SelectSingleNode("//Configuration/HelperBinaries/xtmake");
             if (elem != null && !String.IsNullOrWhiteSpace(elem.InnerText)) {
-                string helper = elem.InnerText.Replace("$(BINPATH)", XmlConfiguration.BinDir.FullName);
+                string helper = elem.InnerText.Replace("$(BINDIR)", XmlConfiguration.BinDir.FullName);
                 this.XtmakeBinPath = new FileInfo(helper);
             }
         }
