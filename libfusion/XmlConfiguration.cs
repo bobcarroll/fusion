@@ -76,7 +76,7 @@ namespace Fusion.Framework
             _instance.AcceptKeywords = new string[] { };
             _instance.CollisionDetect = false;
             _instance.PortDirOverlays = new DirectoryInfo[] { };
-            _instance.PortMirrors = new Uri[] { };
+            _instance.RsyncMirrors = new Uri[] { };
 
             /* load the profile cascade tree */
             if (_instance.ProfileDir.Exists) {
@@ -136,11 +136,15 @@ namespace Fusion.Framework
                 overlaylst.Add(new DirectoryInfo(((XmlElement)n).InnerText));
             this.PortDirOverlays = overlaylst.ToArray();
 
-            nl = doc.SelectNodes("//Configuration/PortMirror");
+            nl = doc.SelectNodes("//Configuration/RsyncMirrors/Uri[starts-with(., 'rsync://')]");
             List<Uri> mlst = new List<Uri>();
             foreach (XmlNode n in nl)
                 mlst.Add(new Uri(((XmlElement)n).InnerText));
-            this.PortMirrors = mlst.ToArray();
+            this.RsyncMirrors = mlst.ToArray();
+
+            elem = (XmlElement)doc.SelectSingleNode("//Configuration/HelperBinaries/rsync");
+            if (elem != null && !String.IsNullOrWhiteSpace(elem.InnerText))
+                this.RsyncBinPath = new FileInfo(elem.InnerText);
         }
 
         /// <summary>
@@ -221,7 +225,12 @@ namespace Fusion.Framework
         /// <summary>
         /// URIs of port mirrors.
         /// </summary>
-        public Uri[] PortMirrors { get; set; }
+        public Uri[] RsyncMirrors { get; set; }
+
+        /// <summary>
+        /// Absolute path of the rsync binary.
+        /// </summary>
+        public FileInfo RsyncBinPath { get; set; }
 
         /// <summary>
         /// The selected profile directory.

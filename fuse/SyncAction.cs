@@ -23,6 +23,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
+using libconsole2;
+
 using Fusion.Framework;
 
 namespace fuse
@@ -45,8 +47,32 @@ namespace fuse
         /// <param name="pkgmgr">package manager instance</param>
         public void Execute(IPackageManager pkgmgr)
         {
-            /* TODO */
-            throw new NotImplementedException();
+            XmlConfiguration cfg = XmlConfiguration.LoadSeries();
+
+            if (cfg.PortDir == null || !cfg.PortDir.Exists)
+                throw new Exception("Ports directory is not defined or doesn't exist.");
+
+            string cygpath = "/cygdrive/" +
+                cfg.PortDir.FullName.ToLower().Substring(0, 1) +
+                cfg.PortDir.FullName.Substring(2).Replace("\\", "/");
+
+            if (cfg.RsyncMirrors.Length == 0)
+                throw new Exception("No rsync mirrors have been defined.");
+
+            if (cfg.RsyncBinPath == null || !cfg.RsyncBinPath.Exists)
+                throw new Exception("rsync binary not defined or doesn't exist.");
+
+            for (int i = 0; i < cfg.RsyncMirrors.Length; i++) {
+                Uri mirror = cfg.RsyncMirrors[i];
+                Console.WriteLine("\n>>> Starting rsync with {0}...\n", mirror.ToString());
+
+                string[] args = new string[] { "-av", "--delete", mirror.ToString(), cygpath };
+                ChildProcess cp = ChildProcess.Fork(cfg.RsyncBinPath.FullName, args);
+                cp.WaitForExit();
+
+                if (cp.GetExitCode() != 0)
+                    continue;
+            }
         }
 
         /// <summary>
