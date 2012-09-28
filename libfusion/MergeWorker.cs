@@ -48,6 +48,7 @@ namespace Fusion.Framework
 
         private IPackageManager _pkgmgr;
         private XmlConfiguration _cfg;
+        private string[] _protected;
 
         /// <summary>
         /// Event raised when auto-cleaning of packages begins.
@@ -87,6 +88,7 @@ namespace Fusion.Framework
         {
             _pkgmgr = pkgmgr;
             _cfg = XmlConfiguration.LoadSeries();
+            _protected = this.GetSystemProtectedFiles();
         }
 
         /// <summary>
@@ -106,11 +108,44 @@ namespace Fusion.Framework
                 .Select(i => _cfg.RootDir.FullName.TrimEnd('\\') + @"\" + i)
                 .ToArray();
             string[] collisions = _pkgmgr.CheckFilesOwner(files, atom);
+            bool protect = false;
 
             foreach (string file in collisions)
-                _log.ErrorFormat("File already owned: {0}", file);
+                _log.ErrorFormat("File '{0}' is already owned by a package", file);
 
-            return (collisions.Length > 0);
+            foreach (string file in files) {
+                if (this.IsProtected(file)) {
+                    _log.ErrorFormat("File '{0}' is protected by the system profile", file);
+                    protect = true;
+                }
+            }
+
+            return (collisions.Length > 0 || protect);
+        }
+
+        /// <summary>
+        /// Gets all protected system files and directories.
+        /// </summary>
+        /// <returns>system paths</returns>
+        private string[] GetSystemProtectedFiles()
+        {
+            List<string> results = new List<string>();
+            string root = 
+                Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.Windows));
+
+            foreach (DirectoryInfo di in _cfg.ProfileTree) {
+                FileInfo[] fiarr = di.GetFiles("system.protect").ToArray();
+                if (fiarr.Length == 0)
+                    continue;
+
+                string[] lines = File.ReadAllLines(fiarr[0].FullName)
+                    .Where(i => !String.IsNullOrWhiteSpace(i))
+                    .Select(i => root + i.TrimStart('\\'))
+                    .ToArray();
+                results.AddRange(lines);
+            }
+
+            return results.OrderBy(i => i).ToArray();
         }
 
         /// <summary>
@@ -139,6 +174,11 @@ namespace Fusion.Framework
                 else if (fsi.Attributes.HasFlag(FileAttributes.ReparsePoint))
                     type = FileType.SymbolicLink;
 
+                if (this.IsProtected(fsi.FullName) && type != FileType.Directory) {
+                    _log.ErrorFormat("Refusing to overwrite system protected file!");
+                    throw new UnauthorizedAccessException("File '" + fsi.FullName + "' is protected.");
+                }
+
                 if (type == FileType.Directory) {
                     if (!Directory.Exists(targetpath)) {
                         Directory.CreateDirectory(targetpath);
@@ -154,6 +194,18 @@ namespace Fusion.Framework
             }
 
             created = results.ToArray();
+        }
+
+        /// <summary>
+        /// Determines if the given path is protected.
+        /// </summary>
+        /// <param name="path">path to check</param>
+        /// <returns>true if protected, false otherwise</returns>
+        private bool IsProtected(string path)
+        {
+            return _protected
+                .Select(i => i.TrimEnd('\\'))
+                .Contains(path.TrimEnd('\\'));
         }
 
         /// <summary>
@@ -266,8 +318,10 @@ namespace Fusion.Framework
                 _log.Debug("Trashing files from previous installation");
                 FileTuple[] oldfiles = _pkgmgr.QueryPackageFiles(mea.Previous);
 
-                foreach (FileTuple ft in oldfiles)
-                    TrashWorker.AddFile(ft.Item1, _pkgmgr);
+                foreach (FileTuple ft in oldfiles) {
+                    if (ft.Item2 != FileType.Directory || !this.IsProtected(ft.Item1))
+                        TrashWorker.AddFile(ft.Item1, _pkgmgr);
+                }
             }
 
             FileTuple[] files = null;
@@ -444,6 +498,11 @@ namespace Fusion.Framework
 
                 foreach (FileTuple ft in files) {
                     try {
+                        if (ft.Item2 == FileType.Directory && this.IsProtected(ft.Item1)) {
+                            _log.DebugFormat("Skipping protected directory '{0}'", ft.Item1);
+                            continue;
+                        }
+
                         if (ft.Item2 == FileType.Directory) {
                             if (Directory.GetFiles(ft.Item1).Length > 0)
                                 throw new IOException();

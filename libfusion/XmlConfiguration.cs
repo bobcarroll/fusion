@@ -60,7 +60,6 @@ namespace Fusion.Framework
 
             _instance = new XmlConfiguration();
             bool isadmin = Security.IsNTAdmin();
-            FileInfo[] fiarr;
 
             string progdata = 
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + @"\Fusion";
@@ -79,18 +78,30 @@ namespace Fusion.Framework
             _instance.PortDirOverlays = new DirectoryInfo[] { };
             _instance.PortMirrors = new Uri[] { };
 
+            /* load the profile cascade tree */
+            if (_instance.ProfileDir.Exists) {
+                List<DirectoryInfo> profilelst = new List<DirectoryInfo>();
+                XmlConfiguration.WalkProfileTree(_instance.ProfileDir, profilelst);
+                _instance.ProfileTree = profilelst.ToArray();
+            } else
+                _instance.ProfileTree = new DirectoryInfo[] { };
+
             /* load profile config */
-            FileInfo profcfg = new FileInfo(_instance.ProfileDir.FullName + @"\config.xml");
-            if (profcfg.Exists)
-                _instance.LoadSingle(profcfg);
+            foreach (DirectoryInfo di in _instance.ProfileTree) {
+                FileInfo profcfg = new FileInfo(di.FullName + @"\config.xml");
+                if (profcfg.Exists)
+                    _instance.LoadSingle(profcfg);
+            }
 
             /* load machine config */
             FileInfo localcfg = new FileInfo(_instance.ConfDir.FullName + @"\config.xml");
             if (localcfg.Exists)
                 _instance.LoadSingle(localcfg);
 
-            if (_instance.RootDir == null || !_instance.RootDir.Exists)
-                throw new DirectoryNotFoundException("Root directory is invalid.");
+            if (_instance.RootDir == null || !_instance.RootDir.Exists) {
+                string winroot = Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.Windows));
+                _instance.RootDir = new DirectoryInfo(winroot);
+            }
 
             return _instance;
         }
@@ -130,6 +141,29 @@ namespace Fusion.Framework
             foreach (XmlNode n in nl)
                 mlst.Add(new Uri(((XmlElement)n).InnerText));
             this.PortMirrors = mlst.ToArray();
+        }
+
+        /// <summary>
+        /// Recursively finds the top of the profile cascade tree.
+        /// </summary>
+        /// <param name="curdir">starting directory</param>
+        /// <param name="results">output list of results ordered top parent first</param>
+        private static void WalkProfileTree(DirectoryInfo curdir, List<DirectoryInfo> results)
+        {
+            FileInfo[] fiarr = curdir.GetFiles("parent").ToArray();
+            string parentpath = (fiarr.Length != 0) ?
+                File.ReadAllText(fiarr[0].FullName) :
+                null;
+
+            if (String.IsNullOrWhiteSpace(parentpath)) {
+                results.Add(curdir);
+                return;
+            }
+
+            XmlConfiguration.WalkProfileTree(
+                new DirectoryInfo(curdir + @"\" + parentpath), 
+                results);
+            results.Add(curdir);
         }
 
         /// <summary>
@@ -193,6 +227,11 @@ namespace Fusion.Framework
         /// The selected profile directory.
         /// </summary>
         public DirectoryInfo ProfileDir { get; set; }
+
+        /// <summary>
+        /// Profile cascade tree ordered top-most parent first.
+        /// </summary>
+        public DirectoryInfo[] ProfileTree { get; set; }
 
         /// <summary>
         /// Root directory where packages are installed.
