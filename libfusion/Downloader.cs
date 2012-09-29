@@ -97,8 +97,14 @@ namespace Fusion.Framework
         {
             bool result;
 
+            if (handle == Guid.Empty)
+                throw new ArgumentException("Fetch handle is invalid.");
+
             lock (_finished) {
                 result = _finished.Contains(handle);
+
+                if (result)
+                    _finished.Remove(handle);
             }
 
             return result;
@@ -170,12 +176,8 @@ namespace Fusion.Framework
         public void WaitFor(Guid handle)
         {
             while (true) {
-                lock (_finished) {
-                    if (_finished.Contains(handle)) {
-                        _finished.Remove(handle);
-                        break;
-                    }
-                }
+                if (this.Peek(handle))
+                    break;
 
                 Thread.Sleep(500);
             }
