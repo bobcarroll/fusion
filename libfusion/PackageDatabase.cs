@@ -311,10 +311,9 @@ namespace Fusion.Framework
         /// <param name="installer">installer project</param>
         /// <param name="files">real files and directories created by the package</param>
         /// <param name="metadata">dictionary of package installation metadata</param>
-        /// <param name="world">indicates if the package is a world favourite</param>
         /// <remarks>The files tuple should be (absolute file path, file type, digest).</remarks>
         public void RecordPackage(IDistribution dist, IInstallProject installer, FileTuple[] files, 
-            MetadataPair[] metadata, bool world)
+            MetadataPair[] metadata)
         {
             string pf = dist.Package.FullName;
             string ver = dist.Version.ToString();
@@ -357,11 +356,19 @@ namespace Fusion.Framework
             }
 
             _ent.Packages.AddObject(newpkg);
-
-            if (world && _ent.WorldSet.Where(i => i.Atom == dist.Package.FullName).Count() == 0)
-                _ent.WorldSet.AddObject(new WorldItem() { Atom = pf });
-
             _ent.SaveChanges();
+        }
+
+        /// <summary>
+        /// Adds the given package atom to the world favourites.
+        /// </summary>
+        /// <param name="atom">package atom without version</param>
+        public void SelectPackage(Atom atom)
+        {
+            if (_ent.WorldSet.Where(i => i.Atom == atom.PackageName).Count() == 0) {
+                _ent.WorldSet.AddObject(new WorldItem() { Atom = atom.PackageName });
+                _ent.SaveChanges();
+            }
         }
 
         /// <summary>

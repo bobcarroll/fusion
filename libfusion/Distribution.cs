@@ -199,6 +199,7 @@ namespace Fusion.Framework
             vars.Add("ROOT", cfg.RootDir.FullName);
             vars.Add("DISTDIR", cfg.DistFilesDir.FullName);
             vars.Add("WORKDIR", sbox.WorkDir.FullName);
+            vars.Add("DATADIR", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
             vars.Add("T", sbox.TempDir.FullName);
             vars.Add("D", sbox.ImageDir.FullName);
             vars.Add("L", sbox.LinkDir.FullName);

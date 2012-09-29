@@ -327,21 +327,31 @@ namespace Fusion.Framework
             FileTuple[] files = null;
             FileTuple[] shortcuts = null;
 
-            installer.PkgPreInst();
+            if (installer.HasPkgPreInstTarget) {
+                _log.Info("Executing pre-install tasks...");
+                installer.PkgPreInst();
+            }
+
             this.InstallImage(sbox.ImageDir, rootdir, out files);
             this.InstallImage(
                 sbox.LinkDir, 
                 new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)), 
                 out shortcuts);
-            installer.PkgPostInst();
 
             FileTuple[] allfiles = files.Union(shortcuts).ToArray();
             Dictionary<string, string> metadata = new Dictionary<string, string>();
             metadata.Add("repository", dist.PortsTree.Repository);
+            _pkgmgr.RecordPackage(dist, installer, allfiles, metadata.ToArray());
 
-            if (mea.Selected)
+            if (installer.HasPkgPostInstTarget) {
+                _log.Info("Executing post-install tasks...");
+                installer.PkgPostInst();
+            }
+
+            if (mea.Selected) {
                 _log.InfoFormat("Recording {0} in world favourites", dist.Package.FullName);
-            _pkgmgr.RecordPackage(dist, installer, allfiles, metadata.ToArray(), mea.Selected);
+                _pkgmgr.SelectPackage(dist.Atom);
+            }
 
             _log.Debug("Destroying the sandbox...");
             sbox.Delete();
@@ -440,9 +450,9 @@ namespace Fusion.Framework
             stream.Close();
 
             StringBuilder sb = new StringBuilder();
-            sb.Append(_cfg.XtmakeBinPath.FullName);
+            sb.Append("\"" + _cfg.XtmakeBinPath.FullName + "\"");
             sb.Append(" ");
-            sb.Append(installerbin);
+            sb.Append("\"" + installerbin + "\"");
 
             ProcessStartInfo psi = new ProcessStartInfo();
             psi.FileName = _cfg.SudontBinPath.FullName;
@@ -495,8 +505,10 @@ namespace Fusion.Framework
 
                 IInstallProject installer = _pkgmgr.GetPackageInstaller(atom);
 
-                if (installer != null)
+                if (installer != null && installer.HasPkgPreRmTarget) {
+                    _log.Info("Executing pre-removal tasks...");
                     installer.PkgPreRm();
+                }
 
                 FileTuple[] files = _pkgmgr.QueryPackageFiles(atom)
                     .OrderByDescending(i => i.Item1)
@@ -525,8 +537,10 @@ namespace Fusion.Framework
                     }
                 }
 
-                if (installer != null)
+                if (installer != null && installer.HasPkgPostRmTarget) {
+                    _log.Info("Executing post-removal tasks...");
                     installer.PkgPostRm();
+                }
 
                 _pkgmgr.DeletePackage(atom);
 

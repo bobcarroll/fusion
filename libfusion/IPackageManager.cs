@@ -110,10 +110,15 @@ namespace Fusion.Framework
         /// <param name="installer">installer project</param>
         /// <param name="files">real files and directories created by the package</param>
         /// <param name="metadata">dictionary of package installation metadata</param>
-        /// <param name="world">indicates if the package is a world favourite</param>
         /// <remarks>The files tuple should be (absolute file path, file type, digest).</remarks>
         void RecordPackage(IDistribution dist, IInstallProject installer, FileTuple[] files, 
-            MetadataPair[] metadata, bool world);
+            MetadataPair[] metadata);
+
+        /// <summary>
+        /// Adds the given package atom to the world favourites.
+        /// </summary>
+        /// <param name="atom">package atom without version</param>
+        void SelectPackage(Atom atom);
 
         /// <summary>
         /// Adds an item to the trash for later clean-up.
