@@ -78,6 +78,11 @@ namespace Fusion.Framework
         AbstractTree PortsTree { get; }
 
         /// <summary>
+        /// Port file revision number.
+        /// </summary>
+        uint Revision { get; }
+
+        /// <summary>
         /// Package installation slot number.
         /// </summary>
         uint Slot { get; }

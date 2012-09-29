@@ -143,7 +143,13 @@ namespace Fusion.Framework
         /// </summary>
         public IDistribution LatestAvailable
         {
-            get { return _dists.OrderByDescending(i => i.Version).FirstOrDefault(); }
+            get
+            {
+                return _dists
+                    .OrderByDescending(i => i.Version)
+                    .OrderByDescending(i => Atom.GetRevisionSort(i.Revision))
+                    .FirstOrDefault();
+            }
         }
 
         /// <summary>
@@ -153,8 +159,11 @@ namespace Fusion.Framework
         {
             get
             {
-                return _dists.Where(i => !_category.PortsTree.IsMasked(i))
-                    .OrderByDescending(i => i.Version).FirstOrDefault();
+                return _dists
+                    .Where(i => !_category.PortsTree.IsMasked(i))
+                    .OrderByDescending(i => i.Version)
+                    .OrderByDescending(i => Atom.GetRevisionSort(i.Revision))
+                    .FirstOrDefault();
             }
         }
 

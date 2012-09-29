@@ -46,6 +46,7 @@
           <Property Name="id" Type="integer" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="full_name" Type="nvarchar" Nullable="false" />
           <Property Name="version" Type="nvarchar" Nullable="false" />
+          <Property Name="revision" Type="integer" Nullable="false" />
           <Property Name="slot" Type="integer" Nullable="false" />
           <Property Name="project" Type="nvarchar" />
         </EntityType>
@@ -124,6 +125,7 @@
           <Property Type="Int64" Name="ID" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Type="String" Name="FullName" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
           <Property Type="String" Name="Version" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Type="Int64" Name="Revision" Nullable="false" />
           <Property Type="Int64" Name="Slot" Nullable="false" />
           <Property Type="String" Name="Project" MaxLength="2147483647" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="Files" Relationship="Model.FK_files_0_0" FromRole="packages" ToRole="files" />
@@ -203,6 +205,7 @@
               <MappingFragment StoreEntitySet="packages">
                 <ScalarProperty Name="Project" ColumnName="project" />
                 <ScalarProperty Name="Slot" ColumnName="slot" />
+                <ScalarProperty Name="Revision" ColumnName="revision" />
                 <ScalarProperty Name="Version" ColumnName="version" />
                 <ScalarProperty Name="FullName" ColumnName="full_name" />
                 <ScalarProperty Name="ID" ColumnName="id" />

@@ -35,6 +35,7 @@ namespace Fusion.Framework
         private string _pkg;
         private Version _ver;
         private uint _slot;
+        private uint _revision;
 
         /// <summary>
         /// Regular expression for matching the category name.
@@ -59,14 +60,19 @@ namespace Fusion.Framework
         /// <summary>
         /// Regular expression for matching the slot number.
         /// </summary>
-        public const string SLOT_FMT = ":[1-9]";
+        public const string SLOT_FMT = "(?:[1-9]|[1-9][0-9]+)";
+
+        /// <summary>
+        /// Regular expression for matching the revision number.
+        /// </summary>
+        public const string REVISION_FMT = "r(?:[1-9]|[1-9][0-9]+)";
 
         /// <summary>
         /// Initialises an atom from a package name.
         /// </summary>
         /// <param name="pkg">the package name</param>
         private Atom(string pkg)
-            : this(null, pkg, null, 0) { }
+            : this(null, pkg, null, 0, 0) { }
 
         /// <summary>
         /// Initialises an atom.
@@ -74,8 +80,9 @@ namespace Fusion.Framework
         /// <param name="oper">the comparison operator</param>
         /// <param name="pkg">the package name</param>
         /// <param name="ver">the package version</param>
+        /// <param name="rev">the revision number</param>
         /// <param name="slot">the slot number</param>
-        private Atom(string oper, string pkg, string ver, uint slot)
+        private Atom(string oper, string pkg, string ver, uint rev, uint slot)
         {
             Debug.Assert(
                 (oper == null && ver == null) ||
@@ -84,9 +91,64 @@ namespace Fusion.Framework
             _oper = oper;
             _pkg = pkg;
             _ver = null;
+            _revision = rev;
             _slot = slot;
 
             Version.TryParse(ver, out _ver);
+        }
+
+        /// <summary>
+        /// Compares two versions with revision numbers.
+        /// </summary>
+        /// <param name="leftver">version on the left side</param>
+        /// <param name="leftrev">revision number on the left side</param>
+        /// <param name="rightver">version on the right side</param>
+        /// <param name="rightrev">revision number on the right side</param>
+        /// <returns>zero if equal, less than zero if right is greater, greater than zero if left is greater</returns>
+        public static int CompareVersions(Version leftver, uint leftrev, Version rightver, uint rightrev)
+        {
+            int vercmp = leftver.CompareTo(rightver);
+
+            if (vercmp != 0)
+                return vercmp;
+
+            leftrev = Atom.GetRevisionSort(leftrev);
+            rightrev = Atom.GetRevisionSort(rightrev);
+
+            return leftrev.CompareTo(rightrev);
+        }
+
+        /// <summary>
+        /// Makes a string representation of the given revision.
+        /// </summary>
+        /// <param name="rev">revision number</param>
+        /// <returns>formatted revision string</returns>
+        public static string FormatRevision(uint rev)
+        {
+            return (rev > 0) ? String.Format("r{0}", rev) : "";
+        }
+
+        /// <summary>
+        /// Makes a string representation of the given revision and version.
+        /// </summary>
+        /// <param name="rev">revision number</param>
+        /// <param name="ver">version</param>
+        /// <returns>formatted revision string with version</returns>
+        public static string FormatRevision(uint rev, Version ver)
+        {
+            return (rev > 0) ?
+                String.Format("{0}-{1}", ver.ToString(), Atom.FormatRevision(rev)) :
+                ver.ToString();
+        }
+
+        /// <summary>
+        /// Gets the revision order value from the given revision number.
+        /// </summary>
+        /// <param name="rev">revision number</param>
+        /// <returns>a revision number used for sorting</returns>
+        public static uint GetRevisionSort(uint rev)
+        {
+            return (uint)(rev - 1);
         }
 
         /// <summary>
@@ -94,14 +156,22 @@ namespace Fusion.Framework
         /// </summary>
         /// <param name="fullname">full package name (in the form of category/package)</param>
         /// <param name="version">version string</param>
+        /// <param name="rev">revision number</param>
         /// <param name="slot">slot number</param>
         /// <returns>the full package name</returns>
-        public static string MakeAtomString(string fullname, string version, uint slot)
+        public static string MakeAtomString(string fullname, string version, uint rev, uint slot)
         {
-            if (slot > 0)
-                return String.Format("{0}-{1}:{2}", fullname, version, slot);
+            string result;
+
+            if (rev > 0)
+                result = String.Format("{0}-{1}-{2}", fullname, version, Atom.FormatRevision(rev));
             else
-                return String.Format("{0}-{1}", fullname, version);
+                result = String.Format("{0}-{1}", fullname, version);
+
+            if (slot > 0)
+                result = String.Format("{0}:{1}", result, slot);
+
+            return result;
         }
 
         /// <summary>
@@ -147,17 +217,17 @@ namespace Fusion.Framework
 
             if (!left.HasVersion || _oper == null || _ver == null)
                 return true;
-            else if (_oper == "=" && left.Version.CompareTo(_ver) == 0)
+            else if (_oper == "=" && Atom.CompareVersions(left.Version, left.Revision, _ver, _revision) == 0)
                 return true;
-            else if (_oper == "<" && left.Version.CompareTo(_ver) < 0)
+            else if (_oper == "<" && Atom.CompareVersions(left.Version, left.Revision, _ver, _revision) < 0)
                 return true;
-            else if (_oper == "<=" && left.Version.CompareTo(_ver) <= 0)
+            else if (_oper == "<=" && Atom.CompareVersions(left.Version, left.Revision, _ver, _revision) <= 0)
                 return true;
-            else if (_oper == ">" && left.Version.CompareTo(_ver) > 0)
+            else if (_oper == ">" && Atom.CompareVersions(left.Version, left.Revision, _ver, _revision) > 0)
                 return true;
-            else if (_oper == ">=" && left.Version.CompareTo(_ver) >= 0)
+            else if (_oper == ">=" && Atom.CompareVersions(left.Version, left.Revision, _ver, _revision) >= 0)
                 return true;
-            else if (_oper == "!=" && left.Version.CompareTo(_ver) != 0)
+            else if (_oper == "!=" && Atom.CompareVersions(left.Version, left.Revision, _ver, _revision) != 0)
                 return true;
 
             return false;
@@ -182,33 +252,52 @@ namespace Fusion.Framework
         public static Atom Parse(string atom, AtomParseOptions opts)
         {
             Match m;
-            uint slot = 0;
+            uint slot = 0, rev = 0;
+            string atomstr;
 
-            /* full package atom with implicit equals: =(category/package)-(version):(slot) */
-            m = Regex.Match(
-                atom.ToLower(),
-                "^(?:=?)(" + CATEGORY_NAME_FMT + "/" + PACKAGE_NAME_FMT + ")-(" + VERSION_FMT + ")(" + SLOT_FMT + ")?$");
+            /* full package atom with implicit equals: =(category/package)-(version)-(revision):(slot) */
+            atomstr = String.Format(
+                "^(?:=?)({0}/{1})-({2})(?:-({3}))?(?:[:]({4}))?$",
+                CATEGORY_NAME_FMT,
+                PACKAGE_NAME_FMT,
+                VERSION_FMT,
+                REVISION_FMT,
+                SLOT_FMT);
+            m = Regex.Match(atom.ToLower(), atomstr);
             if (opts != AtomParseOptions.WithoutVersion && m.Success) {
-                UInt32.TryParse(m.Groups[3].Value.TrimStart(':'), out slot);
-                return new Atom("=", m.Groups[1].Value, m.Groups[2].Value, slot);
+                UInt32.TryParse(m.Groups[3].Value.TrimStart('r'), out rev);
+                UInt32.TryParse(m.Groups[4].Value, out slot);
+                return new Atom("=", m.Groups[1].Value, m.Groups[2].Value, rev, slot);
             }
 
-            /* package short name with version and implicit equals: =(package)-(version):(slot) */
-            m = Regex.Match(
-                atom.ToLower(),
-                "^(?:=?)(" + PACKAGE_NAME_FMT + ")-(" + VERSION_FMT + ")(" + SLOT_FMT + ")?$");
+            /* package short name with version and implicit equals: =(package)-(version)-(revision):(slot) */
+            atomstr = String.Format(
+                "^(?:=?)({0})-({1})(?:-({2}))?(?:[:]({3}))?$",
+                PACKAGE_NAME_FMT,
+                VERSION_FMT,
+                REVISION_FMT,
+                SLOT_FMT);
+            m = Regex.Match(atom.ToLower(), atomstr);
             if (opts != AtomParseOptions.WithoutVersion && m.Success) {
-                UInt32.TryParse(m.Groups[3].Value.TrimStart(':'), out slot);
-                return new Atom("=", m.Groups[1].Value, m.Groups[2].Value, slot);
+                UInt32.TryParse(m.Groups[3].Value.TrimStart('r'), out rev);
+                UInt32.TryParse(m.Groups[4].Value, out slot);
+                return new Atom("=", m.Groups[1].Value, m.Groups[2].Value, rev, slot);
             }
 
-            /* full package atom: (operator)(category/package)-(version):(slot) */
-            m = Regex.Match(
-                atom.ToLower(),
-                "^(" + CMP_OPERATOR_FMT + ")(" + CATEGORY_NAME_FMT + "/" + PACKAGE_NAME_FMT + ")-(" + VERSION_FMT + ")(" + SLOT_FMT + ")?$");
+            /* full package atom: (operator)(category/package)-(version)-(revision):(slot) */
+            atomstr = String.Format(
+                "^({0})({1}/{2})-({3})(?:-({4}))?(?:[:]({5}))?$",
+                CMP_OPERATOR_FMT,
+                CATEGORY_NAME_FMT,
+                PACKAGE_NAME_FMT,
+                VERSION_FMT,
+                REVISION_FMT,
+                SLOT_FMT);
+            m = Regex.Match(atom.ToLower(), atomstr);
             if ((opts == AtomParseOptions.VersionOptional || opts == AtomParseOptions.VersionRequired) && m.Success) {
-                UInt32.TryParse(m.Groups[4].Value.TrimStart(':'), out slot);
-                return new Atom(m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value, slot);
+                UInt32.TryParse(m.Groups[4].Value.TrimStart('r'), out rev);
+                UInt32.TryParse(m.Groups[5].Value, out slot);
+                return new Atom(m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value, rev, slot);
             }
 
             /* fully-qualified package name: (category/package) */
@@ -260,7 +349,7 @@ namespace Fusion.Framework
             string slot = _slot > 0 ? ":" + _slot.ToString() : "";
 
             return _ver != null ? 
-                oper + _pkg + "-" + _ver.ToString() + slot: 
+                oper + _pkg + "-" + Atom.FormatRevision(_revision, _ver) + slot: 
                 _pkg;
         }
 
@@ -322,6 +411,14 @@ namespace Fusion.Framework
                     _pkg.Substring(_pkg.IndexOf('/') + 1) :
                     _pkg;
             }
+        }
+
+        /// <summary>
+        /// The revision number specified in this atom.
+        /// </summary>
+        public uint Revision
+        {
+            get { return _revision; }
         }
 
         /// <summary>

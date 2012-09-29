@@ -33,8 +33,8 @@ namespace Fusion.Framework
             : base("No package found matching the name '" + package + "-" + version + "'.")
         { }
 
-        public DistributionNotFoundException(string package, Version version)
-            : this(package, version.ToString())
+        public DistributionNotFoundException(Atom atom)
+            : this(atom.PackageName, Atom.FormatRevision(atom.Revision, atom.Version))
         { }
     }
 }

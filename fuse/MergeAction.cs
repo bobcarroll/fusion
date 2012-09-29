@@ -214,7 +214,7 @@ namespace fuse
             Console.Write(") ");
 
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.Write(e.Distribution.Atom.ToString());
+            Console.Write(e.Distribution.ToString());
 
             Console.ResetColor();
             Console.Write("\n");
@@ -295,7 +295,7 @@ namespace fuse
 
             if (!e.Flags.HasFlag(MergeFlags.New) && !e.Flags.HasFlag(MergeFlags.Replacing)) {
                 Console.ForegroundColor = ConsoleColor.Blue;
-                Console.Write(" [{0}]", e.Previous.Version.ToString());
+                Console.Write(" [{0}]", Atom.FormatRevision(e.Previous.Revision, e.Previous.Version));
                 Console.ResetColor();
             }
 
@@ -319,7 +319,7 @@ namespace fuse
         {
             Console.Write("\n>>> Installing ");
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.Write(e.Distribution.Atom.ToString());
+            Console.Write(e.Distribution.ToString());
 
             Console.ResetColor();
             Console.Write(" into live file system\n");

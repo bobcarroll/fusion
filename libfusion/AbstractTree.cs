@@ -64,7 +64,7 @@ namespace Fusion.Framework
                     .OrderBy(i => i.Version)
                     .ToArray();
                 if (matcharr.Length == 0)
-                    throw new DistributionNotFoundException(atom.PackageName, atom.Version);
+                    throw new DistributionNotFoundException(atom);
 
                 if (atom.Comparison == "=")
                     result = matcharr.SingleOrDefault();

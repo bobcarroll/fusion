@@ -39,6 +39,7 @@ namespace Fusion.Framework
         private FileInfo _pkgdist;
         private Package _package;
         private Version _version;
+        private uint _revision;
         private int _apirev = 1;  /* default to the lowest revision */
         private string[] _keywords = new string[] { };
         private bool _fetch = false;
@@ -65,6 +66,7 @@ namespace Fusion.Framework
             _pkgdist = dist;
             _package = pkg;
             _version = Distribution.ParseVersion(dist.Name, pkg.Name);
+            _revision = Distribution.ParseRevision(dist.Name, pkg.Name);
 
             XmlDocument doc = new XmlDocument();
             doc.Load(dist.FullName);
@@ -100,7 +102,7 @@ namespace Fusion.Framework
                 Uri srcuri = !String.IsNullOrEmpty(srctmp) ? new Uri(srctmp) : null;
                 string pkgname = e.InnerText.Replace(
                     "$(P)", 
-                    String.Format("{0}-{1}", _package.Name, _version.ToString()));
+                    String.Format("{0}-{1}", _package.Name, Atom.FormatRevision(_revision, _version)));
 
                 if (srcuri != null)
                     srcfile = new WebSourceFile(srcuri, srcdigest, pkgname, archsz);
@@ -130,7 +132,7 @@ namespace Fusion.Framework
             _project = (XmlElement)root.SelectSingleNode("msbuild:Project", nsmgr);
 
             _myatom = Atom.Parse(
-                Atom.MakeAtomString(_package.FullName, _version.ToString(), _slot),
+                Atom.MakeAtomString(_package.FullName, _version.ToString(), _revision, _slot), 
                 AtomParseOptions.VersionRequired);
         }
 
@@ -184,13 +186,15 @@ namespace Fusion.Framework
             if (_project == null)
                 return null;
 
-            string pkgname = String.Format("{0}-{1}", _package.Name, _version.ToString());
+            string pkgname = String.Format("{0}-{1}", 
+                _package.Name, 
+                Atom.FormatRevision(_revision, _version));
             XmlConfiguration cfg = XmlConfiguration.LoadSeries();
 
             Dictionary<string, string> vars = new Dictionary<string, string>();
             vars.Add("P", pkgname);
             vars.Add("PN", _package.Name);
-            vars.Add("PV", _version.ToString());
+            vars.Add("PV", Atom.FormatRevision(_revision, _version));
             vars.Add("CATEGORY", _package.Category.Name);
             vars.Add("ROOT", cfg.RootDir.FullName);
             vars.Add("DISTDIR", cfg.DistFilesDir.FullName);
@@ -201,6 +205,24 @@ namespace Fusion.Framework
 
             XmlReader xr = new XmlNodeReader(_project);
             return new MSBuildProject(pkgname, ProjectRootElement.Create(xr), vars);
+        }
+
+        /// <summary>
+        /// Parses the port file name for the distribution revision number.
+        /// </summary>
+        /// <param name="distname">the port file name</param>
+        /// <param name="pkgname">the package name</param>
+        /// <returns>a revision number</returns>
+        public static uint ParseRevision(string distname, string pkgname)
+        {
+            uint rev = 0;
+
+            if (!Distribution.ValidateName(distname, pkgname))
+                return rev;
+
+            Match m = Regex.Match(distname, "-(" + Atom.REVISION_FMT + ")");
+            UInt32.TryParse(m.Groups[1].Value.TrimStart('r'), out rev);
+            return rev;
         }
 
         /// <summary>
@@ -226,7 +248,9 @@ namespace Fusion.Framework
         /// <returns>true when valid, false otherwise</returns>
         public static bool ValidateName(string name, string pkgname)
         {
-            return Regex.IsMatch(name, "^" + pkgname + "-" + Atom.VERSION_FMT + "[.]xml$");
+            return Regex.IsMatch(
+                name, 
+                "^" + pkgname + "-" + Atom.VERSION_FMT + "(?:-" + Atom.REVISION_FMT + ")?[.]xml$");
         }
 
         /// <summary>
@@ -235,7 +259,7 @@ namespace Fusion.Framework
         /// <returns>a package atom</returns>
         public override string ToString()
         {
-            return _package.FullName + "-" + _version.ToString();
+            return _package.FullName + "-" + Atom.FormatRevision(_revision, _version);
         }
 
         /// <summary>
@@ -300,6 +324,14 @@ namespace Fusion.Framework
         public AbstractTree PortsTree
         {
             get { return _package.PortsTree; }
+        }
+
+        /// <summary>
+        /// Port file revision number.
+        /// </summary>
+        public uint Revision
+        {
+            get { return _revision; }
         }
 
         /// <summary>
