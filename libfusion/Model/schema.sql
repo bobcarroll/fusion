@@ -1,0 +1,40 @@
+CREATE TABLE [world] (
+    [id] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    [atom] TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE [packages] (
+    [id] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    [full_name] TEXT NOT NULL,
+    [version] TEXT NOT NULL,
+    [revision] INTEGER NOT NULL DEFAULT (0),
+    [slot] INTEGER NOT NULL DEFAULT (0),
+    [project] TEXT
+);
+
+CREATE TABLE [files] (
+    [id] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    [path] TEXT NOT NULL,
+    [type] INTEGER NOT NULL,
+    [digest] TEXT,
+    [package] INTEGER NOT NULL REFERENCES [packages] ([id]) ON DELETE CASCADE
+);
+
+CREATE TABLE [metadata] (
+    [id] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    [key] TEXT NOT NULL,
+    [value] TEXT NOT NULL,
+    [package] INTEGER NOT NULL REFERENCES [packages] ([id]) ON DELETE CASCADE
+);
+
+CREATE TABLE [trash] (
+    [id] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    [path] TEXT NOT NULL
+);
+
+CREATE INDEX "IDX_FILES_PATH" on files (path ASC);
+CREATE INDEX "IDX_METADATA_KEY" on metadata (key ASC);
+CREATE INDEX "IDX_PACKAGES_FULLNAME" on packages (full_name ASC);
+CREATE INDEX "IDX_WORLD_ATOM" on world (atom ASC);
+CREATE UNIQUE INDEX "UK_METADATA_KEY_PACKAGE" on metadata (key ASC, package ASC);
+CREATE UNIQUE INDEX "UK_PACKAGES_NAME_VER_SLOT" on packages (full_name ASC, version ASC, slot ASC);
