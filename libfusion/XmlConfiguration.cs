@@ -61,8 +61,10 @@ namespace Fusion.Framework
             _instance = new XmlConfiguration();
             bool isadmin = Security.IsNTAdmin();
 
-            string progdata = 
-                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + @"\Fusion";
+            string homedirenv = Environment.GetEnvironmentVariable("FUSION_HOME");
+            string progdata = String.IsNullOrEmpty(homedirenv) ?
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + @"\Fusion" :
+                homedirenv;
 
             _instance.ConfDir = new DirectoryInfo(progdata + @"\etc");
             _instance.DistFilesDir = new DirectoryInfo(progdata + @"\distfiles");
