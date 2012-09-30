@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xtmake", "xtmake\xtmake.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libfusiontasks", "libfusiontasks\libfusiontasks.csproj", "{F6BE67E7-CCB0-4CF9-80AC-5FEA1E4027FB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fusion-config", "fusion-config\fusion-config.csproj", "{7CCA9B3D-3B1F-47EC-9B9F-10B281FA882A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{F6BE67E7-CCB0-4CF9-80AC-5FEA1E4027FB}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{F6BE67E7-CCB0-4CF9-80AC-5FEA1E4027FB}.Release|x64.ActiveCfg = Release|Any CPU
 		{F6BE67E7-CCB0-4CF9-80AC-5FEA1E4027FB}.Release|x86.ActiveCfg = Release|Any CPU
+		{7CCA9B3D-3B1F-47EC-9B9F-10B281FA882A}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{7CCA9B3D-3B1F-47EC-9B9F-10B281FA882A}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{7CCA9B3D-3B1F-47EC-9B9F-10B281FA882A}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{7CCA9B3D-3B1F-47EC-9B9F-10B281FA882A}.Debug|x64.ActiveCfg = Debug|x86
+		{7CCA9B3D-3B1F-47EC-9B9F-10B281FA882A}.Debug|x86.ActiveCfg = Debug|x86
+		{7CCA9B3D-3B1F-47EC-9B9F-10B281FA882A}.Debug|x86.Build.0 = Debug|x86
+		{7CCA9B3D-3B1F-47EC-9B9F-10B281FA882A}.Release|Any CPU.ActiveCfg = Release|x86
+		{7CCA9B3D-3B1F-47EC-9B9F-10B281FA882A}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{7CCA9B3D-3B1F-47EC-9B9F-10B281FA882A}.Release|Mixed Platforms.Build.0 = Release|x86
+		{7CCA9B3D-3B1F-47EC-9B9F-10B281FA882A}.Release|x64.ActiveCfg = Release|x86
+		{7CCA9B3D-3B1F-47EC-9B9F-10B281FA882A}.Release|x86.ActiveCfg = Release|x86
+		{7CCA9B3D-3B1F-47EC-9B9F-10B281FA882A}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
