@@ -393,7 +393,7 @@ namespace Fusion.Framework
 
                 MergeEventArgs mea = new MergeEventArgs();
                 mea.Previous = current;
-                mea.Selected = distarr.Contains(dist);
+                mea.Selected = !mopts.HasFlag(MergeOptions.OneShot) && distarr.Contains(dist);
                 mea.Distribution = dist;
                 mea.FetchOnly = mopts.HasFlag(MergeOptions.FetchOnly);
 
