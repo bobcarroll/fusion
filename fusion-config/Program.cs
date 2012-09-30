@@ -117,6 +117,11 @@ namespace fusion_config
                     return 1;
                 }
 
+                if (!Security.IsNTAdmin()) {
+                    Console.WriteLine("You must be an administrator to execute this command!");
+                    return 1;
+                }
+
                 if (cfg.ProfileDir.Exists)
                     Directory.Delete(cfg.ProfileDir.FullName);
 
