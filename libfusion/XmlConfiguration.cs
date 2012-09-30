@@ -83,7 +83,7 @@ namespace Fusion.Framework
             /* load the profile cascade tree */
             if (_instance.ProfileDir.Exists) {
                 List<DirectoryInfo> profilelst = new List<DirectoryInfo>();
-                XmlConfiguration.WalkProfileTree(_instance.ProfileDir, profilelst);
+                XmlConfiguration.WalkProfileTree(_instance.ProfileDir, profilelst, true);
                 _instance.ProfileTree = profilelst.ToArray();
             } else
                 _instance.ProfileTree = new DirectoryInfo[] { };
@@ -168,21 +168,23 @@ namespace Fusion.Framework
         /// </summary>
         /// <param name="curdir">starting directory</param>
         /// <param name="results">output list of results ordered top parent first</param>
-        private static void WalkProfileTree(DirectoryInfo curdir, List<DirectoryInfo> results)
+        /// <param name="start">indicates the start of the recursive climb</param>
+        private static void WalkProfileTree(DirectoryInfo curdir, List<DirectoryInfo> results, bool start)
         {
             FileInfo[] fiarr = curdir.GetFiles("parent").ToArray();
-            string parentpath = (fiarr.Length != 0) ?
-                File.ReadAllText(fiarr[0].FullName) :
+            string[] parentpath = (fiarr.Length != 0) ?
+                File.ReadAllLines(fiarr[0].FullName) :
                 null;
 
-            if (String.IsNullOrWhiteSpace(parentpath)) {
+            if (parentpath == null) {
                 results.Add(curdir);
                 return;
             }
 
             XmlConfiguration.WalkProfileTree(
-                new DirectoryInfo(curdir + @"\" + parentpath), 
-                results);
+                new DirectoryInfo(curdir + @"\" + (start ? parentpath[1] : parentpath[0])), 
+                results,
+                false);
             results.Add(curdir);
         }
 
