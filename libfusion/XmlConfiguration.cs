@@ -32,8 +32,6 @@ namespace Fusion.Framework
     /// </summary>
     public sealed class XmlConfiguration
     {
-        public const string PROFILEDIR = "profiles";
-
         private static DirectoryInfo _bindir;
         private static XmlConfiguration _instance;
 
@@ -73,6 +71,7 @@ namespace Fusion.Framework
                 new DirectoryInfo(progdata + @"\logs") :
                 new DirectoryInfo(Path.GetTempPath());
             _instance.ProfileDir = new DirectoryInfo(progdata + @"\profile");
+            _instance.ProfilesRootDir = new DirectoryInfo(_instance.PortDir + @"\profiles");
 
             /* set defaults for optional settings */
             _instance.AcceptKeywords = new string[] { };
@@ -259,6 +258,11 @@ namespace Fusion.Framework
         /// Profile cascade tree ordered top-most parent first.
         /// </summary>
         public DirectoryInfo[] ProfileTree { get; set; }
+
+        /// <summary>
+        /// The profiles root directory.
+        /// </summary>
+        public DirectoryInfo ProfilesRootDir { get; set; }
 
         /// <summary>
         /// Root directory where packages are installed.

@@ -66,8 +66,18 @@ namespace Fusion.Framework
         /// <returns>a list of categories found in the ports directory</returns>
         private static List<Category> Enumerate(AbstractTree tree, DirectoryInfo portdir)
         {
-            DirectoryInfo[] diarr = portdir.EnumerateDirectories()
-                .Where(d => d.Name.Length <= 20 && Category.ValidateName(d.Name)).ToArray();
+            XmlConfiguration xmlconf = XmlConfiguration.LoadSeries();
+            FileInfo[] filearr = xmlconf.ProfilesRootDir.GetFiles("categories");
+            string[] list = (filearr.Length > 0) ? 
+                File.ReadAllLines(filearr[0].FullName) : 
+                new string[] { };
+
+            DirectoryInfo[] diarr = portdir
+                .EnumerateDirectories()
+                .Where(d => d.Name.Length <= 20 && 
+                            Category.ValidateName(d.Name) && 
+                            list.Contains(d.Name))
+                .ToArray();
             List<Category> results = new List<Category>();
 
             foreach (DirectoryInfo di in diarr)
@@ -83,9 +93,6 @@ namespace Fusion.Framework
         /// <returns>true when valid, false otherwise</returns>
         public static bool ValidateName(string name)
         {
-            if (name.ToLower() == XmlConfiguration.PROFILEDIR.ToLower())
-                return false;
-
             return Regex.IsMatch(name, "^" + Atom.CATEGORY_NAME_FMT + "$");
         }
 

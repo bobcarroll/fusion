@@ -84,13 +84,11 @@ namespace fusion_config
             }
 
             XmlConfiguration cfg = XmlConfiguration.LoadSeries();
-            DirectoryInfo profroot = 
-                new DirectoryInfo(cfg.PortDir + @"\" + XmlConfiguration.PROFILEDIR);
-            DirectoryInfo[] profiles = profroot.GetDirectories("*", SearchOption.AllDirectories)
+            DirectoryInfo[] profiles = cfg.ProfilesRootDir.GetDirectories("*", SearchOption.AllDirectories)
                 .Where(i => File.ReadAllLines(i.FullName + @"\parent").Length > 1)
                 .OrderBy(i => i.FullName)
                 .ToArray();
-            int striplev = profroot.FullName.TrimEnd('\\').Count(i => i == '\\') + 1;
+            int striplev = cfg.ProfilesRootDir.FullName.TrimEnd('\\').Count(i => i == '\\') + 1;
             ReparsePoint current = cfg.ProfileDir.Exists ?
                 new ReparsePoint(cfg.ProfileDir.FullName) :
                 null;

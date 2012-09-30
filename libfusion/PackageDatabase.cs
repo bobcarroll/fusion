@@ -217,7 +217,7 @@ namespace Fusion.Framework
         {
             List<Atom> alst = new List<Atom>();
 
-            FileInfo fi = new FileInfo(_cfg.ProfileDir + @"\package.protect");
+            FileInfo fi = new FileInfo(_cfg.ProfilesRootDir + @"\package.protect");
             if (fi.Exists) {
                 string[] inarr = System.IO.File.ReadAllLines(fi.FullName);
 

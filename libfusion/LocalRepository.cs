@@ -55,7 +55,7 @@ namespace Fusion.Framework
         {
             List<Atom> alst = new List<Atom>();
             string[] files = new string[] { 
-                _xmlconf.ProfileDir + @"\package.mask",
+                _xmlconf.ProfilesRootDir + @"\package.mask",
                 _xmlconf.ConfDir + @"\package.mask" };
 
             foreach (string file in files) {
@@ -85,7 +85,7 @@ namespace Fusion.Framework
         {
             Dictionary<Atom, string[]> dict = new Dictionary<Atom, string[]>();
             string[] files = new string[] { 
-                _xmlconf.ProfileDir + @"\package.keywords",
+                _xmlconf.ProfilesRootDir + @"\package.keywords",
                 _xmlconf.ConfDir + @"\package.keywords" };
 
             foreach (string file in files) {
