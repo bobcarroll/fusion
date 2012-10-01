@@ -163,8 +163,10 @@ namespace Fusion.Framework
         /// <returns>a list of distributions of the given package</returns>
         internal static List<Distribution> Enumerate(Package pkg)
         {
-            FileInfo[] fiarr = pkg.PackageDirectory.EnumerateFiles()
-                .Where(p => Distribution.ValidateName(p.Name, pkg.Name)).ToArray();
+            FileInfo[] fiarr = pkg.PackageDirectory
+                .EnumerateFiles()
+                .Where(p => Distribution.ValidateName(p.Name, pkg.Name))
+                .ToArray();
             List<Distribution> results = new List<Distribution>();
 
             foreach (FileInfo fi in fiarr) {

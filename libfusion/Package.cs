@@ -78,8 +78,10 @@ namespace Fusion.Framework
         /// <returns>a list of packages in the category directory</returns>
         internal static List<Package> Enumerate(Category cat)
         {
-            DirectoryInfo[] diarr = cat.CategoryDirectory.EnumerateDirectories()
-                .Where(d => d.Name.Length <= 30 && Package.ValidateName(d.Name)).ToArray();
+            DirectoryInfo[] diarr = cat.CategoryDirectory
+                .EnumerateDirectories()
+                .Where(d => d.Name.Length <= 30 && Package.ValidateName(d.Name))
+                .ToArray();
             List<Package> results = new List<Package>();
 
             foreach (DirectoryInfo di in diarr)
