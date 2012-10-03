@@ -142,24 +142,6 @@ namespace Fusion.Framework
             foreach (XmlNode n in nl)
                 mlst.Add(new Uri(((XmlElement)n).InnerText));
             this.RsyncMirrors = mlst.ToArray();
-
-            elem = (XmlElement)doc.SelectSingleNode("//Configuration/HelperBinaries/rsync");
-            if (elem != null && !String.IsNullOrWhiteSpace(elem.InnerText)) {
-                string helper = elem.InnerText.Replace("$(BINDIR)", XmlConfiguration.BinDir.FullName);
-                this.RsyncBinPath = new FileInfo(helper);
-            }
-
-            elem = (XmlElement)doc.SelectSingleNode("//Configuration/HelperBinaries/sudont");
-            if (elem != null && !String.IsNullOrWhiteSpace(elem.InnerText)) {
-                string helper = elem.InnerText.Replace("$(BINDIR)", XmlConfiguration.BinDir.FullName);
-                this.SudontBinPath = new FileInfo(helper);
-            }
-
-            elem = (XmlElement)doc.SelectSingleNode("//Configuration/HelperBinaries/xtmake");
-            if (elem != null && !String.IsNullOrWhiteSpace(elem.InnerText)) {
-                string helper = elem.InnerText.Replace("$(BINDIR)", XmlConfiguration.BinDir.FullName);
-                this.XtmakeBinPath = new FileInfo(helper);
-            }
         }
 
         /// <summary>
@@ -245,11 +227,6 @@ namespace Fusion.Framework
         public Uri[] RsyncMirrors { get; set; }
 
         /// <summary>
-        /// Absolute path of the rsync binary.
-        /// </summary>
-        public FileInfo RsyncBinPath { get; set; }
-
-        /// <summary>
         /// The selected profile directory.
         /// </summary>
         public DirectoryInfo ProfileDir { get; set; }
@@ -268,15 +245,5 @@ namespace Fusion.Framework
         /// Root directory where packages are installed.
         /// </summary>
         public DirectoryInfo RootDir { get; set; }
-
-        /// <summary>
-        /// Absolute path of the sudont binary.
-        /// </summary>
-        public FileInfo SudontBinPath { get; set; }
-
-        /// <summary>
-        /// Absolute path of the xtmake binary.
-        /// </summary>
-        public FileInfo XtmakeBinPath { get; set; }
     }
 }

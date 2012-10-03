@@ -59,15 +59,12 @@ namespace fuse
             if (cfg.RsyncMirrors.Length == 0)
                 throw new Exception("No rsync mirrors have been defined.");
 
-            if (cfg.RsyncBinPath == null || !cfg.RsyncBinPath.Exists)
-                throw new Exception("rsync binary not defined or doesn't exist.");
-
             for (int i = 0; i < cfg.RsyncMirrors.Length; i++) {
                 Uri mirror = cfg.RsyncMirrors[i];
                 Console.WriteLine("\n>>> Starting rsync with {0}...\n", mirror.ToString());
 
                 string[] args = new string[] { "-av", "--delete", mirror.ToString(), cygpath };
-                ChildProcess cp = ChildProcess.Fork(cfg.RsyncBinPath.FullName, args);
+                ChildProcess cp = ChildProcess.Fork(XmlConfiguration.BinDir.FullName + @"\rsync.exe", args);
                 cp.WaitForExit();
 
                 if (cp.GetExitCode() != 0)
