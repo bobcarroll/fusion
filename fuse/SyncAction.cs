@@ -48,6 +48,7 @@ namespace fuse
         public void Execute(IPackageManager pkgmgr)
         {
             XmlConfiguration cfg = XmlConfiguration.LoadSeries();
+            Security.DemandNTAdmin();
 
             if (cfg.PortDir == null || !cfg.PortDir.Exists)
                 throw new Exception("Ports directory is not defined or doesn't exist.");
