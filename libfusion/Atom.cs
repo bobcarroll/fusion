@@ -45,7 +45,7 @@ namespace Fusion.Framework
         /// <summary>
         /// Regular expression for matching the package name.
         /// </summary>
-        public const string PACKAGE_NAME_FMT = "[a-z0-9]+(?:[_-][a-z0-9]+)*";
+        public const string PACKAGE_NAME_FMT = "[a-z0-9\\+]+(?:[_-][a-z0-9\\+]+)*";
 
         /// <summary>
         /// Regular expression for matching the distribution version string.

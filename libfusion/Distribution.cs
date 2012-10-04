@@ -223,7 +223,7 @@ namespace Fusion.Framework
             if (!Distribution.ValidateName(distname, pkgname))
                 return rev;
 
-            Match m = Regex.Match(distname, "-(" + Atom.REVISION_FMT + ")");
+            Match m = Regex.Match(distname, "-(" + Atom.REVISION_FMT + ")[.]xml$");
             UInt32.TryParse(m.Groups[1].Value.TrimStart('r'), out rev);
             return rev;
         }
@@ -253,7 +253,7 @@ namespace Fusion.Framework
         {
             return Regex.IsMatch(
                 name, 
-                "^" + pkgname + "-" + Atom.VERSION_FMT + "(?:-" + Atom.REVISION_FMT + ")?[.]xml$");
+                "^" + Regex.Escape(pkgname) + "-" + Atom.VERSION_FMT + "(?:-" + Atom.REVISION_FMT + ")?[.]xml$");
         }
 
         /// <summary>
