@@ -185,9 +185,9 @@ namespace Fusion.Framework
                         _log.InfoFormat("Created directory '{0}'", targetpath);
                     }
                 } else {
-                    File.Move(fsi.FullName, targetpath);
+                    File.Copy(fsi.FullName, targetpath, true);
                     digest = Md5Sum.Compute(targetpath, Md5Sum.MD5SUMMODE.BINARY);
-                    _log.InfoFormat("Moved file to '{0}'", targetpath);
+                    _log.InfoFormat("Copied file to '{0}'", targetpath);
                 }
 
                 results.Add(new FileTuple(targetpath, type, digest));
