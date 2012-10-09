@@ -34,6 +34,7 @@ namespace Fusion.Framework
     {
         private static DirectoryInfo _bindir;
         private static XmlConfiguration _instance;
+        private static CpuArchitecture _cpuarch = 0;
 
         private XmlConfiguration() { }
 
@@ -240,6 +241,24 @@ namespace Fusion.Framework
         /// The profiles root directory.
         /// </summary>
         public DirectoryInfo ProfilesRootDir { get; set; }
+
+        /// <summary>
+        /// The native CPU architecture even when running under WOW64.
+        /// </summary>
+        public static CpuArchitecture RealCpuArch
+        {
+            get
+            {
+                if (_cpuarch == 0) {
+                    string cpuarch = Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432");
+                    if (cpuarch == null)
+                        cpuarch = Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
+                    _cpuarch = (CpuArchitecture)Enum.Parse(typeof(CpuArchitecture), cpuarch.ToLower());
+                }
+
+                return _cpuarch;
+            }
+        }
 
         /// <summary>
         /// Root directory where packages are installed.

@@ -229,7 +229,7 @@ namespace fuse
         {
             _numpkgs++;
 
-            foreach (SourceFile s in e.Distribution.Sources)
+            foreach (SourceFile s in e.Distribution.Sources.Where(i => i.CheckPlatform()))
                 _dloadsz += s.Size;
 
             string distrepo = e.Distribution.PortsTree.Repository;

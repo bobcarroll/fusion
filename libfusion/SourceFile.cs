@@ -33,6 +33,7 @@ namespace Fusion.Framework
         private string _digest;
         private string _localname;
         private long _size;
+        private CpuArchitecture _cpuarch;
 
         /// <summary>
         /// Initialises the local source.
@@ -40,11 +41,30 @@ namespace Fusion.Framework
         /// <param name="digest">expected digest of the file</param>
         /// <param name="localname">file name to use when saving to distfiles</param>
         /// <param name="size">size of the file in bytes</param>
-        internal SourceFile(string digest, string localname, long size)
+        /// <param name="arch">CPU architecture name</param>
+        internal SourceFile(string digest, string localname, long size, CpuArchitecture cpuarch)
         {
             _digest = digest;
             _localname = localname;
             _size = size;
+            _cpuarch = cpuarch;
+        }
+
+        /// <summary>
+        /// Determines if this source is compatible for the current system platform.
+        /// </summary>
+        /// <returns>true if compatible, false otherwise</returns>
+        public bool CheckPlatform()
+        {
+            return this.CpuArch == 0 || this.CpuArch == XmlConfiguration.RealCpuArch;
+        }
+
+        /// <summary>
+        /// CPU architecture name.
+        /// </summary>
+        public CpuArchitecture CpuArch
+        {
+            get { return _cpuarch; }
         }
 
         /// <summary>

@@ -104,10 +104,14 @@ namespace Fusion.Framework
                     "$(P)", 
                     String.Format("{0}-{1}", _package.Name, Atom.FormatRevision(_revision, _version)));
 
+                srctmp = e.GetAttribute("cpuarch");
+                CpuArchitecture arch = 0;
+                Enum.TryParse<CpuArchitecture>(srctmp, out arch);
+
                 if (srcuri != null)
-                    srcfile = new WebSourceFile(srcuri, srcdigest, pkgname, archsz);
+                    srcfile = new WebSourceFile(srcuri, srcdigest, pkgname, archsz, arch);
                 else
-                    srcfile = new SourceFile(srcdigest, pkgname, archsz);
+                    srcfile = new SourceFile(srcdigest, pkgname, archsz, arch);
 
                 sources.Add(srcfile);
             }

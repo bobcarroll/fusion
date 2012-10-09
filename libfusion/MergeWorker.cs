@@ -283,7 +283,7 @@ namespace Fusion.Framework
 
                 _log.InfoFormat("Checking package digests");
 
-                foreach (SourceFile src in dist.Sources) {
+                foreach (SourceFile src in dist.Sources.Where(i => i.CheckPlatform())) {
                     FileInfo distfile = new FileInfo(_cfg.DistFilesDir + @"\" + src.LocalName);
 
                     if (!Md5Sum.Check(distfile.FullName, src.Digest, Md5Sum.MD5SUMMODE.BINARY)) {
