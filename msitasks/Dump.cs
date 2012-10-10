@@ -51,21 +51,23 @@ namespace Fusion.Tasks.MSI
 
             List<string> args = new List<string>();
             args.Add(this.MsiPath);
-            args.Add(Path.Combine(this.TempDir, "wix.xml"));
+            args.Add(Path.Combine(this.DumpDir, "wix.xml"));
 
             if (this.CabFiles) {
                 args.Add("-x");
-                args.Add(this.TempDir);
+                args.Add(this.DumpDir);
             }
 
             ProcessStartInfo psi = new ProcessStartInfo();
             psi.FileName = Path.Combine(wixhome, "dark.exe");
             psi.Arguments = String.Join(" ", args.ToArray());
+            psi.EnvironmentVariables.Add("WIX_TEMP", this.TempDir);
+            psi.UseShellExecute = false;
 
             base.Log.LogMessage(
                 "Dumping MSI package '{0}' to '{1}'", 
                 this.MsiPath, 
-                this.TempDir);
+                this.DumpDir);
             Process dark = Process.Start(psi);
             dark.WaitForExit();
 
@@ -76,6 +78,12 @@ namespace Fusion.Tasks.MSI
         /// Flag to dump cabinet files.
         /// </summary>
         public bool CabFiles { get; set; }
+
+        /// <summary>
+        /// Path where files were dumped from the MSI.
+        /// </summary>
+        [Required]
+        public string DumpDir { get; set; }
 
         /// <summary>
         /// Path of the MSI file.

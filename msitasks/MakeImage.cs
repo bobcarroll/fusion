@@ -40,7 +40,7 @@ namespace Fusion.Tasks.MSI
         /// <returns>true on success, false on error</returns>
         public override bool Execute()
         {
-            string xmlfile = Path.Combine(this.TempDir, "wix.xml");
+            string xmlfile = Path.Combine(this.DumpDir, "wix.xml");
             if (!File.Exists(xmlfile)) {
                 base.Log.LogError("Could not find wix.xml file. Did you execute Dump?");
                 return false;
@@ -101,9 +101,9 @@ namespace Fusion.Tasks.MSI
         public string ImageDir { get; set; }
 
         /// <summary>
-        /// Path where temporary files are read from.
+        /// Path where files were dumped from the MSI.
         /// </summary>
         [Required]
-        public string TempDir { get; set; }
+        public string DumpDir { get; set; }
     }
 }
