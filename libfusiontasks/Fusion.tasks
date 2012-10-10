@@ -3,4 +3,6 @@
   <UsingTask AssemblyFile="libfusiontasks.dll" TaskName="Fusion.Tasks.FileSystem.BreakInheritance" />
   <UsingTask AssemblyFile="libfusiontasks.dll" TaskName="Fusion.Tasks.FileSystem.CopyFile" />
   <UsingTask AssemblyFile="libfusiontasks.dll" TaskName="Fusion.Tasks.FileSystem.SetMandatoryLabel" />
+
+  <UsingTask AssemblyFile="libfusiontasks.dll" TaskName="Fusion.Tasks.Registry.DeleteValue" />
 </Project>

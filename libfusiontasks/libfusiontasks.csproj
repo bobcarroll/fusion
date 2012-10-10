@@ -46,6 +46,7 @@
     <Compile Include="FileSystem\CopyFile.cs" />
     <Compile Include="FileSystem\SetMandatoryLabel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Registry\DeleteValue.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libfusion\libfusion.csproj">
