@@ -34,9 +34,29 @@ namespace fusion_config
     {
         private const uint SYMBOLIC_LINK_FLAG_DIRECTORY = 0x1;
 
+        [StructLayout(LayoutKind.Sequential)]
+        private struct OSVERSIONINFOEX
+        {
+            public uint dwOSVersionInfoSize;
+            public uint dwMajorVersion;
+            public uint dwMinorVersion;
+            public uint dwBuildNumber;
+            public uint dwPlatformId;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+            public string szCSDVersion;
+            public UInt16 wServicePackMajor;
+            public UInt16 wServicePackMinor;
+            public UInt16 wSuiteMask;
+            public byte wProductType;
+            public byte wReserved;
+        }
+
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern bool CreateSymbolicLink([In] string lpSymlinkFileName,
             [In] string lpTargetFileName, uint dwFlags);
+
+        [DllImport("kernel32", SetLastError = true)]
+        private static extern bool GetVersionEx(ref OSVERSIONINFOEX osvi);
 
         /* option group names */
         static string[] _groups = new string[] {
@@ -45,6 +65,10 @@ namespace fusion_config
 
         /* command-line options */
         static OptionExtra[] _options = new OptionExtra[] {
+            new OptionExtra() { 
+                Option = new Option() { Name = "auto-select", Val = 'a' },
+                Description = "Automatically select the best profile.",
+                InGroup = _groups[0] },
             new OptionExtra() { 
                 Option = new Option() { Name = "list-profiles", Val = 'l' },
                 Description = "Print a list of available profiles.",
@@ -68,6 +92,8 @@ namespace fusion_config
             int longindex = 0;
             int result;
             bool list = false;
+            bool auto = false;
+            uint choice = uint.MaxValue;
 
             if (args.Length == 0) {
                 op.PrintUsage();
@@ -77,6 +103,10 @@ namespace fusion_config
             while ((result = gopt.GetOptLong(ref argv, ot.ToOptString(), ot.ToLongOpts(), ref longindex)) != -1) {
 
                 switch (result) {
+                    case 'a':
+                        auto = true;
+                        break;
+
                     case 'l':
                         list = true;
                         break;
@@ -94,6 +124,26 @@ namespace fusion_config
                 null;
             int padding = (int)Math.Log10(profiles.Length);
 
+            if (gopt.NextOption < argv.Length) {
+                if (!uint.TryParse(argv[gopt.NextOption], out choice) || --choice >= profiles.Length) {
+                    Console.WriteLine("Invalid profile selection");
+                    return 1;
+                }
+            } else if (auto) {
+                string asresult = AutoSelect(cfg.ProfilesRootDir.FullName + @"\autoselect");
+                if (asresult == null) {
+                    Console.WriteLine("Could not automatically select profile");
+                    return 1;
+                }
+
+                for (uint i = 0; i < profiles.Length; i++) {
+                    if (String.Join("/", profiles[i].FullName.Split('\\').Skip(striplev)) == asresult) {
+                        choice = i;
+                        break;
+                    }
+                }
+            }
+
             if (list) {
                 for (int i = 0; i < profiles.Length; i++) {
                     string name = String.Join("/", profiles[i].FullName.Split('\\').Skip(striplev));
@@ -110,13 +160,7 @@ namespace fusion_config
 
                     Console.Write("\n");
                 }
-            } else if (gopt.NextOption < argv.Length) {
-                uint choice = 0;
-                if (!uint.TryParse(argv[gopt.NextOption], out choice) || --choice >= profiles.Length) {
-                    Console.WriteLine("Invalid profile selection");
-                    return 1;
-                }
-
+            } else if (choice < uint.MaxValue) {
                 if (!Security.IsNTAdmin()) {
                     Console.WriteLine("You must be an administrator to execute this command!");
                     return 1;
@@ -139,6 +183,43 @@ namespace fusion_config
             }
 
             return 0;
+        }
+
+        static string AutoSelect(string asfile)
+        {
+            if (!File.Exists(asfile))
+                return null;
+
+            string[] lines = File.ReadAllLines(asfile);
+
+            OSVERSIONINFOEX osvi = new OSVERSIONINFOEX();
+            osvi.dwOSVersionInfoSize = (uint)Marshal.SizeOf(osvi);
+            GetVersionEx(ref osvi);
+
+            string cpuarch = Enum.GetName(typeof(CpuArchitecture), XmlConfiguration.RealCpuArch);
+            string result = null;
+
+            foreach (string l in lines) {
+                string[] items = l.Split(' ');
+                uint val = 0;
+
+                if (items.Length < 5)
+                    continue;
+
+                if (!UInt32.TryParse(items[0], out val) || val != osvi.dwMajorVersion)
+                    continue;
+                else if (!UInt32.TryParse(items[1], out val) || val != osvi.dwMinorVersion)
+                    continue;
+                else if (!UInt32.TryParse(items[2], out val) || val != osvi.wProductType)
+                    continue;
+                else if (items[3] != cpuarch)
+                    continue;
+
+                result = items[4];
+                break;
+            }
+
+            return result;
         }
     }
 }
