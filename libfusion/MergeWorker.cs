@@ -232,11 +232,12 @@ namespace Fusion.Framework
 
             this.ScheduleMerges(distarr, mopts, downloader, out scheduled);
 
-            if (this.OnParallelFetch != null)
-                this.OnParallelFetch.Invoke(this, new EventArgs());
+            if (!mopts.HasFlag(MergeOptions.Pretend)) {
+                if (this.OnParallelFetch != null)
+                    this.OnParallelFetch.Invoke(this, new EventArgs());
 
-            if (!mopts.HasFlag(MergeOptions.Pretend))
                 downloader.FetchAsync();
+            }
 
             for (int i = 0; i < scheduled.Count; i++) {
                 MergeEventArgs mea = scheduled[i];
@@ -246,10 +247,12 @@ namespace Fusion.Framework
                 this.MergeOne(mea, mopts, downloader, _pkgmgr.RootDir);
             }
 
-            if (this.OnAutoClean != null)
-                this.OnAutoClean.Invoke(this, new EventArgs());
+            if (!mopts.HasFlag(MergeOptions.Pretend)) {
+                if (this.OnAutoClean != null)
+                    this.OnAutoClean.Invoke(this, new EventArgs());
 
-            TrashWorker.Purge(_pkgmgr);
+                TrashWorker.Purge(_pkgmgr);
+            }
         }
 
         /// <summary>
@@ -303,7 +306,11 @@ namespace Fusion.Framework
             if (installer == null)
                 throw new InstallException("Encountered missing or invalid installer project.");
 
-            if ((rc = this.SpawnXtMake(sbox, installer)) != 0) {
+            bool runmake = installer.HasSrcUnpackTarget ||
+                           installer.HasSrcCompileTarget ||
+                           installer.HasSrcInstallTarget ||
+                           installer.HasSrcTestTarget;
+            if (runmake && (rc = this.SpawnXtMake(sbox, installer)) != 0) {
                 _log.DebugFormat("xtmake return code: {0}", rc);
                 throw new InstallException("Installation failed. See previous errors.");
             }
@@ -372,8 +379,9 @@ namespace Fusion.Framework
             DependencyGraph dg = DependencyGraph.Compute(distarr);
             IDistribution[] distdeparr = dg.SortedNodes.ToArray();
 
-            IDistribution masked =
-                distdeparr.Where(i => i.PortsTree.IsMasked(i)).FirstOrDefault();
+            IDistribution masked = distdeparr
+                .Where(i => i.PortsTree.IsMasked(i))
+                .FirstOrDefault();
             if (masked != null)
                 throw new MaskedPackageException(masked.Package.FullName);
 
@@ -531,6 +539,10 @@ namespace Fusion.Framework
                             File.Delete(ft.Item1);
                             _log.InfoFormat("Deleted file '{0}'", ft.Item1);
                         }
+                    } catch (DirectoryNotFoundException) {
+                        _log.DebugFormat("Skipping non-existant directory '{0}'", ft.Item1);
+                    } catch (FileNotFoundException) {
+                        _log.DebugFormat("Skipping non-existant file '{0}'", ft.Item1);
                     } catch {
                         TrashWorker.AddFile(ft.Item1, _pkgmgr);
                         _log.WarnFormat("Marked '{0}' for future removal", ft.Item1);
