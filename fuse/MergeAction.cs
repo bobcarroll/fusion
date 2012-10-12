@@ -86,15 +86,22 @@ namespace fuse
                                     instarr.Where(n => n.PackageName == i.PackageName)
                                            .Max(n => n.Version.ToString()) == i.Version.ToString())
                         .ToArray();
+                    if (latestinst.Length > 1)
+                        throw new AmbiguousMatchException(atom.ToString());
 
-                    /* if we're not updating, no version was specified, and there's a version
-                     * already installed then select the installed version */
-                    IDistribution[] distarr =
-                        (!_options.update && !atom.HasVersion && latestinst.Length > 0) ?
-                            tree.LookupAll(latestinst) :
-                            tree.LookupAll(new Atom[] { atom });
-
-                    mergeset.AddRange(distarr);
+                    try {
+                        /* if we're not updating, no version was specified, and there's a version
+                         * already installed then select the installed version */
+                        IDistribution dist =
+                            (!_options.update && !atom.HasVersion && latestinst.Length > 0) ?
+                                tree.Lookup(latestinst[0]) :
+                                tree.Lookup(atom);
+                        mergeset.Add(dist);
+                    } catch (PackageNotFoundException ex) {
+                        /* we can ignore this exception if we're updating */
+                        if (!_options.update)
+                            throw ex;
+                    }
                 }
             } catch (AmbiguousMatchException ex) {
                 SearchAction sa = new SearchAction(ex.Atom);
