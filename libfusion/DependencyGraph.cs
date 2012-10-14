@@ -52,6 +52,7 @@ namespace Fusion.Framework
             _sorted = DependencyGraph.TopoSort(transrel);
 
             Dictionary<IDistribution, Node> nodemap = new Dictionary<IDistribution, Node>();
+            List<Node> visited = new List<Node>();
             Node tail;
 
             /* build the dependency graph */
@@ -64,13 +65,21 @@ namespace Fusion.Framework
                 foreach (IDistribution dep in transrel[dist]) {
                     tail = node.firstchild;
 
-                    if (tail == null)
-                        node.firstchild = nodemap[dep];
-                    else {
+                    if (tail == null) {
+                        Node first = nodemap[dep];
+                        if (!visited.Contains(first)) {
+                            node.firstchild = first;
+                            visited.Add(first);
+                        }
+                    } else {
                         while (tail.next != null)
                             tail = tail.next;
 
-                        tail.next = nodemap[dep];
+                        Node next = nodemap[dep];
+                        if (!visited.Contains(next)) {
+                            tail.next = nodemap[dep];
+                            visited.Add(next);
+                        }
                     }
                 }
             }
