@@ -80,7 +80,7 @@ namespace Fusion.Framework
         {
             DirectoryInfo[] diarr = cat.CategoryDirectory
                 .EnumerateDirectories()
-                .Where(d => d.Name.Length <= 30 && Package.ValidateName(d.Name))
+                .Where(d => d.Name.Length <= 50 && Package.ValidateName(d.Name))
                 .ToArray();
             List<Package> results = new List<Package>();
 
