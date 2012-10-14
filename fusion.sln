@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "msitasks", "msitasks\msitas
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bootstrap", "bootstrap\bootstrap.csproj", "{8E7EB837-CBA0-482D-B82A-F26572AE42D9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "7ztasks", "7ztasks\7ztasks.csproj", "{4C1C947D-C577-4D06-A14B-626C2196B33F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,18 @@ Global
 		{8E7EB837-CBA0-482D-B82A-F26572AE42D9}.Release|x64.ActiveCfg = Release|x86
 		{8E7EB837-CBA0-482D-B82A-F26572AE42D9}.Release|x86.ActiveCfg = Release|x86
 		{8E7EB837-CBA0-482D-B82A-F26572AE42D9}.Release|x86.Build.0 = Release|x86
+		{4C1C947D-C577-4D06-A14B-626C2196B33F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C1C947D-C577-4D06-A14B-626C2196B33F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C1C947D-C577-4D06-A14B-626C2196B33F}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{4C1C947D-C577-4D06-A14B-626C2196B33F}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{4C1C947D-C577-4D06-A14B-626C2196B33F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4C1C947D-C577-4D06-A14B-626C2196B33F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4C1C947D-C577-4D06-A14B-626C2196B33F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C1C947D-C577-4D06-A14B-626C2196B33F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C1C947D-C577-4D06-A14B-626C2196B33F}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{4C1C947D-C577-4D06-A14B-626C2196B33F}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{4C1C947D-C577-4D06-A14B-626C2196B33F}.Release|x64.ActiveCfg = Release|Any CPU
+		{4C1C947D-C577-4D06-A14B-626C2196B33F}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
