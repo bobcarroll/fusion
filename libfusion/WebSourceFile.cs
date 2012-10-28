@@ -55,6 +55,7 @@ namespace Fusion.Framework
         {
             try {
                 WebClient wc = new WebClient();
+                wc.Proxy = WebRequest.DefaultWebProxy;
                 wc.DownloadFile(_location, destdir.FullName + @"\" + this.LocalName);
             } catch (WebException ex) {
                 throw ex;
