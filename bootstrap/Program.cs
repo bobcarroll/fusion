@@ -22,12 +22,19 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace bootstrap
 {
     class Program
     {
+        const int CSIDL_SYSTEMX86 = 0x0029;
+
+        [DllImport("shell32.dll")]
+        public static extern bool SHGetSpecialFolderPath(IntPtr hwndOwner, 
+            [Out] StringBuilder lpszPath, int nFolder, bool fCreate);
+
         /// <summary>
         /// Application entry-point function.
         /// </summary>
@@ -37,12 +44,34 @@ namespace bootstrap
         {
             Console.WriteLine("Fusion - http://github.com/rcarz/fusion\n");
 
-            if (Environment.OSVersion.Version.Major < 6) {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("WARNING! You are about to bootstrap Fusion on your system." +
+                " This will\noverwrite any existing version you have installed, including " +
+                "your\nconfiguration files and database of installed packages.");
+            Console.ResetColor();
+
+            while (true) {
+                Console.Write("\nDo you want to continue (yes or no): ");
+                string input = Console.ReadLine();
+
+                if (input.ToLower() == "yes") {
+                    Console.Write("\n");
+                    break;
+                } else if (input.ToLower() == "no") {
+                    Console.Write("\nInstallation is cancelled. Press any key to continue...");
+                    Console.ReadKey(true);
+                    return;
+                }
+            }
+
+            bool win8 = Environment.OSVersion.Version.Major == 6 &&
+                        Environment.OSVersion.Version.Minor == 2;
+            if (Environment.OSVersion.Version.Major < 6 || win8) {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("ERROR: your Windows version is not supported!");
                 Console.ResetColor();
-                Console.WriteLine("\nFusion is only compatible with Windows Vista/7/8/2008.");
-                Console.WriteLine("\nPress any key to continue...");
+                Console.WriteLine("\nFusion is only compatible with Windows Vista/7/2008.");
+                Console.Write("\nPress any key to continue...");
                 Console.ReadKey(true);
                 return;
             }
@@ -54,10 +83,25 @@ namespace bootstrap
                 Console.ResetColor();
                 Console.WriteLine("\nYou will be redirected to the Microsoft download website. " +
                     "Re-run Fusion\nsetup after you've installed .NET Framework 4.0.");
-                Console.WriteLine("\nPress any key to continue...");
+                Console.Write("\nPress any key to continue...");
                 Console.ReadKey(true);
 
                 Process browser = Process.Start("http://www.microsoft.com/en-us/download/details.aspx?id=17851");
+                return;
+            }
+
+            StringBuilder sys86path = new StringBuilder(260);
+            SHGetSpecialFolderPath(IntPtr.Zero, sys86path, CSIDL_SYSTEMX86, false);
+            if (!File.Exists(sys86path.ToString() + @"\msvcr100.dll")) {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("ERROR: Microsoft C runtime 2010 is not installed!");
+                Console.ResetColor();
+                Console.WriteLine("\nYou will be redirected to the Microsoft download website. " +
+                    "Re-run Fusion\nsetup after you've installed Microsoft C runtime 2010.");
+                Console.Write("\nPress any key to continue...");
+                Console.ReadKey(true);
+
+                Process browser = Process.Start("http://www.microsoft.com/en-us/download/details.aspx?id=5555");
                 return;
             }
 
