@@ -39,6 +39,8 @@ namespace fuse
         private List<string> _repolst;
         private int _numpkgs;
         private long _dloadsz;
+        private List<Atom> _hardmask;
+        private List<Tuple<Atom, string[]>> _kwmask;
 
         /// <summary>
         /// Initialises the new merge action.
@@ -60,6 +62,11 @@ namespace fuse
             AbstractTree tree = LocalRepository.Read();
             List<IDistribution> mergeset = new List<IDistribution>();
             List<Atom> atomset = new List<Atom>();
+
+            _numpkgs = 0;
+            _dloadsz = 0;
+            _hardmask = new List<Atom>();
+            _kwmask = new List<Tuple<Atom, string[]>>();
 
             try {
                 /* expand world */
@@ -158,6 +165,34 @@ namespace fuse
                         "Total: {0} package(s), Size of download(s): {1}",
                         _numpkgs,
                         sb.ToString());
+
+                    if (_hardmask.Count > 0) {
+                        Console.Write("\nThe following packages must be ");
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Write("unmasked");
+                        Console.ResetColor();
+                        Console.WriteLine(" before continuing:");
+                        Console.ForegroundColor = ConsoleColor.Green;
+
+                        foreach (Atom a in _hardmask)
+                            Console.WriteLine("={0}", a.ToString());
+
+                        Console.ResetColor();
+                    }
+
+                    if (_kwmask.Count > 0) {
+                        Console.Write("\nThe following ");
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Write("keyword changes");
+                        Console.ResetColor();
+                        Console.WriteLine(" are necessary to proceed:");
+                        Console.ForegroundColor = ConsoleColor.Green;
+
+                        foreach (var t in _kwmask)
+                            Console.WriteLine("={0} {1}", t.Item1.ToString(), String.Join(" ", t.Item2));
+
+                        Console.ResetColor();
+                    }
                 } else
                     Console.Write("\n");
             } catch (MaskedPackageException ex) {
@@ -243,12 +278,18 @@ namespace fuse
             if (!_repolst.Contains(distrepo))
                 _repolst.Add(distrepo);
 
+            if (e.HardMask)
+                _hardmask.Add(e.Distribution.Atom);
+
+            if (e.KeywordMask)
+                _kwmask.Add(new Tuple<Atom, string[]>(e.Distribution.Atom, e.KeywordsNeeded));
+
             Console.Write("[");
             if (e.Selected)
                 Console.ForegroundColor = ConsoleColor.Green;
             else
                 Console.ForegroundColor = ConsoleColor.DarkGreen;
-            Console.Write("port   ");
+            Console.Write("port  ");
             Console.ResetColor();
 
             if (e.Flags.HasFlag(MergeFlags.BlockUnresolved) || e.Flags.HasFlag(MergeFlags.BlockResolved)) {
@@ -291,6 +332,17 @@ namespace fuse
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.Write("{0}", e.Flags.HasFlag(MergeFlags.Downgrading) ? "D" : " ");
             Console.ResetColor();
+
+            if (e.HardMask) {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write("M");
+                Console.ResetColor();
+            } else if (e.KeywordMask) {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("~");
+                Console.ResetColor();
+            } else
+                Console.Write(" ");
 
             Console.Write("]");
             if (e.Selected)

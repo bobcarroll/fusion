@@ -277,6 +277,9 @@ namespace Fusion.Framework
             if (this.OnRealMerge != null)
                 this.OnRealMerge.Invoke(this, mea);
 
+            if (mea.HardMask || mea.KeywordMask)
+                throw new MaskedPackageException(mea.Distribution.Package.FullName);
+
             if (dist.Sources.Length > 0) {
                 if (mea.FetchHandle != Guid.Empty && !downloader.Peek(mea.FetchHandle)) {
                     _log.Info("Fetching files in the background... please wait");
@@ -379,12 +382,6 @@ namespace Fusion.Framework
             DependencyGraph dg = DependencyGraph.Compute(distarr);
             IDistribution[] distdeparr = dg.SortedNodes.ToArray();
 
-            IDistribution masked = distdeparr
-                .Where(i => i.PortsTree.IsMasked(i))
-                .FirstOrDefault();
-            if (masked != null)
-                throw new MaskedPackageException(masked.Package.FullName);
-
             IDistribution[] conflicts = distdeparr
                 .Where(d => distdeparr.Where(
                     dd => d.Package.FullName == dd.Package.FullName && d.Slot == dd.Slot).Count() > 1)
@@ -404,6 +401,16 @@ namespace Fusion.Framework
                 mea.Selected = !mopts.HasFlag(MergeOptions.OneShot) && distarr.Contains(dist);
                 mea.Distribution = dist;
                 mea.FetchOnly = mopts.HasFlag(MergeOptions.FetchOnly);
+
+                mea.HardMask = dist.PortsTree.IsHardMasked(dist);
+                mea.KeywordMask = dist.PortsTree.IsKeywordMasked(dist);
+
+                mea.KeywordsNeeded = dist.Keywords
+                    .Where(kw => _cfg.AcceptKeywords.Contains(Distribution.GetKeywordName(kw)))
+                    .ToArray();
+
+                if (!mopts.HasFlag(MergeOptions.Pretend) && (mea.HardMask || mea.KeywordMask))
+                    throw new MaskedPackageException(dist.Package.FullName);
 
                 int cmpresult = (current != null) ? 
                     Atom.CompareVersions(current.Version, current.Revision, dist.Version, dist.Revision) :

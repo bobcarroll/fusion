@@ -46,6 +46,13 @@ namespace Fusion.Framework
         public abstract bool IsHardMasked(IDistribution dist);
 
         /// <summary>
+        /// Determines if the given distribution is masked by keywords.
+        /// </summary>
+        /// <param name="dist">the distribution to check</param>
+        /// <returns>true if masked, false otherwise</returns>
+        public abstract bool IsKeywordMasked(IDistribution dist);
+
+        /// <summary>
         /// Gets the package distribution referenced by the given atom.
         /// </summary>
         /// <param name="atom">the package atom to lookup</param>

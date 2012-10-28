@@ -55,6 +55,21 @@ namespace Fusion.Framework
         public MergeFlags Flags;
 
         /// <summary>
+        /// Flag indicating whether or not the packaged is hard masked.
+        /// </summary>
+        public bool HardMask;
+
+        /// <summary>
+        /// Flag indicating whether or not the package is masked by keywords.
+        /// </summary>
+        public bool KeywordMask;
+
+        /// <summary>
+        /// Set of keywords needed to merge the package.
+        /// </summary>
+        public string[] KeywordsNeeded;
+
+        /// <summary>
         /// The previously installed version (if any).
         /// </summary>
         public Atom Previous;

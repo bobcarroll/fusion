@@ -36,6 +36,16 @@ namespace Fusion.Framework
     /// </summary>
     public sealed class Distribution : IDistribution
     {
+        /// <summary>
+        /// Regular expression for matching inclusive keywords.
+        /// </summary>
+        public const string KEYWORD_INCL_FMT = "[~]?[A-Za-z0-9-_]+";
+
+        /// <summary>
+        /// Regular expression for matching exclusive keywords.
+        /// </summary>
+        public const string KEYWORD_EXCL_FMT = "[-]?[A-Za-z0-9-_]+";
+
         private FileInfo _pkgdist;
         private Package _package;
         private Version _version;
@@ -80,8 +90,11 @@ namespace Fusion.Framework
 
             XmlNodeList nl = root.SelectNodes("Keywords/Keyword");
             List<string> keywords = new List<string>();
-            foreach (XmlElement kwelem in nl)
-                keywords.Add(kwelem.InnerText);
+            foreach (XmlElement kwelem in nl) {
+                if (Regex.IsMatch(kwelem.InnerText, KEYWORD_INCL_FMT) ||
+                    Regex.IsMatch(kwelem.InnerText, KEYWORD_EXCL_FMT))
+                     keywords.Add(kwelem.InnerText);
+            }
             _keywords = keywords.ToArray();
 
             XmlAttribute szattr = (XmlAttribute)root.SelectSingleNode("Sources/@size");
@@ -120,7 +133,7 @@ namespace Fusion.Framework
             XmlElement elem = (XmlElement)root.SelectSingleNode("Restrict/Fetch");
             _fetch = (elem != null) ? Convert.ToBoolean(elem.InnerText) : false;
 
-            elem = (XmlElement)root.SelectSingleNode("Interactive");
+            elem = (XmlElement)root.SelectSingleNode("Properties/Interactive");
             _interactive = (elem != null) ? Convert.ToBoolean(elem.InnerText) : false;
 
             elem = (XmlElement)root.SelectSingleNode("Slot");
@@ -212,6 +225,16 @@ namespace Fusion.Framework
 
             XmlReader xr = new XmlNodeReader(_project);
             return new MSBuildProject(pkgname, ProjectRootElement.Create(xr), vars);
+        }
+
+        /// <summary>
+        /// Gets the keyword name without any modifier symbols.
+        /// </summary>
+        /// <param name="keyword">keyword</param>
+        /// <returns>keyword name</returns>
+        public static string GetKeywordName(string keyword)
+        {
+            return keyword.TrimStart('~');
         }
 
         /// <summary>

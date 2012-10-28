@@ -20,9 +20,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.IO;
+using System.Text.RegularExpressions;
 
 namespace Fusion.Framework
 {
@@ -103,10 +104,10 @@ namespace Fusion.Framework
                             continue;
 
                         Atom a = Atom.Parse(parts[0], AtomParseOptions.WithoutVersion);
-                        string[] brarr = new string[parts.Length - 1];
-                        Array.Copy(parts, 1, brarr, 0, parts.Length - 1);
+                        string[] kwarr = new string[parts.Length - 1];
+                        Array.Copy(parts, 1, kwarr, 0, parts.Length - 1);
 
-                        dict.Add(a, brarr);
+                        dict.Add(a, kwarr.Where(i => Regex.IsMatch(i, Distribution.KEYWORD_INCL_FMT)).ToArray());
                     } catch (BadAtomException) {
                         throw new BadAtomException("Bad package atom '" + s + "' in package.keywords file.");
                     }
@@ -149,20 +150,7 @@ namespace Fusion.Framework
         /// <returns>true if masked, false otherwise</returns>
         public override bool IsMasked(IDistribution dist)
         {
-            if (this.IsHardMasked(dist))
-                return true;
-
-            bool result = _xmlconf.AcceptKeywords.Intersect(dist.Keywords).Count() == 0;
-            Dictionary<Atom, string[]> kwdict = this.GetPackageKeywords();
-
-            foreach (KeyValuePair<Atom, string[]> kvp in kwdict) {
-                if (kvp.Key.Match(dist.Atom) && kvp.Value.Intersect(dist.Keywords).Count() > 0) {
-                    result = false;
-                    break;
-                }
-            }
-            
-            return result;
+            return this.IsHardMasked(dist) || this.IsKeywordMasked(dist);
         }
 
         /// <summary>
@@ -191,6 +179,26 @@ namespace Fusion.Framework
             }
 
             return fmasked;
+        }
+
+        /// <summary>
+        /// Determines if the given distribution is masked by keywords.
+        /// </summary>
+        /// <param name="dist">the distribution to check</param>
+        /// <returns>true if masked, false otherwise</returns>
+        public override bool IsKeywordMasked(IDistribution dist)
+        {
+            bool result = _xmlconf.AcceptKeywords.Intersect(dist.Keywords).Count() == 0;
+            Dictionary<Atom, string[]> kwdict = this.GetPackageKeywords();
+
+            foreach (KeyValuePair<Atom, string[]> kvp in kwdict) {
+                if (kvp.Key.Match(dist.Atom) && kvp.Value.Intersect(dist.Keywords).Count() > 0) {
+                    result = false;
+                    break;
+                }
+            }
+
+            return result;
         }
 
         /// <summary>

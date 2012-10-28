@@ -24,6 +24,7 @@ using System.Text;
 using System.Xml;
 using System.IO;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Fusion.Framework
 {
@@ -120,8 +121,10 @@ namespace Fusion.Framework
 
             XmlNodeList nl = doc.SelectNodes("//Configuration/AcceptKeywords/Keyword");
             List<string> blst = new List<string>(this.AcceptKeywords);
-            foreach (XmlNode n in nl)
-                blst.Add(n.InnerText);
+            foreach (XmlNode n in nl) {
+                if (Regex.IsMatch(n.InnerText, Distribution.KEYWORD_INCL_FMT))
+                    blst.Add(n.InnerText);
+            }
             this.AcceptKeywords = blst.Distinct().ToArray();
 
             elem = (XmlElement)doc.SelectSingleNode("//Configuration/CollisionDetect");
