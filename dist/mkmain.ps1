@@ -31,6 +31,7 @@ cp ../bin/Release/xtmake.exe.config ../bin/dist/main/bin/
 
 cp ../lib/libconsole2.dll ../bin/dist/main/bin/
 cp ../lib/log4net.dll ../bin/dist/main/bin/
+cp ../lib/Nini.dll ../bin/dist/main/bin/
 cp ../lib/System.Data.SQLite.dll ../bin/dist/main/bin/
 cp ../lib/System.Data.SQLite.Linq.dll ../bin/dist/main/bin/
 

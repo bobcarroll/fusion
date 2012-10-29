@@ -44,7 +44,7 @@ namespace Fusion.Framework
         private static ILog _log = LogManager.GetLogger(typeof(PackageDatabase));
 
         private Entities _ent;
-        private XmlConfiguration _cfg;
+        private Configuration _cfg;
         private Atom[] _protected;
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Fusion.Framework
         private PackageDatabase(Entities ent)
         {
             _ent = ent;
-            _cfg = XmlConfiguration.LoadSeries();
+            _cfg = Configuration.LoadSeries();
             _log = LogManager.GetLogger(typeof(PackageDatabase));
             _protected = this.GetProtectedPackages();
 

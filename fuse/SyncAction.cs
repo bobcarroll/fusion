@@ -47,7 +47,7 @@ namespace fuse
         /// <param name="pkgmgr">package manager instance</param>
         public void Execute(IPackageManager pkgmgr)
         {
-            XmlConfiguration cfg = XmlConfiguration.LoadSeries();
+            Configuration cfg = Configuration.LoadSeries();
             Security.DemandNTAdmin();
 
             if (cfg.PortDir == null || !cfg.PortDir.Exists)
@@ -65,7 +65,7 @@ namespace fuse
                 Console.WriteLine("\n>>> Starting rsync with {0}...\n", mirror.ToString());
 
                 string[] args = new string[] { "-av", "--delete", mirror.ToString(), cygpath };
-                ChildProcess cp = ChildProcess.Fork(XmlConfiguration.BinDir.FullName + @"\rsync.exe", args);
+                ChildProcess cp = ChildProcess.Fork(Configuration.BinDir.FullName + @"\rsync.exe", args);
                 cp.WaitForExit();
 
                 if (cp.GetExitCode() != 0)

@@ -56,7 +56,7 @@ namespace Fusion.Framework
         /// <returns>true if compatible, false otherwise</returns>
         public bool CheckPlatform()
         {
-            return this.CpuArch == 0 || this.CpuArch == XmlConfiguration.RealCpuArch;
+            return this.CpuArch == 0 || this.CpuArch == Configuration.RealCpuArch;
         }
 
         /// <summary>

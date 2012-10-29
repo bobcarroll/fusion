@@ -208,7 +208,7 @@ namespace Fusion.Framework
             string pkgname = String.Format("{0}-{1}", 
                 _package.Name, 
                 Atom.FormatRevision(_revision, _version));
-            XmlConfiguration cfg = XmlConfiguration.LoadSeries();
+            Configuration cfg = Configuration.LoadSeries();
 
             Dictionary<string, string> vars = new Dictionary<string, string>();
             vars.Add("P", pkgname);

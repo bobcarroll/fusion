@@ -66,7 +66,7 @@ namespace Fusion.Framework
         /// <returns>a list of categories found in the ports directory</returns>
         private static List<Category> Enumerate(AbstractTree tree, DirectoryInfo portdir)
         {
-            XmlConfiguration xmlconf = XmlConfiguration.LoadSeries();
+            Configuration xmlconf = Configuration.LoadSeries();
             FileInfo[] filearr = xmlconf.ProfilesRootDir.GetFiles("categories");
             string[] list = (filearr.Length > 0) ? 
                 File.ReadAllLines(filearr[0].FullName) : 

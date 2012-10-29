@@ -37,6 +37,9 @@
     </Reference>
     <Reference Include="Microsoft.Build" />
     <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Nini">
+      <HintPath>..\lib\Nini.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
@@ -131,7 +134,7 @@
     <Compile Include="SlotConflictException.cs" />
     <Compile Include="TrashWorker.cs" />
     <Compile Include="WebSourceFile.cs" />
-    <Compile Include="XmlConfiguration.cs">
+    <Compile Include="Configuration.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

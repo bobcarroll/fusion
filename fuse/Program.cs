@@ -237,7 +237,7 @@ namespace fuse
             Environment.SetEnvironmentVariable("CONSOLE", ConsoleEx.GetConsoleProcessId().ToString());
 
             try {
-                XmlConfiguration cfg = XmlConfiguration.LoadSeries();
+                Fusion.Framework.Configuration cfg = Fusion.Framework.Configuration.LoadSeries();
                 GlobalContext.Properties["logdir"] = cfg.LogDir.FullName;
                 log4net.Config.XmlConfigurator.Configure();
 

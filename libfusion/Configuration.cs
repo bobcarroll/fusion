@@ -20,32 +20,33 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Xml;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
+
+using Nini.Config;
 
 namespace Fusion.Framework
 {
     /// <summary>
-    /// A simple XML configuration loader.
+    /// A simple configuration loader.
     /// </summary>
-    public sealed class XmlConfiguration
+    public sealed class Configuration
     {
         private static DirectoryInfo _bindir;
-        private static XmlConfiguration _instance;
+        private static Configuration _instance;
         private static CpuArchitecture _cpuarch = 0;
 
-        private XmlConfiguration() { }
+        private Configuration() { }
 
         /// <summary>
         /// Loads the Fusion configuration series.
         /// </summary>
         /// <returns>a configuration instance with loaded values</returns>
-        public static XmlConfiguration LoadSeries()
+        public static Configuration LoadSeries()
         {
-            return XmlConfiguration.LoadSeries(false);
+            return Configuration.LoadSeries(false);
         }
 
         /// <summary>
@@ -53,12 +54,12 @@ namespace Fusion.Framework
         /// </summary>
         /// <param name="reload">flag to reload configuration</param>
         /// <returns>a configuration instance with loaded values</returns>
-        public static XmlConfiguration LoadSeries(bool reload)
+        public static Configuration LoadSeries(bool reload)
         {
             if (_instance != null && !reload)
                 return _instance;
 
-            _instance = new XmlConfiguration();
+            _instance = new Configuration();
             bool isadmin = Security.IsNTAdmin();
 
             string homedirenv = Environment.GetEnvironmentVariable("FUSION_HOME");
@@ -84,20 +85,20 @@ namespace Fusion.Framework
             /* load the profile cascade tree */
             if (_instance.ProfileDir.Exists) {
                 List<DirectoryInfo> profilelst = new List<DirectoryInfo>();
-                XmlConfiguration.WalkProfileTree(_instance.ProfileDir, profilelst, true);
+                Configuration.WalkProfileTree(_instance.ProfileDir, profilelst, true);
                 _instance.ProfileTree = profilelst.ToArray();
             } else
                 _instance.ProfileTree = new DirectoryInfo[] { };
 
             /* load profile config */
             foreach (DirectoryInfo di in _instance.ProfileTree) {
-                FileInfo profcfg = new FileInfo(di.FullName + @"\config.xml");
+                FileInfo profcfg = new FileInfo(di.FullName + @"\config.ini");
                 if (profcfg.Exists)
                     _instance.LoadSingle(profcfg);
             }
 
             /* load machine config */
-            FileInfo localcfg = new FileInfo(_instance.ConfDir.FullName + @"\config.xml");
+            FileInfo localcfg = new FileInfo(_instance.ConfDir.FullName + @"\config.ini");
             if (localcfg.Exists)
                 _instance.LoadSingle(localcfg);
 
@@ -110,42 +111,53 @@ namespace Fusion.Framework
         }
 
         /// <summary>
-        /// Read in configuration data from an XML file.
+        /// Read in configuration data from an INI file.
         /// </summary>
         /// <param name="file">path of the config file</param>
         public void LoadSingle(FileInfo cfgfile)
         {
-            XmlDocument doc = new XmlDocument();
-            doc.Load(cfgfile.FullName);
-            XmlElement elem;
+            IConfigSource source = new IniConfigSource(cfgfile.FullName);
+            IConfig cc = source.Configs["Fusion"];
 
-            XmlNodeList nl = doc.SelectNodes("//Configuration/AcceptKeywords/Keyword");
-            List<string> blst = new List<string>(this.AcceptKeywords);
-            foreach (XmlNode n in nl) {
-                if (Regex.IsMatch(n.InnerText, Distribution.KEYWORD_INCL_FMT))
-                    blst.Add(n.InnerText);
+            string acceptkw = cc.Get("AcceptKeywords", "");
+            List<string> kwlist = new List<string>();
+            foreach (string kw in acceptkw.Split(' ').Where(i => !String.IsNullOrWhiteSpace(i))) {
+                if (Regex.IsMatch(kw, Distribution.KEYWORD_INCL_FMT))
+                    kwlist.Add(kw);
             }
-            this.AcceptKeywords = blst.Distinct().ToArray();
+            this.AcceptKeywords = this.AcceptKeywords
+                .Union(kwlist)
+                .Distinct()
+                .ToArray();
 
-            elem = (XmlElement)doc.SelectSingleNode("//Configuration/CollisionDetect");
-            if (elem != null && !String.IsNullOrWhiteSpace(elem.InnerText))
-                this.CollisionDetect = Convert.ToBoolean(elem.InnerText);
+            /* yes, I know there's a GetBoolean(), but this is a tri-state...
+               true to set true, false to set false, and empty to do nothing */
+            string coldetstr = cc.Get("CollisionDetect", "");
+            bool coldetbool = false;
+            if (Boolean.TryParse(coldetstr, out coldetbool))
+                this.CollisionDetect = coldetbool;
 
-            elem = (XmlElement)doc.SelectSingleNode("//Configuration/SystemRoot");
-            if (elem != null && !String.IsNullOrWhiteSpace(elem.InnerText))
-                this.RootDir = new DirectoryInfo(elem.InnerText);
+            string sysroot = cc.Get("SystemRoot", "");
+            if (!String.IsNullOrEmpty(sysroot))
+                this.RootDir = new DirectoryInfo(sysroot);
 
-            nl = doc.SelectNodes("//Configuration/PortDirOverlay");
-            List<DirectoryInfo> overlaylst = new List<DirectoryInfo>();
-            foreach (XmlNode n in nl)
-                overlaylst.Add(new DirectoryInfo(((XmlElement)n).InnerText));
-            this.PortDirOverlays = overlaylst.ToArray();
+            string portdiroverlay = cc.Get("PortDir_Overlay", "");
+            List<DirectoryInfo> overlaylist = new List<DirectoryInfo>();
+            foreach (string overlay in portdiroverlay.Split(' ').Where(i => !String.IsNullOrWhiteSpace(i)))
+                overlaylist.Add(new DirectoryInfo(overlay));
+            this.PortDirOverlays = this.PortDirOverlays
+                .Union(overlaylist)
+                .Distinct()
+                .ToArray();
 
-            nl = doc.SelectNodes("//Configuration/RsyncMirrors/Uri[starts-with(., 'rsync://')]");
-            List<Uri> mlst = new List<Uri>();
-            foreach (XmlNode n in nl)
-                mlst.Add(new Uri(((XmlElement)n).InnerText));
-            this.RsyncMirrors = mlst.ToArray();
+            string mirrors = cc.Get("Mirrors", "");
+            List<Uri> mirrorlist = new List<Uri>();
+            foreach (string mirror in mirrors.Split(' ').Where(i => !String.IsNullOrWhiteSpace(i)))
+                mirrorlist.Add(new Uri(mirror));
+            this.RsyncMirrors = this.RsyncMirrors
+                .Union(mirrorlist)
+                .Distinct()
+                .ToArray();
         }
 
         /// <summary>
@@ -166,7 +178,7 @@ namespace Fusion.Framework
                 return;
             }
 
-            XmlConfiguration.WalkProfileTree(
+            Configuration.WalkProfileTree(
                 new DirectoryInfo(curdir + @"\" + (start ? parentpath[1] : parentpath[0])), 
                 results,
                 false);

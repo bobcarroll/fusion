@@ -1,7 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Configuration>
-  <AcceptKeywords />
-  <RsyncMirrors>
-    <Uri>rsync://unifieddiff.com/fusion-ports</Uri>
-  </RsyncMirrors>
-</Configuration>

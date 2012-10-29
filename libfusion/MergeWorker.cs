@@ -47,7 +47,7 @@ namespace Fusion.Framework
         private static ILog _log = LogManager.GetLogger(typeof(MergeWorker));
 
         private IPackageManager _pkgmgr;
-        private XmlConfiguration _cfg;
+        private Configuration _cfg;
         private string[] _protected;
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace Fusion.Framework
         public MergeWorker(IPackageManager pkgmgr)
         {
             _pkgmgr = pkgmgr;
-            _cfg = XmlConfiguration.LoadSeries();
+            _cfg = Configuration.LoadSeries();
             _protected = this.GetSystemProtectedFiles();
         }
 
@@ -406,7 +406,8 @@ namespace Fusion.Framework
                 mea.KeywordMask = dist.PortsTree.IsKeywordMasked(dist);
 
                 mea.KeywordsNeeded = dist.Keywords
-                    .Where(kw => _cfg.AcceptKeywords.Contains(Distribution.GetKeywordName(kw)))
+                    .Where(kw => _cfg.AcceptKeywords.Contains(kw) ||
+                                 _cfg.AcceptKeywords.Contains(Distribution.GetKeywordName(kw)))
                     .ToArray();
 
                 if (!mopts.HasFlag(MergeOptions.Pretend) && (mea.HardMask || mea.KeywordMask))
@@ -465,12 +466,12 @@ namespace Fusion.Framework
             stream.Close();
 
             StringBuilder sb = new StringBuilder();
-            sb.Append("\"" + XmlConfiguration.BinDir.FullName + "\\xtmake.exe\"");
+            sb.Append("\"" + Configuration.BinDir.FullName + "\\xtmake.exe\"");
             sb.Append(" ");
             sb.Append("\"" + installerbin + "\"");
 
             ProcessStartInfo psi = new ProcessStartInfo();
-            psi.FileName = XmlConfiguration.BinDir.FullName + @"\sudont.exe";
+            psi.FileName = Configuration.BinDir.FullName + @"\sudont.exe";
             psi.Arguments = sb.ToString();
 
             _log.DebugFormat("Spawning low-privileged process: {0}", psi.Arguments);

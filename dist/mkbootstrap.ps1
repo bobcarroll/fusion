@@ -20,7 +20,7 @@ mkdir ../bin/dist/bootstrap/global/sys-apps/fusion | out-null
 
 cp ../bin/Release/bootstrap.exe ../bin/dist/bootstrap/
 
-cp ./bootstrap/config.xml ../bin/dist/bootstrap/etc/
+cp ./bootstrap/config.ini ../bin/dist/bootstrap/etc/
 cp ./etc/fusion.s3db ../bin/dist/bootstrap/etc/
 
 cp ../bin/Release/fuse.exe ../bin/dist/bootstrap/bin/
@@ -33,6 +33,7 @@ cp ../bin/Release/xtmake.exe.config ../bin/dist/bootstrap/bin/
 
 cp ../lib/libconsole2.dll ../bin/dist/bootstrap/bin/
 cp ../lib/log4net.dll ../bin/dist/bootstrap/bin/
+cp ../lib/Nini.dll ../bin/dist/bootstrap/bin/
 cp ../lib/System.Data.SQLite.dll ../bin/dist/bootstrap/bin/
 cp ../lib/System.Data.SQLite.Linq.dll ../bin/dist/bootstrap/bin/
 

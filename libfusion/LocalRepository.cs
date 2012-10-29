@@ -32,7 +32,7 @@ namespace Fusion.Framework
     /// </summary>
     public sealed class LocalRepository : AbstractTree
     {
-        private XmlConfiguration _xmlconf;
+        private Configuration _xmlconf;
         private List<ICategory> _categories;
         private Atom[] _hdmasked;
         private Atom[] _unmasked;
@@ -42,7 +42,7 @@ namespace Fusion.Framework
         /// </summary>
         private LocalRepository()
         {
-            _xmlconf = XmlConfiguration.LoadSeries();
+            _xmlconf = Configuration.LoadSeries();
             _categories = new List<ICategory>(Category.Enumerate(this));
             _hdmasked = this.GetMaskedPackages();
             _unmasked = this.GetUnmaskedPackages();

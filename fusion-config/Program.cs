@@ -113,7 +113,7 @@ namespace fusion_config
                 }
             }
 
-            XmlConfiguration cfg = XmlConfiguration.LoadSeries();
+            Configuration cfg = Configuration.LoadSeries();
             DirectoryInfo[] profiles = cfg.ProfilesRootDir.GetDirectories("*", SearchOption.AllDirectories)
                 .Where(i => File.ReadAllLines(i.FullName + @"\parent").Length > 1)
                 .OrderBy(i => i.FullName)
@@ -196,7 +196,7 @@ namespace fusion_config
             osvi.dwOSVersionInfoSize = (uint)Marshal.SizeOf(osvi);
             GetVersionEx(ref osvi);
 
-            string cpuarch = Enum.GetName(typeof(CpuArchitecture), XmlConfiguration.RealCpuArch);
+            string cpuarch = Enum.GetName(typeof(CpuArchitecture), Configuration.RealCpuArch);
             string result = null;
 
             foreach (string l in lines) {
