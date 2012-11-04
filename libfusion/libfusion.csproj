@@ -76,6 +76,7 @@
     <Compile Include="BuildLogRedirector.cs" />
     <Compile Include="Category.cs" />
     <Compile Include="CircularReferenceException.cs" />
+    <Compile Include="SourceType.cs" />
     <Compile Include="CpuArchitecture.cs" />
     <Compile Include="ProtectedPackageException.cs" />
     <Compile Include="UnmergeEventArgs.cs" />

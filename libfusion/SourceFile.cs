@@ -34,6 +34,7 @@ namespace Fusion.Framework
         private string _localname;
         private long _size;
         private CpuArchitecture _cpuarch;
+        private SourceType _srctype;
 
         /// <summary>
         /// Initialises the local source.
@@ -42,12 +43,15 @@ namespace Fusion.Framework
         /// <param name="localname">file name to use when saving to distfiles</param>
         /// <param name="size">size of the file in bytes</param>
         /// <param name="arch">CPU architecture name</param>
-        internal SourceFile(string digest, string localname, long size, CpuArchitecture cpuarch)
+        /// <param name="cpuarch">source type name</param>
+        internal SourceFile(string digest, string localname, long size, 
+            CpuArchitecture cpuarch, SourceType srctype)
         {
             _digest = digest;
             _localname = localname;
             _size = size;
             _cpuarch = cpuarch;
+            _srctype = srctype;
         }
 
         /// <summary>
@@ -89,6 +93,14 @@ namespace Fusion.Framework
         public long Size
         {
             get { return _size; }
+        }
+
+        /// <summary>
+        /// Type of the source file (binary or source code).
+        /// </summary>
+        public SourceType Type
+        {
+            get { return _srctype; }
         }
     }
 }

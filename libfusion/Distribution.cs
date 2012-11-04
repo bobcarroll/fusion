@@ -119,12 +119,16 @@ namespace Fusion.Framework
 
                 srctmp = e.GetAttribute("cpuarch");
                 CpuArchitecture arch = 0;
-                Enum.TryParse<CpuArchitecture>(srctmp, out arch);
+                Enum.TryParse<CpuArchitecture>(srctmp, true, out arch);
+
+                srctmp = e.GetAttribute("type");
+                SourceType srctype = 0;
+                Enum.TryParse<SourceType>(srctmp, true, out srctype);
 
                 if (srcuri != null)
-                    srcfile = new WebSourceFile(srcuri, srcdigest, pkgname, archsz, arch);
+                    srcfile = new WebSourceFile(srcuri, srcdigest, pkgname, archsz, arch, srctype);
                 else
-                    srcfile = new SourceFile(srcdigest, pkgname, archsz, arch);
+                    srcfile = new SourceFile(srcdigest, pkgname, archsz, arch, srctype);
 
                 sources.Add(srcfile);
             }
