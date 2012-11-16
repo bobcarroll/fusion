@@ -59,6 +59,7 @@ namespace Fusion.Framework
         private long _totalsz = 0;
         private uint _slot = 0;
         private bool _interactive = false;
+        private bool _srcdist = false;
         private Atom _myatom;
 
         /// <summary>
@@ -121,14 +122,10 @@ namespace Fusion.Framework
                 CpuArchitecture arch = 0;
                 Enum.TryParse<CpuArchitecture>(srctmp, true, out arch);
 
-                srctmp = e.GetAttribute("type");
-                SourceType srctype = 0;
-                Enum.TryParse<SourceType>(srctmp, true, out srctype);
-
                 if (srcuri != null)
-                    srcfile = new WebSourceFile(srcuri, srcdigest, pkgname, archsz, arch, srctype);
+                    srcfile = new WebSourceFile(srcuri, srcdigest, pkgname, archsz, arch);
                 else
-                    srcfile = new SourceFile(srcdigest, pkgname, archsz, arch, srctype);
+                    srcfile = new SourceFile(srcdigest, pkgname, archsz, arch);
 
                 sources.Add(srcfile);
             }
@@ -139,6 +136,9 @@ namespace Fusion.Framework
 
             elem = (XmlElement)root.SelectSingleNode("Properties/Interactive");
             _interactive = (elem != null) ? Convert.ToBoolean(elem.InnerText) : false;
+
+            elem = (XmlElement)root.SelectSingleNode("Properties/Source");
+            _srcdist = (elem != null) ? Convert.ToBoolean(elem.InnerText) : false;
 
             elem = (XmlElement)root.SelectSingleNode("Slot");
             if (elem != null)
@@ -378,6 +378,14 @@ namespace Fusion.Framework
         public uint Slot
         {
             get { return _slot; }
+        }
+
+        /// <summary>
+        /// Flag indicating if this distribution is source code.
+        /// </summary>
+        public bool SourceDistribution
+        {
+            get { return _srcdist; }
         }
 
         /// <summary>

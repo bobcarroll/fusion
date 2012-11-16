@@ -41,10 +41,8 @@ namespace Fusion.Framework
         /// <param name="localname">file name to use when saving to distfiles</param>
         /// <param name="size">size of the file in bytes</param>
         /// <param name="cpuarch">CPU architecture name</param>
-        /// <param name="srctype">source type name</param>
-        internal WebSourceFile(Uri location, string digest, string localname, long size, 
-            CpuArchitecture cpuarch, SourceType srctype)
-            : base(digest, localname, size, cpuarch, srctype)
+        internal WebSourceFile(Uri location, string digest, string localname, long size, CpuArchitecture cpuarch)
+            : base(digest, localname, size, cpuarch)
         {
             _location = location;
         }

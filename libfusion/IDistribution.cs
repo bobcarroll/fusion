@@ -88,6 +88,11 @@ namespace Fusion.Framework
         uint Slot { get; }
 
         /// <summary>
+        /// Flag indicating if this distribution is source code.
+        /// </summary>
+        bool SourceDistribution { get; }
+
+        /// <summary>
         /// Package source files.
         /// </summary>
         SourceFile[] Sources { get; }
