@@ -30,6 +30,15 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>..\dist\public.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DelaySign>true</DelaySign>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -145,6 +154,9 @@
     </EntityDeploy>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\dist\public.snk">
+      <Link>public.snk</Link>
+    </None>
     <None Include="App.Config" />
     <None Include="Properties\DataSources\Fusion.Framework.Model.Entities.datasource" />
   </ItemGroup>
