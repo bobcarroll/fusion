@@ -63,7 +63,7 @@ namespace Fusion.Framework
         public MSBuildProject(string pkg, ProjectRootElement root, Dictionary<string, string> vars)
         {
             Dictionary<string, string> globals = new Dictionary<string, string>();
-            globals.Add("BINDIR", Configuration.BinDir.FullName);
+            globals.Add("BINDIR", Configuration.BinDir.FullName.TrimEnd('\\') + @"\");
             globals.Add("BITNESS", Environment.Is64BitOperatingSystem ? "64" : "32");
 
             foreach (KeyValuePair<string, string> kvp in vars)

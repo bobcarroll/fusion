@@ -214,18 +214,22 @@ namespace Fusion.Framework
                 Atom.FormatRevision(_revision, _version));
             Configuration cfg = Configuration.LoadSeries();
 
+            Func<string, string> addslash = delegate(string input) {
+                return input.TrimEnd('\\') + @"\";
+            };
+
             Dictionary<string, string> vars = new Dictionary<string, string>();
             vars.Add("P", pkgname);
             vars.Add("PN", _package.Name);
             vars.Add("PV", Atom.FormatRevision(_revision, _version));
             vars.Add("CATEGORY", _package.Category.Name);
-            vars.Add("ROOT", cfg.RootDir.FullName);
-            vars.Add("DISTDIR", cfg.DistFilesDir.FullName);
-            vars.Add("WORKDIR", sbox.WorkDir.FullName);
-            vars.Add("DATADIR", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
-            vars.Add("T", sbox.TempDir.FullName);
-            vars.Add("D", sbox.ImageDir.FullName);
-            vars.Add("L", sbox.LinkDir.FullName);
+            vars.Add("ROOT", addslash(cfg.RootDir.FullName));
+            vars.Add("DISTDIR", addslash(cfg.DistFilesDir.FullName));
+            vars.Add("WORKDIR", addslash(sbox.WorkDir.FullName));
+            vars.Add("DATADIR", addslash(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)));
+            vars.Add("T", addslash(sbox.TempDir.FullName));
+            vars.Add("D", addslash(sbox.ImageDir.FullName));
+            vars.Add("L", addslash(sbox.LinkDir.FullName));
 
             XmlReader xr = new XmlNodeReader(_project);
             return new MSBuildProject(pkgname, ProjectRootElement.Create(xr), vars);
