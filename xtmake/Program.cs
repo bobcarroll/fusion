@@ -66,6 +66,9 @@ namespace xtmake
             GlobalContext.Properties["logfile"] = sbox.Root.FullName + @"\build.log";
             XmlConfigurator.Configure();
 
+            Environment.SetEnvironmentVariable("TEMP", sbox.TempDir.FullName);
+            Environment.SetEnvironmentVariable("TMP", sbox.TempDir.FullName);
+
             try {
                 Stream stream = new FileStream(args[0], FileMode.Open, FileAccess.Read, FileShare.None);
                 IInstallProject installer = (IInstallProject)(new BinaryFormatter()).Deserialize(stream);
