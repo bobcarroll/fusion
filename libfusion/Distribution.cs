@@ -36,6 +36,8 @@ namespace Fusion.Framework
     /// </summary>
     public sealed class Distribution : IDistribution
     {
+        private static ILog _log = LogManager.GetLogger(typeof(Distribution));
+
         /// <summary>
         /// Regular expression for matching inclusive keywords.
         /// </summary>
@@ -188,12 +190,17 @@ namespace Fusion.Framework
                 .EnumerateFiles()
                 .Where(p => Distribution.ValidateName(p.Name, pkg.Name))
                 .ToArray();
+            _log.DebugFormat(
+                "{0} distributions: {1}",
+                pkg.Name, String.Join(", ", fiarr.Select(i => i.Name).ToArray()));
             List<Distribution> results = new List<Distribution>();
 
             foreach (FileInfo fi in fiarr) {
                 try {
                     results.Add(new Distribution(fi, pkg));
-                } catch { }
+                } catch {
+                    _log.WarnFormat("Skipping malformed port file '{0}'", fi.FullName);
+                }
             }
 
             return results;
@@ -274,7 +281,7 @@ namespace Fusion.Framework
             if (!Distribution.ValidateName(distname, pkgname))
                 return null;
 
-            Match m = Regex.Match(distname, "-(" + Atom.VERSION_FMT + ")");
+            Match m = Regex.Match(distname, "-(" + Atom.VERSION_FMT + ")", RegexOptions.RightToLeft);
             return new Version(m.Groups[1].Value);
         }
 

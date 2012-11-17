@@ -26,6 +26,8 @@ using System.Text.RegularExpressions;
 using System.IO;
 using System.Xml;
 
+using log4net;
+
 namespace Fusion.Framework
 {
     /// <summary>
@@ -33,6 +35,8 @@ namespace Fusion.Framework
     /// </summary>
     public sealed class Package : IPackage
     {
+        private static ILog _log = LogManager.GetLogger(typeof(Package));
+
         private DirectoryInfo _pkgdir;
         private Category _category;
         private List<IDistribution> _dists;
@@ -82,6 +86,9 @@ namespace Fusion.Framework
                 .EnumerateDirectories()
                 .Where(d => d.Name.Length <= 50 && Package.ValidateName(d.Name))
                 .ToArray();
+            _log.DebugFormat(
+                "{0} packages: {1}", 
+                cat.Name, String.Join(", ", diarr.Select(i => i.Name).ToArray()));
             List<Package> results = new List<Package>();
 
             foreach (DirectoryInfo di in diarr)

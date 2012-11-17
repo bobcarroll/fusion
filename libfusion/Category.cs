@@ -25,6 +25,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
 
+using log4net;
+
 namespace Fusion.Framework
 {
     /// <summary>
@@ -32,6 +34,8 @@ namespace Fusion.Framework
     /// </summary>
     public sealed class Category : ICategory
     {
+        private static ILog _log = LogManager.GetLogger(typeof(Category));
+
         private DirectoryInfo _catdir;
         private AbstractTree _tree;
         private List<IPackage> _packages;
@@ -78,6 +82,9 @@ namespace Fusion.Framework
                             Category.ValidateName(d.Name) && 
                             list.Contains(d.Name))
                 .ToArray();
+            _log.DebugFormat(
+                "categories: {0}",
+                String.Join(", ", diarr.Select(i => i.Name).ToArray()));
             List<Category> results = new List<Category>();
 
             foreach (DirectoryInfo di in diarr)
