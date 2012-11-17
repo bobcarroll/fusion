@@ -46,7 +46,7 @@ namespace Fusion.Framework
                 else if (ev.Level == Level.Notice || ev.Level == Level.Info)
                     Console.ForegroundColor = ConsoleColor.Green;
                 else
-                    Console.ForegroundColor = ConsoleColor.White;
+                    return; /* don't write debug messages to the screen */
 
                 Console.Write(" * ");
                 Console.ResetColor();
