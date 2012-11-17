@@ -67,7 +67,8 @@ namespace Fusion.Framework
 
                 foreach (string s in inarr) {
                     try {
-                        if (s.StartsWith("#")) continue;
+                        if (String.IsNullOrWhiteSpace(s) || s.StartsWith("#"))
+                            continue;
                         alst.Add(Atom.Parse(s, AtomParseOptions.VersionRequired));
                     } catch (BadAtomException) {
                         throw new BadAtomException("Bad package atom '" + s + "' in package.mask file.");
@@ -100,10 +101,10 @@ namespace Fusion.Framework
                         string[] parts = s.Split(
                             new char[] { ' ', '\t' },
                             StringSplitOptions.RemoveEmptyEntries);
-                        if (s.StartsWith("#") || parts.Length < 2)
+                        if (String.IsNullOrWhiteSpace(s) || s.StartsWith("#") || parts.Length < 2)
                             continue;
 
-                        Atom a = Atom.Parse(parts[0], AtomParseOptions.WithoutVersion);
+                        Atom a = Atom.Parse(parts[0], AtomParseOptions.VersionOptional);
                         string[] kwarr = new string[parts.Length - 1];
                         Array.Copy(parts, 1, kwarr, 0, parts.Length - 1);
 
@@ -131,7 +132,8 @@ namespace Fusion.Framework
 
                 foreach (string s in inarr) {
                     try {
-                        if (s.StartsWith("#")) continue;
+                        if (String.IsNullOrWhiteSpace(s) || s.StartsWith("#"))
+                            continue;
                         alst.Add(Atom.Parse(s, AtomParseOptions.VersionRequired));
                     } catch (BadAtomException) {
                         throw new BadAtomException("Bad package atom '" + s + "' in package.unmask file.");

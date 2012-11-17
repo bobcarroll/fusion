@@ -223,7 +223,8 @@ namespace Fusion.Framework
 
                 foreach (string s in inarr) {
                     try {
-                        if (s.StartsWith("#")) continue;
+                        if (String.IsNullOrWhiteSpace(s) || s.StartsWith("#"))
+                            continue;
                         alst.Add(Atom.Parse(s, AtomParseOptions.WithoutVersion));
                     } catch (BadAtomException) {
                         throw new BadAtomException("Bad package atom '" + s + "' in package.protect file.");
