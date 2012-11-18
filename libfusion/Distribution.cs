@@ -65,11 +65,6 @@ namespace Fusion.Framework
         private Atom _myatom;
 
         /// <summary>
-        /// MSBuild XML schema URI.
-        /// </summary>
-        public const string MSBUILD_PROJECT_NS = "http://schemas.microsoft.com/developer/msbuild/2003";
-
-        /// <summary>
         /// Initialises the package distribution.
         /// </summary>
         /// <param name="dist">the distribution file</param>
@@ -151,7 +146,7 @@ namespace Fusion.Framework
                 _depends.Add(Atom.Parse(e.Attributes["atom"].Value));
 
             XmlNamespaceManager nsmgr = new XmlNamespaceManager(root.OwnerDocument.NameTable);
-            nsmgr.AddNamespace("msbuild", MSBUILD_PROJECT_NS);
+            nsmgr.AddNamespace("msbuild", MSBuildProject.MSBUILD_PROJECT_NS);
             _project = (XmlElement)root.SelectSingleNode("msbuild:Project", nsmgr);
 
             _myatom = Atom.Parse(
@@ -239,7 +234,8 @@ namespace Fusion.Framework
             vars.Add("L", addslash(sbox.LinkDir.FullName));
 
             XmlReader xr = new XmlNodeReader(_project);
-            return new MSBuildProject(pkgname, ProjectRootElement.Create(xr), vars);
+            string[] imports = MSBuildProject.GetImportedProjects(_project);
+            return new MSBuildProject(pkgname, ProjectRootElement.Create(xr), vars, imports);
         }
 
         /// <summary>

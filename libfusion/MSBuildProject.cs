@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Xml;
@@ -53,6 +54,12 @@ namespace Fusion.Framework
         private Project _project;
         private ILog _log;
         private Dictionary<string, string> _globals;
+        private string[] _imports;
+
+        /// <summary>
+        /// MSBuild XML schema URI.
+        /// </summary>
+        public const string MSBUILD_PROJECT_NS = "http://schemas.microsoft.com/developer/msbuild/2003";
         
         /// <summary>
         /// Reads an installer project from an MSBuild project root.
@@ -60,7 +67,8 @@ namespace Fusion.Framework
         /// <param name="pkg">package name</param>
         /// <param name="root">an MSBuild project root element</param>
         /// <param name="vars">dictionary of global installer variables</param>
-        public MSBuildProject(string pkg, ProjectRootElement root, Dictionary<string, string> vars)
+        /// <param name="imports">paths of imported project files</param>
+        public MSBuildProject(string pkg, ProjectRootElement root, Dictionary<string, string> vars, string[] imports)
         {
             Dictionary<string, string> globals = new Dictionary<string, string>();
             globals.Add("BINDIR", Configuration.BinDir.FullName.TrimEnd('\\') + @"\");
@@ -73,6 +81,11 @@ namespace Fusion.Framework
             _project = new Project(root, globals, null);
             _log = LogManager.GetLogger(typeof(MSBuildProject));
             _globals = vars;
+            _imports = imports;
+
+            /* force all required assemblies to load now... we might replace them
+               during the merge and we don't want a loader exception */
+            this.LoadProjectLibraries(_project, imports);
         }
 
         /// <summary>
@@ -83,7 +96,8 @@ namespace Fusion.Framework
         private MSBuildProject(SerializationInfo info, StreamingContext context)
             : this((string)info.GetValue("name", typeof(string)), 
                    MSBuildProject.DeserialiseProject(info), 
-                   MSBuildProject.DeserialiseGlobals(info)) { }
+                   MSBuildProject.DeserialiseGlobals(info),
+                   MSBuildProject.DeserialiseImports(info)) { }
 
         /// <summary>
         /// Extract the MSBuild project XML from the serialised data.
@@ -118,6 +132,22 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Extract the imported projects from the serialised data.
+        /// </summary>
+        /// <param name="info">the SerializationInfo to read data from</param>
+        /// <returns>paths of imported project files</returns>
+        private static string[] DeserialiseImports(SerializationInfo info)
+        {
+            string[] results = new string[] { };
+
+            try {
+                results = (string[])info.GetValue("imports", typeof(string[]));
+            } catch (SerializationException) { }
+
+            return results;
+        }
+
+        /// <summary>
         /// Executes the given target with the given installer instance.
         /// </summary>
         /// <param name="pi">installer project instance</param>
@@ -127,6 +157,28 @@ namespace Fusion.Framework
             ILogger msb2l4n = new BuildLogRedirector(_log);
             if (!pi.Build(target, new ILogger[] { msb2l4n }))
                 throw new InstallException("Target '" + target + "' execution failed.");
+        }
+
+        /// <summary>
+        /// Gets a list of unresolved include paths from an MSBuild project.
+        /// </summary>
+        /// <param name="project">the project XML element</param>
+        /// <returns>an array of paths</returns>
+        public static string[] GetImportedProjects(XmlElement project)
+        {
+            XmlNamespaceManager nsmgr = new XmlNamespaceManager(project.OwnerDocument.NameTable);
+            nsmgr.AddNamespace("msbuild", MSBUILD_PROJECT_NS);
+
+            List<string> results = new List<string>();
+
+            XmlNodeList nl = project.SelectNodes("msbuild:Import", nsmgr);
+            foreach (XmlElement elem in nl) {
+                string path = elem.GetAttribute("Project");
+                if (!String.IsNullOrEmpty(path))
+                    results.Add(path);
+            }
+
+            return results.ToArray();
         }
 
         /// <summary>
@@ -142,6 +194,62 @@ namespace Fusion.Framework
             info.AddValue("name", _name);
             info.AddValue("project", elem.OwnerDocument.OuterXml);
             info.AddValue("globals", _globals, typeof(Dictionary<string, string>));
+            info.AddValue("imports", _imports, typeof(string[]));
+        }
+
+        /// <summary>
+        /// Loads libraries needed by imported tasks.
+        /// </summary>
+        /// <param name="project">MSBuild project</param>
+        /// <param name="imports">paths of imported project files</param>
+        private void LoadProjectLibraries(Project project, string[] imports)
+        {
+            ProjectInstance pi = project.CreateProjectInstance();
+            List<string> impfiles = new List<string>();
+            List<string> asmfiles = new List<string>();
+
+            foreach (string imp in imports) {
+                string impval = imp;
+
+                foreach (ProjectPropertyInstance ppi in pi.Properties) {
+                    String propname = String.Format("$({0})", ppi.Name);
+                    if (imp.Contains(propname))
+                        impval = imp.Replace(propname, ppi.EvaluatedValue);
+                }
+
+                impfiles.Add(impval);
+            }
+
+            foreach (string imp in impfiles) {
+                XmlDocument doc = new XmlDocument();
+                doc.Load(imp);
+
+                XmlNamespaceManager nsmgr = new XmlNamespaceManager(doc.NameTable);
+                nsmgr.AddNamespace("msbuild", MSBUILD_PROJECT_NS);
+
+                XmlNodeList nl = doc.SelectNodes("//msbuild:UsingTask/@AssemblyFile", nsmgr);
+                foreach (XmlAttribute attr in nl) {
+                    if (String.IsNullOrEmpty(attr.Value))
+                        continue;
+
+                    string attrval = attr.Value;
+
+                    foreach (ProjectPropertyInstance ppi in pi.Properties) {
+                        String propname = String.Format("$({0})", ppi.Name);
+                        if (attrval.Contains(propname))
+                            attrval = attrval.Replace(propname, ppi.EvaluatedValue);
+                    }
+
+                    asmfiles.Add(attrval);
+                }
+            }
+
+            foreach (string asm in asmfiles) {
+                if (!Path.IsPathRooted(asm))
+                    Assembly.LoadFrom(Path.Combine(Configuration.BinDir.FullName, asm));
+                else
+                    Assembly.LoadFrom(asm);
+            }
         }
 
         /// <summary>
