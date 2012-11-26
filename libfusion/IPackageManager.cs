@@ -25,7 +25,6 @@ using System.Text;
 
 using FileTuple = System.Tuple<string, Fusion.Framework.FileType, string>;
 using MetadataPair = System.Collections.Generic.KeyValuePair<string, string>;
-using VersionTuple = System.Tuple<System.Version, uint>;
 
 namespace Fusion.Framework
 {
@@ -94,7 +93,7 @@ namespace Fusion.Framework
         /// <param name="atom">package atom without version</param>
         /// <returns>package version, or NULL if none is found</returns>
         /// <remarks>This will query the same slot of the given atom.</remarks>
-        VersionTuple QueryInstalledVersion(Atom atom);
+        Version QueryInstalledVersion(Atom atom);
 
         /// <summary>
         /// Finds all files associated with the given installed package.

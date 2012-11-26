@@ -156,7 +156,6 @@ namespace Fusion.Framework
             {
                 return _dists
                     .OrderByDescending(i => i.Version)
-                    .OrderByDescending(i => Atom.GetRevisionSort(i.Revision))
                     .FirstOrDefault();
             }
         }
@@ -171,7 +170,6 @@ namespace Fusion.Framework
                 return _dists
                     .Where(i => !_category.PortsTree.IsMasked(i))
                     .OrderByDescending(i => i.Version)
-                    .OrderByDescending(i => Atom.GetRevisionSort(i.Revision))
                     .FirstOrDefault();
             }
         }

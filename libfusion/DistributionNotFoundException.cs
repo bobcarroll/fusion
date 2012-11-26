@@ -34,7 +34,7 @@ namespace Fusion.Framework
         { }
 
         public DistributionNotFoundException(Atom atom)
-            : this(atom.PackageName, Atom.FormatRevision(atom.Revision, atom.Version))
+            : this(atom.PackageName, atom.Version.ToString())
         { }
     }
 }

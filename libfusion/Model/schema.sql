@@ -7,7 +7,6 @@ CREATE TABLE [packages] (
     [id] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     [full_name] TEXT NOT NULL,
     [version] TEXT NOT NULL,
-    [revision] INTEGER NOT NULL DEFAULT (0),
     [slot] INTEGER NOT NULL DEFAULT (0),
     [project] TEXT
 );

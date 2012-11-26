@@ -354,7 +354,7 @@ namespace fuse
 
             if (!e.Flags.HasFlag(MergeFlags.New) && !e.Flags.HasFlag(MergeFlags.Replacing)) {
                 Console.ForegroundColor = ConsoleColor.Blue;
-                Console.Write(" [{0}]", Atom.FormatRevision(e.Previous.Revision, e.Previous.Version));
+                Console.Write(" [{0}]", e.Previous.Version.ToString());
                 Console.ResetColor();
             }
 

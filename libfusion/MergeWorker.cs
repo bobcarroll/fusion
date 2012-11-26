@@ -413,17 +413,13 @@ namespace Fusion.Framework
                 if (!mopts.HasFlag(MergeOptions.Pretend) && (mea.HardMask || mea.KeywordMask))
                     throw new MaskedPackageException(dist.Package.FullName);
 
-                int cmpresult = (current != null) ? 
-                    Atom.CompareVersions(current.Version, current.Revision, dist.Version, dist.Revision) :
-                    0;
-
                 if (current == null)
                     mea.Flags |= MergeFlags.New;
-                if (!mea.Flags.HasFlag(MergeFlags.New) && cmpresult == 0)
+                if (!mea.Flags.HasFlag(MergeFlags.New) && current.Version == dist.Version)
                     mea.Flags |= MergeFlags.Replacing;
                 if (!mea.Flags.HasFlag(MergeFlags.New) && !mea.Flags.HasFlag(MergeFlags.Replacing))
                     mea.Flags |= MergeFlags.Updating;
-                if (!mea.Flags.HasFlag(MergeFlags.New) && cmpresult > 0)
+                if (!mea.Flags.HasFlag(MergeFlags.New) && current.Version > dist.Version)
                     mea.Flags |= MergeFlags.Downgrading;
                 if (dist.Slot > 0)
                     mea.Flags |= MergeFlags.Slot;

@@ -64,10 +64,8 @@ namespace fuse
                         fmasked = true;
                     }
 
-                    Tuple<Version, uint> iv = pkgmgr.QueryInstalledVersion(latest.Atom);
-                    string ivstr = iv != null ? 
-                        Atom.FormatRevision(iv.Item2, iv.Item1) : 
-                        "[ Not Installed ]";
+                    Version iv = pkgmgr.QueryInstalledVersion(latest.Atom);
+                    string ivstr = iv != null ? iv.ToString() : "[ Not Installed ]";
 
                     StringBuilder sizesb = new StringBuilder(11);
                     Win32.StrFormatByteSize(latest.TotalSize, sizesb, sizesb.Capacity);
@@ -88,7 +86,7 @@ namespace fuse
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write("      Latest version available:");
                     Console.ResetColor();
-                    Console.Write(" {0}\n", Atom.FormatRevision(latest.Revision, latest.Version));
+                    Console.Write(" {0}\n", latest.Version.ToString());
 
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write("      Latest version installed:");

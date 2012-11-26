@@ -32,7 +32,6 @@ using Fusion.Framework.Model;
 
 using FileTuple = System.Tuple<string, Fusion.Framework.FileType, string>;
 using MetadataPair = System.Collections.Generic.KeyValuePair<string, string>;
-using VersionTuple = System.Tuple<System.Version, uint>;
 
 namespace Fusion.Framework
 {
@@ -117,7 +116,6 @@ namespace Fusion.Framework
                 .AsEnumerable()
                 .Where(i => i.FullName == atom.PackageName &&
                              i.Version == atom.Version.ToString() &&
-                             i.Revision == atom.Revision &&
                              i.Slot == atom.Slot)
                 .SingleOrDefault();
 
@@ -169,7 +167,7 @@ namespace Fusion.Framework
         {
             return _ent.Packages
                 .AsEnumerable()
-                .Select(i => Atom.MakeAtomString(i.FullName, i.Version, (uint)i.Revision, (uint)i.Slot))
+                .Select(i => Atom.MakeAtomString(i.FullName, i.Version, (uint)i.Slot))
                 .Select(i => Atom.Parse(i, AtomParseOptions.VersionRequired))
                 .Where(i => atom.Match(i))
                 .ToArray();
@@ -189,7 +187,6 @@ namespace Fusion.Framework
                 .AsEnumerable()
                 .Where(i => i.FullName == atom.PackageName &&
                              i.Version == atom.Version.ToString() &&
-                             i.Revision == atom.Revision &&
                              i.Slot == atom.Slot)
                 .Select(i => i.Project)
                 .SingleOrDefault();
@@ -274,13 +271,13 @@ namespace Fusion.Framework
         /// <param name="atom">package atom without version</param>
         /// <returns>package version, or NULL if none is found</returns>
         /// <remarks>This will query the same slot of the given atom.</remarks>
-        public VersionTuple QueryInstalledVersion(Atom atom)
+        public Version QueryInstalledVersion(Atom atom)
         {
             return _ent.Packages
                 .AsEnumerable()
                 .Where(i => i.FullName == atom.PackageName && 
                             i.Slot == atom.Slot)
-                .Select(i => new VersionTuple(new Version(i.Version), (uint)i.Revision))
+                .Select(i => new Version(i.Version))
                 .SingleOrDefault();
         }
 
@@ -298,7 +295,6 @@ namespace Fusion.Framework
                 .AsEnumerable()
                 .Where(i => i.Package.FullName == atom.PackageName &&
                              i.Package.Version == atom.Version.ToString() &&
-                             i.Package.Revision == atom.Revision &&
                              i.Package.Slot == atom.Slot)
                 .OrderBy(i => i.Path)
                 .Select(i => new FileTuple(i.Path, (FileType)i.Type, i.Digest))
@@ -318,7 +314,6 @@ namespace Fusion.Framework
         {
             string pf = dist.Package.FullName;
             string ver = dist.Version.ToString();
-            uint rev = dist.Revision;
             uint slot = dist.Slot;
 
             MemoryStream ms = new MemoryStream();
@@ -336,7 +331,6 @@ namespace Fusion.Framework
             Model.Package newpkg = new Model.Package() {
                 FullName = pf,
                 Version = ver,
-                Revision = rev,
                 Slot = slot,
                 Project = installerblob
             };

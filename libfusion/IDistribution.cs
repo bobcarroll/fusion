@@ -78,11 +78,6 @@ namespace Fusion.Framework
         AbstractTree PortsTree { get; }
 
         /// <summary>
-        /// Port file revision number.
-        /// </summary>
-        uint Revision { get; }
-
-        /// <summary>
         /// Package installation slot number.
         /// </summary>
         uint Slot { get; }
@@ -105,7 +100,7 @@ namespace Fusion.Framework
         /// <summary>
         /// The package version specified in this atom.
         /// </summary>
-        Version Version { get; }
+        PackageVersion Version { get; }
 
         /// <summary>
         /// Gets a string representation of this distribution

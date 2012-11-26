@@ -590,15 +590,13 @@ namespace Fusion.Framework.Model
         /// <param name="id">Initial value of the ID property.</param>
         /// <param name="fullName">Initial value of the FullName property.</param>
         /// <param name="version">Initial value of the Version property.</param>
-        /// <param name="revision">Initial value of the Revision property.</param>
         /// <param name="slot">Initial value of the Slot property.</param>
-        public static Package CreatePackage(global::System.Int64 id, global::System.String fullName, global::System.String version, global::System.Int64 revision, global::System.Int64 slot)
+        public static Package CreatePackage(global::System.Int64 id, global::System.String fullName, global::System.String version, global::System.Int64 slot)
         {
             Package package = new Package();
             package.ID = id;
             package.FullName = fullName;
             package.Version = version;
-            package.Revision = revision;
             package.Slot = slot;
             return package;
         }
@@ -680,30 +678,6 @@ namespace Fusion.Framework.Model
         private global::System.String _Version;
         partial void OnVersionChanging(global::System.String value);
         partial void OnVersionChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
-        [DataMemberAttribute()]
-        public global::System.Int64 Revision
-        {
-            get
-            {
-                return _Revision;
-            }
-            set
-            {
-                OnRevisionChanging(value);
-                ReportPropertyChanging("Revision");
-                _Revision = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("Revision");
-                OnRevisionChanged();
-            }
-        }
-        private global::System.Int64 _Revision;
-        partial void OnRevisionChanging(global::System.Int64 value);
-        partial void OnRevisionChanged();
     
         /// <summary>
         /// No Metadata Documentation available.
