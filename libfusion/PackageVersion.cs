@@ -222,10 +222,10 @@ namespace Fusion.Framework
         /// <returns>true on success, false otherwise</returns>
         public static bool TryParse(string input, out PackageVersion result)
         {
-            if (input == null) {
-                result = null;
+            result = null;
+
+            if (input == null)
                 return false;
-            }
 
             string pattern = String.Format(
                 "({0})({1})({2})",
@@ -233,12 +233,10 @@ namespace Fusion.Framework
                 VERSION_SUFFIX_FMT,
                 VERSION_REVISION_FMT);
             Match m = Regex.Match(input, "^" + pattern + "$");
-            if (m.Success) {
+            if (m.Success)
                 result = new PackageVersion(m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value);
-            } else
-                result = null;
 
-            return true;
+            return (result != null);
         }
 
         /// <summary>

@@ -249,16 +249,17 @@ namespace Fusion.Framework
         /// </summary>
         /// <param name="distname">the port file name</param>
         /// <param name="pkgname">the package name</param>
-        /// <returns>a version or NULL</returns>
+        /// <returns>the package version</returns>
         public static PackageVersion ParseVersion(string distname, string pkgname)
         {
             PackageVersion result = null;
 
             if (!Distribution.ValidateName(distname, pkgname))
-                return null;
+                throw new FormatException("Failed to validate distribution name '" + distname + "'.");
 
             Match m = Regex.Match(distname, "-(" + PackageVersion.VERSION_FMT + ")", RegexOptions.RightToLeft);
-            PackageVersion.TryParse(m.Groups[1].Value, out result);
+            if (!PackageVersion.TryParse(m.Groups[1].Value, out result))
+                throw new FormatException("Failed to parse package version from '" + distname + "'.");
 
             return result;
         }
