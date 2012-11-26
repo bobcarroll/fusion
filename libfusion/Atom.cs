@@ -49,7 +49,7 @@ namespace Fusion.Framework
         /// <summary>
         /// Regular expression for matching the comparison operator.
         /// </summary>
-        public const string CMP_OPERATOR_FMT = "=|(?:<|>|!)=?";
+        public const string CMP_OPERATOR_FMT = "=|!|(?:<|>)=?";
 
         /// <summary>
         /// Regular expression for matching the slot number.
@@ -155,7 +155,7 @@ namespace Fusion.Framework
 
             if (!left.HasVersion || _oper == null || _ver == null)
                 return true;
-            else if (_oper == "=" && left.Version ==_ver)
+            else if (_oper == "=" && left.Version == _ver)
                 return true;
             else if (_oper == "<" && left.Version < _ver)
                 return true;
@@ -165,7 +165,7 @@ namespace Fusion.Framework
                 return true;
             else if (_oper == ">=" && left.Version >= _ver)
                 return true;
-            else if (_oper == "!=" && left.Version != _ver)
+            else if (_oper == "!" && left.Version != _ver)
                 return true;
 
             return false;
