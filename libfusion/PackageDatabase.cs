@@ -271,13 +271,13 @@ namespace Fusion.Framework
         /// <param name="atom">package atom without version</param>
         /// <returns>package version, or NULL if none is found</returns>
         /// <remarks>This will query the same slot of the given atom.</remarks>
-        public Version QueryInstalledVersion(Atom atom)
+        public PackageVersion QueryInstalledVersion(Atom atom)
         {
             return _ent.Packages
                 .AsEnumerable()
                 .Where(i => i.FullName == atom.PackageName && 
                             i.Slot == atom.Slot)
-                .Select(i => new Version(i.Version))
+                .Select(i => PackageVersion.Parse(i.Version))
                 .SingleOrDefault();
         }
 

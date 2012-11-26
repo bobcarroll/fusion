@@ -93,7 +93,7 @@ namespace Fusion.Framework
         /// <param name="atom">package atom without version</param>
         /// <returns>package version, or NULL if none is found</returns>
         /// <remarks>This will query the same slot of the given atom.</remarks>
-        Version QueryInstalledVersion(Atom atom);
+        PackageVersion QueryInstalledVersion(Atom atom);
 
         /// <summary>
         /// Finds all files associated with the given installed package.

@@ -203,6 +203,21 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Parses the given string as a package version or throws an exception.
+        /// </summary>
+        /// <param name="input">input string to parse</param>
+        /// <returns>output package version result</returns>
+        public static PackageVersion Parse(string input)
+        {
+            PackageVersion pv = null;
+
+            if (!PackageVersion.TryParse(input, out pv))
+                throw new FormatException("Bad package version '" + input + "'.");
+
+            return pv;
+        }
+
+        /// <summary>
         /// Returns a string that represents the package version.
         /// </summary>
         /// <returns>package version string</returns>

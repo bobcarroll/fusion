@@ -64,7 +64,7 @@ namespace fuse
                         fmasked = true;
                     }
 
-                    Version iv = pkgmgr.QueryInstalledVersion(latest.Atom);
+                    PackageVersion iv = pkgmgr.QueryInstalledVersion(latest.Atom);
                     string ivstr = iv != null ? iv.ToString() : "[ Not Installed ]";
 
                     StringBuilder sizesb = new StringBuilder(11);
