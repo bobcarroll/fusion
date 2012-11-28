@@ -55,7 +55,7 @@ namespace Fusion.Tasks.MSI
 
             if (this.CabFiles) {
                 args.Add("-x");
-                args.Add(this.DumpDir);
+                args.Add(this.DumpDir.TrimEnd('\\'));
             }
 
             ProcessStartInfo psi = new ProcessStartInfo();

@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml;
 
@@ -34,6 +35,19 @@ namespace Fusion.Tasks.MSI
     /// </summary>
     public sealed class MakeImage : Task
     {
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        static extern bool CreateDirectoryW(
+            string lpPathName,
+            IntPtr lpSecurityAttributes);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        static extern bool CopyFileW(
+            string lpExistingFileName,
+            string lpNewFileName,
+            bool bFailIfExists);
+
+        public const int ERROR_ALREADY_EXISTS = 183;
+
         /// <summary>
         /// Task execution handler.
         /// </summary>
@@ -75,14 +89,28 @@ namespace Fusion.Tasks.MSI
             foreach (XmlElement elem in nl) {
                 string oldname = elem.GetAttribute("Source");
                 string newname =  Path.Combine(outdir, elem.GetAttribute("Name"));
-                File.Move(oldname, newname);
-                base.Log.LogMessage("Moved file '{0}' to '{1}'", oldname, newname);
+
+                if (!CopyFileW(@"\\?\" + oldname, @"\\?\" + newname, false)) {
+                    int errno = Marshal.GetLastWin32Error();
+                    throw new IOException("Failed to copy file '" + oldname + "' to '" + newname + "' (" + errno + ")");
+                }
+
+                base.Log.LogMessage("Copied file '{0}' to '{1}'", oldname, newname);
             }
 
             nl = direlem.SelectNodes("wi:Directory", nsmgr);
             foreach (XmlElement elem in nl) {
-                string dirname = Path.Combine(outdir, elem.GetAttribute("Name"));
-                Directory.CreateDirectory(dirname);
+                string nameatrr = elem.GetAttribute("Name");
+                if (String.IsNullOrEmpty(nameatrr))
+                    continue;
+
+                string dirname = Path.Combine(outdir, nameatrr);
+                if (!CreateDirectoryW(@"\\?\" + dirname, IntPtr.Zero)) {
+                    int errno = Marshal.GetLastWin32Error();
+                    if (errno != ERROR_ALREADY_EXISTS)
+                        throw new IOException("Failed to create directory '" + dirname + "' (" + errno + ")");
+                }
+
                 base.Log.LogMessage("Created directory '{0}'", dirname);
                 this.RecursiveOutput(elem, dirname);
             }
