@@ -44,6 +44,12 @@ namespace Fusion.Framework
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool GetExitCodeProcess(IntPtr hProcess, out uint lpExitCode);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool Wow64DisableWow64FsRedirection(out IntPtr OldValue);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool Wow64RevertWow64FsRedirection(IntPtr OldValue);
+
         private static ILog _log = LogManager.GetLogger(typeof(MergeWorker));
 
         private IPackageManager _pkgmgr;
@@ -342,7 +348,19 @@ namespace Fusion.Framework
                 installer.PkgPreInst();
             }
 
-            this.InstallImage(sbox.ImageDir, rootdir, out files);
+            IntPtr wow64oldval = IntPtr.Zero;
+            if (Environment.Is64BitOperatingSystem && !Environment.Is64BitProcess) {
+                if (!Wow64DisableWow64FsRedirection(out wow64oldval))
+                    throw new InstallException("Failed to disable Wow64 file system redirection.");
+            }
+
+            try {
+                this.InstallImage(sbox.ImageDir, rootdir, out files);
+            } finally {
+                if (Environment.Is64BitOperatingSystem && !Environment.Is64BitProcess)
+                    Wow64RevertWow64FsRedirection(wow64oldval);
+            }
+
             this.InstallImage(
                 sbox.LinkDir, 
                 new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)), 
@@ -526,6 +544,12 @@ namespace Fusion.Framework
                     .OrderByDescending(i => i.Item1)
                     .ToArray();
 
+                IntPtr wow64oldval = IntPtr.Zero;
+                if (Environment.Is64BitOperatingSystem && !Environment.Is64BitProcess) {
+                    if (!Wow64DisableWow64FsRedirection(out wow64oldval))
+                        throw new InstallException("Failed to disable Wow64 file system redirection.");
+                }
+
                 foreach (FileTuple ft in files) {
                     try {
                         if (ft.Item2 == FileType.Directory && this.IsProtected(ft.Item1)) {
@@ -553,6 +577,9 @@ namespace Fusion.Framework
                     }
                 }
 
+                if (Environment.Is64BitOperatingSystem && !Environment.Is64BitProcess)
+                    Wow64RevertWow64FsRedirection(wow64oldval);
+
                 if (installer != null && installer.HasPkgPostRmTarget) {
                     _log.Info("Executing post-removal tasks...");
                     installer.PkgPostRm();
@@ -560,9 +587,9 @@ namespace Fusion.Framework
 
                 _pkgmgr.DeletePackage(atom);
 
-                Atom worlatom = Atom.Parse(atom.PackageName, AtomParseOptions.WithoutVersion);
-                if (_pkgmgr.FindPackages(worlatom).Length == 0)
-                    _pkgmgr.DeselectPackage(worlatom);
+                Atom worldatom = Atom.Parse(atom.PackageName, AtomParseOptions.WithoutVersion);
+                if (_pkgmgr.FindPackages(worldatom).Length == 0)
+                    _pkgmgr.DeselectPackage(worldatom);
             }
 
             if (this.OnAutoClean != null)
