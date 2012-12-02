@@ -109,9 +109,12 @@ namespace Fusion.Framework
 
                 srctmp = e.GetAttribute("uri");
                 Uri srcuri = !String.IsNullOrEmpty(srctmp) ? new Uri(srctmp) : null;
-                string pkgname = e.InnerText.Replace(
-                    "$(P)", 
-                    Atom.FormatPackageVersion(_package.Name, _version));
+
+                string pkgname = e.GetAttribute("pkgname");
+                if (String.IsNullOrEmpty(pkgname)) {
+                    string ext = Path.GetExtension(srcuri.LocalPath);
+                    pkgname = Atom.FormatPackageVersion(_package.Name, _version) + ext;
+                }
 
                 srctmp = e.GetAttribute("cpuarch");
                 CpuArchitecture arch = 0;
