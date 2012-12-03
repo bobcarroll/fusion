@@ -93,9 +93,6 @@ namespace Fusion.Framework
             }
             _keywords = keywords.ToArray();
 
-            XmlAttribute szattr = (XmlAttribute)root.SelectSingleNode("Sources/@size");
-            _totalsz = (szattr != null) ? Convert.ToInt64(szattr.Value) : 0;
-
             XmlNodeList srcnl = root.SelectNodes("Sources/File");
             List<SourceFile> sources = new List<SourceFile>();
             foreach (XmlElement e in srcnl) {
@@ -153,6 +150,9 @@ namespace Fusion.Framework
             _myatom = Atom.Parse(
                 Atom.MakeAtomString(_package.FullName, _version.ToString(), _slot), 
                 AtomParseOptions.VersionRequired);
+
+            foreach (SourceFile s in this.PlatformSources)
+                _totalsz += s.Size;
         }
 
         /// <summary>
@@ -165,7 +165,7 @@ namespace Fusion.Framework
         {
             bool result = true;
 
-            foreach (SourceFile src in dist.Sources) {
+            foreach (SourceFile src in dist.PlatformSources) {
                 FileInfo fi = new FileInfo(distdir + @"\" + src.LocalName);
 
                 if (!fi.Exists)
@@ -290,6 +290,14 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// All package source files.
+        /// </summary>
+        public SourceFile[] AllSources
+        {
+            get { return _sources; }
+        }
+
+        /// <summary>
         /// Fusion API revision number.
         /// </summary>
         public int ApiRevision
@@ -346,6 +354,19 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Package source files for the current platform.
+        /// </summary>
+        public SourceFile[] PlatformSources
+        {
+            get
+            {
+                return _sources
+                    .Where(i => i.CpuArch == 0 || i.CpuArch == Configuration.RealCpuArch)
+                    .ToArray();
+            }
+        }
+
+        /// <summary>
         /// A reference to the parent ports tree.
         /// </summary>
         public AbstractTree PortsTree
@@ -370,15 +391,7 @@ namespace Fusion.Framework
         }
 
         /// <summary>
-        /// Package source files.
-        /// </summary>
-        public SourceFile[] Sources
-        {
-            get { return _sources; }
-        }
-
-        /// <summary>
-        /// The total uncompressed size of package files.
+        /// The total compressed size of platform source files.
         /// </summary>
         public long TotalSize
         {

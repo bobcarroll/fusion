@@ -270,9 +270,7 @@ namespace fuse
         public void MergeWorker_OnPretendMerge(object sender, MergeEventArgs e)
         {
             _numpkgs++;
-
-            foreach (SourceFile s in e.Distribution.Sources.Where(i => i.CheckPlatform()))
-                _dloadsz += s.Size;
+            _dloadsz += e.Distribution.TotalSize;
 
             string distrepo = e.Distribution.PortsTree.Repository;
             if (!_repolst.Contains(distrepo))

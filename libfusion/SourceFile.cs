@@ -51,15 +51,6 @@ namespace Fusion.Framework
         }
 
         /// <summary>
-        /// Determines if this source is compatible for the current system platform.
-        /// </summary>
-        /// <returns>true if compatible, false otherwise</returns>
-        public bool CheckPlatform()
-        {
-            return this.CpuArch == 0 || this.CpuArch == Configuration.RealCpuArch;
-        }
-
-        /// <summary>
         /// CPU architecture name.
         /// </summary>
         public CpuArchitecture CpuArch

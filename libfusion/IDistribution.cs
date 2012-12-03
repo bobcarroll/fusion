@@ -38,6 +38,11 @@ namespace Fusion.Framework
         IInstallProject GetInstallProject(SandboxDirectory sbox);
 
         /// <summary>
+        /// All package source files.
+        /// </summary>
+        SourceFile[] AllSources { get; }
+
+        /// <summary>
         /// Fusion API revision number.
         /// </summary>
         int ApiRevision { get; }
@@ -73,6 +78,11 @@ namespace Fusion.Framework
         IPackage Package { get; }
 
         /// <summary>
+        /// Package source files for the current platform.
+        /// </summary>
+        SourceFile[] PlatformSources { get; }
+
+        /// <summary>
         /// A reference to the parent ports tree.
         /// </summary>
         AbstractTree PortsTree { get; }
@@ -88,12 +98,7 @@ namespace Fusion.Framework
         bool SourceDistribution { get; }
 
         /// <summary>
-        /// Package source files.
-        /// </summary>
-        SourceFile[] Sources { get; }
-
-        /// <summary>
-        /// The total uncompressed size of package files.
+        /// The total compressed size of platform source files.
         /// </summary>
         long TotalSize { get; }
 

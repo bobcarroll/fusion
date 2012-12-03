@@ -286,7 +286,7 @@ namespace Fusion.Framework
             if (mea.HardMask || mea.KeywordMask)
                 throw new MaskedPackageException(mea.Distribution.Package.FullName);
 
-            if (dist.Sources.Length > 0) {
+            if (dist.PlatformSources.Length > 0) {
                 if (mea.FetchHandle != Guid.Empty && !downloader.Peek(mea.FetchHandle)) {
                     _log.Info("Fetching files in the background... please wait");
                     _log.InfoFormat("See {0} for fetch progress", downloader.LogFile);
@@ -295,7 +295,7 @@ namespace Fusion.Framework
 
                 _log.InfoFormat("Checking package digests");
 
-                foreach (SourceFile src in dist.Sources.Where(i => i.CheckPlatform())) {
+                foreach (SourceFile src in dist.PlatformSources) {
                     FileInfo distfile = new FileInfo(_cfg.DistFilesDir + @"\" + src.LocalName);
 
                     if (!Md5Sum.Check(distfile.FullName, src.Digest, Md5Sum.MD5SUMMODE.BINARY)) {

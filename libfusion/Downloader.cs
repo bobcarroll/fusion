@@ -141,7 +141,7 @@ namespace Fusion.Framework
                 }
 
                 try {
-                    foreach (SourceFile src in current.Item2.Sources.Where(i => i.CheckPlatform())) {
+                    foreach (SourceFile src in current.Item2.PlatformSources) {
                         FileInfo fi = new FileInfo(_destdir + @"\" + src.LocalName);
 
                         if (fi.Exists) {
