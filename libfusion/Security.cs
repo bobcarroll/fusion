@@ -313,7 +313,7 @@ namespace Fusion.Framework
             PROCESS_INFORMATION pi;
             int errno;
 
-            List<string> argsv = new List<string>() { filename };
+            List<string> argsv = new List<string>() { "\"" + filename + "\"" };
             argsv.AddRange(arguments);
 
             if (!Security.CreateProcessAsUser(
