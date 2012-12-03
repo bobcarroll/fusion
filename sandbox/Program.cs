@@ -29,8 +29,6 @@ using System.Text;
 using log4net;
 using log4net.Config;
 
-using libconsole2;
-
 using Fusion.Framework;
 
 namespace sandbox
@@ -46,12 +44,6 @@ namespace sandbox
         /// <returns>an error code</returns>
         static int Main(string[] args)
         {
-            string consid = Environment.GetEnvironmentVariable("CONSOLE");
-            if (!String.IsNullOrEmpty(consid)) {
-                ConsoleEx.Detach();
-                ConsoleEx.Attach(Convert.ToUInt32(consid));
-            }
-
             if (args.Length != 1) {
                 Console.WriteLine("USAGE: sandbox <project file>");
                 return 1;

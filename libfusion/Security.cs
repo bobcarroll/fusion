@@ -53,6 +53,52 @@ namespace Fusion.Framework
         private const int SECURITY_MANDATORY_MEDIUM_RID = 0x2000;
         private const int SECURITY_MANDATORY_HIGH_RID = 0x3000;
 
+        private const int SE_GROUP_INTEGRITY = 0x20;
+
+        private const int SAFER_SCOPEID_MACHINE = 1;
+        private const int SAFER_SCOPEID_USER = 2;
+
+        private const int SAFER_LEVELID_CONSTRAINED = 0x10000;
+        private const int SAFER_LEVELID_DISALLOWED = 0x00000;
+        private const int SAFER_LEVELID_FULLYTRUSTED = 0x40000;
+        private const int SAFER_LEVELID_NORMALUSER = 0x20000;
+        private const int SAFER_LEVELID_UNTRUSTED = 0x10000;
+
+        private const int SAFER_LEVEL_OPEN = 1;
+
+        private enum TOKEN_INFORMATION_CLASS
+        {
+            TokenUser = 1,
+            TokenGroups,
+            TokenPrivileges,
+            TokenOwner,
+            TokenPrimaryGroup,
+            TokenDefaultDacl,
+            TokenSource,
+            TokenType,
+            TokenImpersonationLevel,
+            TokenStatistics,
+            TokenRestrictedSids,
+            TokenSessionId,
+            TokenGroupsAndPrivileges,
+            TokenSessionReference,
+            TokenSandBoxInert,
+            TokenAuditPolicy,
+            TokenOrigin,
+            TokenElevationType,
+            TokenLinkedToken,
+            TokenElevation,
+            TokenHasRestrictions,
+            TokenAccessInformation,
+            TokenVirtualizationAllowed,
+            TokenVirtualizationEnabled,
+            TokenIntegrityLevel,
+            TokenUIAccess,
+            TokenMandatoryPolicy,
+            TokenLogonSid,
+            MaxTokenInfoClass
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         private struct ACE_HEADER
         {
@@ -72,6 +118,15 @@ namespace Fusion.Framework
         }
 
         [StructLayout(LayoutKind.Sequential)]
+        private struct PROCESS_INFORMATION
+        {
+            public IntPtr hProcess;
+            public IntPtr hThread;
+            public uint dwProcessId;
+            public uint dwThreadId;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
         private struct SECURITY_DESCRIPTOR
         {
             public byte revision;
@@ -84,10 +139,40 @@ namespace Fusion.Framework
         }
 
         [StructLayout(LayoutKind.Sequential)]
+        private struct SID_AND_ATTRIBUTES
+        {
+            public IntPtr Sid;
+            public int Attributes;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
         private struct SID_IDENTIFIER_AUTHORITY
         {
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
             public byte[] Value;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct STARTUPINFO
+        {
+            public uint cb;
+            public string lpReserved;
+            public string lpDesktop;
+            public string lpTitle;
+            public uint dwX;
+            public uint dwY;
+            public uint dwXSize;
+            public uint dwYSize;
+            public uint dwXCountChars;
+            public uint dwYCountChars;
+            public uint dwFillAttribute;
+            public uint dwFlags;
+            public short wShowWindow;
+            public short cbReserved2;
+            public IntPtr lpReserved2;
+            public IntPtr hStdInput;
+            public IntPtr hStdOutput;
+            public IntPtr hStdError;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -96,6 +181,27 @@ namespace Fusion.Framework
             public ACE_HEADER Header;
             public ulong Mask;
             public int SidStart;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct TOKEN_MANDATORY_LABEL
+        {
+            public SID_AND_ATTRIBUTES Label;
+        }
+
+        public class AccessToken
+        {
+            private IntPtr _handle;
+
+            internal AccessToken(IntPtr handle)
+            {
+                _handle = handle;
+            }
+
+            internal IntPtr Handle
+            {
+                get { return _handle; }
+            }
         }
 
         [DllImport("advapi32.dll", SetLastError = true)]
@@ -107,6 +213,12 @@ namespace Fusion.Framework
             byte nSubAuthorityCount, int dwSubAuthority0, int dwSubAuthority1,
             int dwSubAuthority2, int dwSubAuthority3, int dwSubAuthority4, int dwSubAuthority5,
             int dwSubAuthority6, int dwSubAuthority7, out IntPtr pSid);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool CreateProcessAsUser(IntPtr hToken, string lpApplicationName, 
+            string lpCommandLine, IntPtr lpProcessAttributes, IntPtr lpThreadAttributes, bool bInheritHandles,
+            uint dwCreationFlags, IntPtr lpEnvironment, string lpCurrentDirectory,
+            ref STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
 
         [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern bool GetFileSecurity(string lpFileName, uint RequestInformation, 
@@ -128,6 +240,17 @@ namespace Fusion.Framework
             ref int lpdwSaclSize, IntPtr pOwner, ref int lpdwOwnerSize, IntPtr pPrimaryGroup,
             ref int lpdwPrimaryGroupSize);
 
+        [DllImport("advapi32.dll", SetLastError = true)]
+        private static extern bool SaferCloseLevel(IntPtr hLevelHandle);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        private static extern bool SaferCreateLevel(int dwScopeId, int dwLevelId, int OpenFlags,
+            out IntPtr pLevelHandle, IntPtr lpReserved);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        private static extern bool SaferComputeTokenFromLevel(IntPtr LevelHandle, IntPtr InAccessToken,
+            out IntPtr OutAccessToken, int dwFlags, IntPtr lpReserved);
+
         [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern bool SetFileSecurity(string lpFileName, uint SecurityInformation,
             IntPtr pSecurityDescriptor);
@@ -135,6 +258,11 @@ namespace Fusion.Framework
         [DllImport("advapi32.dll", SetLastError = true)]
         private static extern bool SetSecurityDescriptorSacl(IntPtr pSecurityDescriptor,
             bool lpbSaclPresent, IntPtr pSacl, bool lpbSaclDefaulted);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        private static extern bool SetTokenInformation(IntPtr TokenHandle,
+            TOKEN_INFORMATION_CLASS TokenInformationClass, IntPtr TokenInformation, 
+            int TokenInformationLength);
         #endregion
 
         /// <summary>
@@ -170,6 +298,82 @@ namespace Fusion.Framework
             NoWriteUp = SYSTEM_MANDATORY_LABEL_NO_WRITE_UP,
             NoReadUP = SYSTEM_MANDATORY_LABEL_NO_READ_UP,
             NoExecuteUp = SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP
+        }
+
+        /// <summary>
+        /// Creates a new process with the given access token.
+        /// </summary>
+        /// <param name="token">handle to an access token</param>
+        /// <param name="filename">image file path</param>
+        /// <param name="arguments">optional command arguments</param>
+        /// <returns>the ID of the new process</returns>
+        public static uint CreateProcessWithToken(AccessToken token, string filename, params string[] arguments)
+        {
+            STARTUPINFO si = new STARTUPINFO();
+            PROCESS_INFORMATION pi;
+            int errno;
+
+            List<string> argsv = new List<string>() { filename };
+            argsv.AddRange(arguments);
+
+            if (!Security.CreateProcessAsUser(
+                    token.Handle,
+                    filename,
+                    String.Join(" ", argsv),
+                    IntPtr.Zero,
+                    IntPtr.Zero,
+                    false,
+                    0,
+                    IntPtr.Zero,
+                    null,
+                    ref si,
+                    out pi)) {
+                errno = Marshal.GetLastWin32Error();
+                throw new IOException("Failed to create new process. (" + errno + ")");
+            }
+
+            return pi.dwProcessId;
+        }
+
+        /// <summary>
+        /// Creates a restricted access token. The caller is responsible for freeing
+        /// the result with Security.FreeToken().
+        /// </summary>
+        /// <param name="low">flag for low integrity level</param>
+        /// <returns>a handle to the access token</returns>
+        public static AccessToken CreateRestrictedToken(bool low)
+        {
+            IntPtr lev;
+            IntPtr token;
+            int errno;
+
+            if (!Security.SaferCreateLevel(
+                    SAFER_SCOPEID_USER,
+                    SAFER_LEVELID_NORMALUSER,
+                    SAFER_LEVEL_OPEN,
+                    out lev,
+                    IntPtr.Zero)) {
+                errno = Marshal.GetLastWin32Error();
+                throw new IOException("Failed to create new safer level. (" + errno + ")");
+            }
+
+            if (!Security.SaferComputeTokenFromLevel(lev, IntPtr.Zero, out token, 0, IntPtr.Zero)) {
+                errno = Marshal.GetLastWin32Error();
+                SaferCloseLevel(lev);
+                throw new IOException("Failed to create new safer level. (" + errno + ")");
+            }
+
+            SaferCloseLevel(lev);
+
+            try {
+                Security.SetTokenMandatoryLabel(
+                    token,
+                    low ? MandatoryLabel.LowIntegrity : MandatoryLabel.MediumIntegrity);
+            } finally {
+                Marshal.FreeHGlobal(token);
+            }
+
+            return new AccessToken(token);
         }
 
         /// <summary>
@@ -261,6 +465,15 @@ namespace Fusion.Framework
         {
             if (!Security.IsNTAdmin())
                 throw new UnauthorizedAccessException("You must be an administrator to execute this command.");
+        }
+
+        /// <summary>
+        /// Frees the given access token.
+        /// </summary>
+        /// <param name="token">handle to the access token</param>
+        public static void FreeToken(AccessToken token)
+        {
+            Marshal.FreeHGlobal(token.Handle);
         }
 
         /// <summary>
@@ -365,6 +578,52 @@ namespace Fusion.Framework
 
             Marshal.FreeHGlobal(newsdptr);
             Marshal.FreeHGlobal(saclptr);
+        }
+
+        /// <summary>
+        /// Sets the integrity of the given access token.
+        /// </summary>
+        /// <param name="token">handle to the access token</param>
+        /// <param name="mlrid">mandatory integrity level</param>
+        private static void SetTokenMandatoryLabel(IntPtr token, MandatoryLabel mlrid)
+        {
+            SID_IDENTIFIER_AUTHORITY mlauth = new SID_IDENTIFIER_AUTHORITY() {
+                Value = MANDATORY_LABEL_AUTHORITY
+            };
+            TOKEN_MANDATORY_LABEL tml = new TOKEN_MANDATORY_LABEL();
+            IntPtr mlauthptr;
+            IntPtr sidptr;
+            IntPtr tmlptr;
+            int tmlsz;
+            int errno = 0;
+
+            mlauthptr = Marshal.AllocHGlobal(Marshal.SizeOf(mlauth));
+            Marshal.StructureToPtr(mlauth, mlauthptr, false);
+
+            if (!Security.AllocateAndInitializeSid(mlauthptr, 1, (int)mlrid, 0, 0, 0, 0, 0, 0, 0, out sidptr)) {
+                errno = Marshal.GetLastWin32Error();
+                Marshal.FreeHGlobal(mlauthptr);
+                throw new IOException("Failed to allocate new SID. (" + errno + ")");
+            }
+
+            Marshal.FreeHGlobal(mlauthptr);
+
+            tml.Label.Sid = sidptr;
+            tml.Label.Attributes = SE_GROUP_INTEGRITY;
+
+            tmlsz = Marshal.SizeOf(tml);
+            tmlptr = Marshal.AllocHGlobal(tmlsz);
+            Marshal.StructureToPtr(tml, tmlptr, false);
+
+            if (!SetTokenInformation(token, TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, tmlptr, tmlsz)) {
+                errno = Marshal.GetLastWin32Error();
+                Marshal.FreeHGlobal(sidptr);
+                Marshal.FreeHGlobal(tmlptr);
+                throw new IOException("Failed to set token mandatory label. (" + errno + ")");
+            }
+
+            Marshal.FreeHGlobal(sidptr);
+            Marshal.FreeHGlobal(tmlptr);
         }
     }
 }

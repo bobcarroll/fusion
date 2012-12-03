@@ -37,8 +37,6 @@ cp ../lib/Nini.dll ../bin/dist/bootstrap/bin/
 cp ../lib/System.Data.SQLite.dll ../bin/dist/bootstrap/bin/
 cp ../lib/System.Data.SQLite.Linq.dll ../bin/dist/bootstrap/bin/
 
-cp ./sudont.exe ../bin/dist/bootstrap/bin/
-
 mkdir ../bin/dist/bootstrap/bin/ExtensionPack | out-null
 cp ./ExtensionPack/* ../bin/dist/bootstrap/bin/ExtensionPack/
 attrib -R ../bin/dist/bootstrap/bin/ExtensionPack/*

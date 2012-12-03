@@ -319,8 +319,8 @@ namespace Fusion.Framework
                            installer.HasSrcCompileTarget ||
                            installer.HasSrcInstallTarget ||
                            installer.HasSrcTestTarget;
-            if (runmake && (rc = this.SpawnXtMake(sbox, installer)) != 0) {
-                _log.DebugFormat("xtmake return code: {0}", rc);
+            if (runmake && (rc = this.SpawnSandboxHost(sbox, installer)) != 0) {
+                _log.DebugFormat("sandbox host return code: {0}", rc);
                 throw new InstallException("Installation failed. See previous errors.");
             }
 
@@ -467,37 +467,30 @@ namespace Fusion.Framework
         }
 
         /// <summary>
-        /// Launches the unprivileged xtmake process with the givne installer.
+        /// Launches the unprivileged sandbox host with the given installer.
         /// </summary>
         /// <param name="sboxdir">sandbox directory</param>
         /// <param name="installer">installer project</param>
-        /// <returns>xtmake exit code</returns>
-        private uint SpawnXtMake(SandboxDirectory sbox, IInstallProject installer)
+        /// <returns>sandbox host exit code</returns>
+        private uint SpawnSandboxHost(SandboxDirectory sbox, IInstallProject installer)
         {
             string installerbin = sbox.Root.FullName + @"\installer.bin";
             Stream stream = new FileStream(installerbin, FileMode.Create, FileAccess.Write, FileShare.Read);
             (new BinaryFormatter()).Serialize(stream, installer);
             stream.Close();
 
-            StringBuilder sb = new StringBuilder();
-            sb.Append("\"" + Configuration.BinDir.FullName + "\\xtmake.exe\"");
-            sb.Append(" ");
-            sb.Append("\"" + installerbin + "\"");
-
-            ProcessStartInfo psi = new ProcessStartInfo();
-            psi.FileName = Configuration.BinDir.FullName + @"\sudont.exe";
-            psi.Arguments = sb.ToString();
-
-            _log.DebugFormat("Spawning low-privileged process: {0}", psi.Arguments);
-            Process launcher = Process.Start(psi);
-            launcher.WaitForExit();
-
-            if (launcher.ExitCode == 0)
+            Security.AccessToken token = Security.CreateRestrictedToken(true);
+            uint pid = Security.CreateProcessWithToken(
+                token,
+                Configuration.BinDir.FullName + @"\sandbox.exe",
+                "\"" + installerbin + "\"");
+            Security.FreeToken(token);
+            if (pid == 0)
                 throw new InstallException("Failed to spawn installer process.");
 
             Process xtinstall = null;
             try {
-                xtinstall = Process.GetProcessById(launcher.ExitCode);
+                xtinstall = Process.GetProcessById((int)pid);
             } catch (ArgumentException) {
                 throw new InstallException("Failed to open handle to installer process.");
             }

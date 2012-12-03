@@ -35,8 +35,6 @@ cp ../lib/Nini.dll ../bin/dist/main/bin/
 cp ../lib/System.Data.SQLite.dll ../bin/dist/main/bin/
 cp ../lib/System.Data.SQLite.Linq.dll ../bin/dist/main/bin/
 
-cp ./sudont.exe ../bin/dist/main/bin/
-
 cp ./cygwin/* ../bin/dist/main/bin/
 
 mkdir ../bin/dist/main/bin/ExtensionPack | out-null
