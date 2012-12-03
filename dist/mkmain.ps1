@@ -26,8 +26,8 @@ cp ../bin/Release/fusion-config.exe ../bin/dist/main/bin/
 cp ../bin/Release/fusion-config.exe.config ../bin/dist/main/bin/
 cp ../bin/Release/libfusion.dll ../bin/dist/main/bin/
 cp ../bin/Release/libfusiontasks.dll ../bin/dist/main/bin/
-cp ../bin/Release/xtmake.exe ../bin/dist/main/bin/
-cp ../bin/Release/xtmake.exe.config ../bin/dist/main/bin/
+cp ../bin/Release/sandbox.exe ../bin/dist/main/bin/
+cp ../bin/Release/sandbox.exe.config ../bin/dist/main/bin/
 
 cp ../lib/libconsole2.dll ../bin/dist/main/bin/
 cp ../lib/log4net.dll ../bin/dist/main/bin/

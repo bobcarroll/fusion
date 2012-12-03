@@ -7,6 +7,6 @@
 "%ProgramFiles(x86)%\Microsoft SDKs\Windows\v7.0A\Bin\x64\sn.exe" -q -vf ..\bin\Release\libfusion.dll
 "%ProgramFiles(x86)%\Microsoft SDKs\Windows\v7.0A\Bin\x64\sn.exe" -q -vf ..\bin\Release\libfusiontasks.dll
 "%ProgramFiles(x86)%\Microsoft SDKs\Windows\v7.0A\Bin\x64\sn.exe" -q -vf ..\bin\Release\libmsitasks.dll
-"%ProgramFiles(x86)%\Microsoft SDKs\Windows\v7.0A\Bin\x64\sn.exe" -q -vf ..\bin\Release\xtmake.exe
+"%ProgramFiles(x86)%\Microsoft SDKs\Windows\v7.0A\Bin\x64\sn.exe" -q -vf ..\bin\Release\sandbox.exe
 
 pause

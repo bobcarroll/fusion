@@ -28,8 +28,8 @@ cp ../bin/Release/fuse.exe.config ../bin/dist/bootstrap/bin/
 cp ../bin/Release/Fusion.tasks ../bin/dist/bootstrap/bin/
 cp ../bin/Release/libfusion.dll ../bin/dist/bootstrap/bin/
 cp ../bin/Release/libfusiontasks.dll ../bin/dist/bootstrap/bin/
-cp ../bin/Release/xtmake.exe ../bin/dist/bootstrap/bin/
-cp ../bin/Release/xtmake.exe.config ../bin/dist/bootstrap/bin/
+cp ../bin/Release/sandbox.exe ../bin/dist/bootstrap/bin/
+cp ../bin/Release/sandbox.exe.config ../bin/dist/bootstrap/bin/
 
 cp ../lib/libconsole2.dll ../bin/dist/bootstrap/bin/
 cp ../lib/log4net.dll ../bin/dist/bootstrap/bin/

@@ -33,7 +33,7 @@ using libconsole2;
 
 using Fusion.Framework;
 
-namespace xtmake
+namespace sandbox
 {
     class Program
     {
@@ -53,12 +53,12 @@ namespace xtmake
             }
 
             if (args.Length != 1) {
-                Console.WriteLine("USAGE: xtmake <project file>");
+                Console.WriteLine("USAGE: sandbox <project file>");
                 return 1;
             }
 
             if (!File.Exists(args[0])) {
-                Console.WriteLine("xtmake: project file doesn't exist!");
+                Console.WriteLine("sandbox: project file doesn't exist!");
                 return 1;
             }
 
