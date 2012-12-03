@@ -64,9 +64,7 @@ namespace bootstrap
                 }
             }
 
-            bool win8 = Environment.OSVersion.Version.Major == 6 &&
-                        Environment.OSVersion.Version.Minor == 2;
-            if (Environment.OSVersion.Version.Major < 6 || win8) {
+            if (Environment.OSVersion.Version.Major < 6) {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("ERROR: your Windows version is not supported!");
                 Console.ResetColor();
