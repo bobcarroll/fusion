@@ -23,8 +23,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
-using libconsole2;
-
 using Fusion.Framework;
 
 namespace fuse
@@ -64,12 +62,17 @@ namespace fuse
                 Uri mirror = cfg.RsyncMirrors[i];
                 Console.WriteLine("\n>>> Starting rsync with {0}...\n", mirror.ToString());
 
-                string[] args = new string[] { "-av", "--delete", mirror.ToString(), cygpath };
-                ChildProcess cp = ChildProcess.Fork(Configuration.BinDir.FullName + @"\rsync.exe", args);
+                ProcessStartInfo psi = new ProcessStartInfo() {
+                    FileName = Configuration.BinDir.FullName + @"\cygwin\bin\rsync.exe",
+                    Arguments = String.Join(" ", new string[] { "-rltv", "--delete", mirror.ToString(), cygpath }),
+                    UseShellExecute = false
+                };
+
+                Process cp = Process.Start(psi);
                 cp.WaitForExit();
 
-                if (cp.GetExitCode() != 0)
-                    continue;
+                if (cp.ExitCode == 0)
+                    break;
             }
         }
 
