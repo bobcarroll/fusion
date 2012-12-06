@@ -25,7 +25,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-using libconsole2;
+using ngetopt;
 
 using log4net;
 using log4net.Core;
@@ -233,8 +233,6 @@ namespace fuse
                 error_msg("\n!!! No database connection string defined in configuration.\n");
                 return 1;
             }
-
-            Environment.SetEnvironmentVariable("CONSOLE", ConsoleEx.GetConsoleProcessId().ToString());
 
             try {
                 Fusion.Framework.Configuration cfg = Fusion.Framework.Configuration.LoadSeries();

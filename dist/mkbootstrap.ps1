@@ -31,8 +31,8 @@ cp ../bin/Release/libfusiontasks.dll ../bin/dist/bootstrap/bin/
 cp ../bin/Release/sandbox.exe ../bin/dist/bootstrap/bin/
 cp ../bin/Release/sandbox.exe.config ../bin/dist/bootstrap/bin/
 
-cp ../lib/libconsole2.dll ../bin/dist/bootstrap/bin/
 cp ../lib/log4net.dll ../bin/dist/bootstrap/bin/
+cp ../lib/ngetopt.dll ../bin/dist/bootstrap/bin/
 cp ../lib/Nini.dll ../bin/dist/bootstrap/bin/
 cp ../lib/System.Data.SQLite.dll ../bin/dist/bootstrap/bin/
 cp ../lib/System.Data.SQLite.Linq.dll ../bin/dist/bootstrap/bin/

@@ -29,8 +29,8 @@ cp ../bin/Release/libfusiontasks.dll ../bin/dist/main/bin/
 cp ../bin/Release/sandbox.exe ../bin/dist/main/bin/
 cp ../bin/Release/sandbox.exe.config ../bin/dist/main/bin/
 
-cp ../lib/libconsole2.dll ../bin/dist/main/bin/
 cp ../lib/log4net.dll ../bin/dist/main/bin/
+cp ../lib/ngetopt.dll ../bin/dist/main/bin/
 cp ../lib/Nini.dll ../bin/dist/main/bin/
 cp ../lib/System.Data.SQLite.dll ../bin/dist/main/bin/
 cp ../lib/System.Data.SQLite.Linq.dll ../bin/dist/main/bin/

@@ -44,9 +44,9 @@
     <DelaySign>true</DelaySign>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="libconsole2, Version=1.3.4653.40283, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="ngetopt, Version=1.0.4722.39403, Culture=neutral, PublicKeyToken=a163f6cd46bb69f8, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\libconsole2.dll</HintPath>
+      <HintPath>..\lib\ngetopt.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

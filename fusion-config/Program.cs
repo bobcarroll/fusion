@@ -24,7 +24,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
-using libconsole2;
+using ngetopt;
 
 using Fusion.Framework;
 
