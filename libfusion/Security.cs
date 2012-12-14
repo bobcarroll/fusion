@@ -360,7 +360,7 @@ namespace Fusion.Framework
             if (!Security.SaferComputeTokenFromLevel(lev, IntPtr.Zero, out token, 0, IntPtr.Zero)) {
                 errno = Marshal.GetLastWin32Error();
                 SaferCloseLevel(lev);
-                throw new IOException("Failed to create new safer level. (" + errno + ")");
+                throw new IOException("Failed to create restricted token. (" + errno + ")");
             }
 
             SaferCloseLevel(lev);

@@ -228,9 +228,11 @@ namespace Fusion.Framework
             vars.Add("DISTDIR", addslash(cfg.DistFilesDir.FullName));
             vars.Add("WORKDIR", addslash(sbox.WorkDir.FullName));
             vars.Add("DATADIR", addslash(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)));
+            vars.Add("FILESDIR", addslash(this.FilesDirectory.FullName));
             vars.Add("T", addslash(sbox.TempDir.FullName));
             vars.Add("D", addslash(sbox.ImageDir.FullName));
             vars.Add("L", addslash(sbox.LinkDir.FullName));
+            vars.Add("S", _slot.ToString());
 
             XmlReader xr = new XmlNodeReader(_project);
             string[] imports = MSBuildProject.GetImportedProjects(_project);
@@ -327,6 +329,14 @@ namespace Fusion.Framework
         public bool FetchRestriction
         {
             get { return _fetch; }
+        }
+
+        /// <summary>
+        /// Full path to the extra files directory in the ports tree.
+        /// </summary>
+        public DirectoryInfo FilesDirectory
+        {
+            get { return new DirectoryInfo(_package.PackageDirectory.FullName + @"\files"); }
         }
 
         /// <summary>
