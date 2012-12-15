@@ -581,7 +581,7 @@ namespace Fusion.Framework
         }
 
         /// <summary>
-        /// Sets the integrity of the given access token.
+        /// Sets the integrity level of the given access token.
         /// </summary>
         /// <param name="token">handle to the access token</param>
         /// <param name="mlrid">mandatory integrity level</param>
@@ -615,7 +615,7 @@ namespace Fusion.Framework
             tmlptr = Marshal.AllocHGlobal(tmlsz);
             Marshal.StructureToPtr(tml, tmlptr, false);
 
-            if (!SetTokenInformation(token, TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, tmlptr, tmlsz)) {
+            if (!Security.SetTokenInformation(token, TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, tmlptr, tmlsz)) {
                 errno = Marshal.GetLastWin32Error();
                 Marshal.FreeHGlobal(sidptr);
                 Marshal.FreeHGlobal(tmlptr);
