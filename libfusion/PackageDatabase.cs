@@ -146,9 +146,11 @@ namespace Fusion.Framework
         /// <param name="atom">package atom without version</param>
         public void DeselectPackage(Atom atom)
         {
+            string pn = Atom.FormatPackageVersion(atom.PackageName, atom.Slot);
+
             WorldItem wi = _ent.WorldSet
                 .AsEnumerable()
-                .Where(i => i.Atom == atom.PackageName)
+                .Where(i => i.Atom == pn)
                 .SingleOrDefault();
 
             if (wi == null)
@@ -233,7 +235,7 @@ namespace Fusion.Framework
         }
 
         /// <summary>
-        /// Determines if the given package is protected by profile.
+        /// Determines if the given package is protected by the system profile.
         /// </summary>
         /// <param name="atom">the package to check</param>
         /// <returns>true if protected, false otherwise</returns>
@@ -360,8 +362,10 @@ namespace Fusion.Framework
         /// <param name="atom">package atom without version</param>
         public void SelectPackage(Atom atom)
         {
-            if (_ent.WorldSet.Where(i => i.Atom == atom.PackageName).Count() == 0) {
-                _ent.WorldSet.AddObject(new WorldItem() { Atom = atom.PackageName });
+            string pn = Atom.FormatPackageVersion(atom.PackageName, atom.Slot);
+
+            if (_ent.WorldSet.Where(i => i.Atom == pn).Count() == 0) {
+                _ent.WorldSet.AddObject(new WorldItem() { Atom = pn });
                 _ent.SaveChanges();
             }
         }

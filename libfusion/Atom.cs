@@ -85,14 +85,46 @@ namespace Fusion.Framework
         }
 
         /// <summary>
-        /// Makes a string representation of the package and version.
+        /// Makes a string representation of the package name and version.
         /// </summary>
         /// <param name="pkg">package name</param>
         /// <param name="ver">package version</param>
         /// <returns>formatted package version string</returns>
         public static string FormatPackageVersion(string pkg, PackageVersion ver)
         {
-            return String.Format("{0}-{1}", pkg, ver.ToString());
+            return Atom.FormatPackageVersion(pkg, ver, 0);
+        }
+
+        /// <summary>
+        /// Makes a string representation of the package name and slot number.
+        /// </summary>
+        /// <param name="pkg">package name</param>
+        /// <param name="slot">slot number</param>
+        /// <returns>formatted package version string</returns>
+        public static string FormatPackageVersion(string pkg, uint slot)
+        {
+            return Atom.FormatPackageVersion(pkg, null, slot);
+        }
+
+        /// <summary>
+        /// Makes a string representation of the package name, version, and slot number.
+        /// </summary>
+        /// <param name="pkg">package name</param>
+        /// <param name="ver">package version</param>
+        /// <param name="slot">slot number</param>
+        /// <returns>formatted package version string</returns>
+        public static string FormatPackageVersion(string pkg, PackageVersion ver, uint slot)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(pkg);
+
+            if (ver != null)
+                sb.Append(String.Format("-{0}", ver.ToString()));
+
+            if (slot > 0)
+                sb.Append(String.Format(":{0}", slot.ToString()));
+
+            return sb.ToString();
         }
 
         /// <summary>
@@ -104,7 +136,9 @@ namespace Fusion.Framework
         /// <returns>the full package name</returns>
         public static string MakeAtomString(string fullname, string version, uint slot)
         {
-            string result = String.Format("{0}-{1}", fullname, version);
+            string result = !String.IsNullOrEmpty(version) ?
+                String.Format("{0}-{1}", fullname, version) :
+                fullname;
 
             if (slot > 0)
                 result = String.Format("{0}:{1}", result, slot);
@@ -144,7 +178,8 @@ namespace Fusion.Framework
         /// "left" is always ignored.
         /// 
         /// If either atom doesn't have a version then version matching is
-        /// skipped. Slots are never compared.
+        /// skipped. Slots are only compared if both sides have slots but
+        /// no versions.
         /// </remarks>
         public bool Match(Atom left)
         {
@@ -153,9 +188,14 @@ namespace Fusion.Framework
             else if (left.PackagePart != this.PackagePart)
                 return false;
 
-            if (!left.HasVersion || _oper == null || _ver == null)
+            bool lnoverslot = (!left.HasVersion && left.Slot == 0);
+            bool rnoverslot = (!this.HasVersion && _slot == 0);
+
+            if (lnoverslot || rnoverslot || _oper == null)
                 return true;
-            else if (_oper == "=" && left.Version == _ver)
+            else if (!left.HasVersion || !this.HasVersion) {
+                return left.Slot == _slot;
+            } else if (_oper == "=" && left.Version == _ver)
                 return true;
             else if (_oper == "<" && left.Version < _ver)
                 return true;
@@ -206,6 +246,18 @@ namespace Fusion.Framework
                 return new Atom("=", m.Groups[1].Value, m.Groups[2].Value, slot);
             }
 
+            /* full package name with slot and implicit equals: =(category/package):(slot) */
+            atomstr = String.Format(
+                "^(?:=?)({0}/{1})[:]({2})$",
+                CATEGORY_NAME_FMT,
+                PACKAGE_NAME_FMT,
+                SLOT_FMT);
+            m = Regex.Match(atom.ToLower(), atomstr);
+            if (opts != AtomParseOptions.VersionRequired && m.Success) {
+                UInt32.TryParse(m.Groups[2].Value, out slot);
+                return new Atom("=", m.Groups[1].Value, "", slot);
+            }
+
             /* package short name with version and implicit equals: =(package)-(version):(slot) */
             atomstr = String.Format(
                 "^(?:=?)({0})-({1})(?:[:]({2}))?$",
@@ -216,6 +268,17 @@ namespace Fusion.Framework
             if (opts != AtomParseOptions.WithoutVersion && m.Success) {
                 UInt32.TryParse(m.Groups[3].Value, out slot);
                 return new Atom("=", m.Groups[1].Value, m.Groups[2].Value, slot);
+            }
+
+            /* package short name with slot and implicit equals: =(package):(slot) */
+            atomstr = String.Format(
+                "^(?:=?)({0})[:]({1})$",
+                PACKAGE_NAME_FMT,
+                SLOT_FMT);
+            m = Regex.Match(atom.ToLower(), atomstr);
+            if (opts != AtomParseOptions.VersionRequired && m.Success) {
+                UInt32.TryParse(m.Groups[2].Value, out slot);
+                return new Atom("=", m.Groups[1].Value, "", slot);
             }
 
             /* full package atom: (operator)(category/package)-(version):(slot) */
@@ -278,10 +341,9 @@ namespace Fusion.Framework
         public override string ToString()
         {
             string oper = _oper != "=" ? _oper : "";
-            string slot = _slot > 0 ? ":" + _slot.ToString() : "";
 
             return _ver != null ? 
-                oper + Atom.FormatPackageVersion(_pkg, _ver) + slot: 
+                oper + Atom.FormatPackageVersion(_pkg, _ver, _slot): 
                 _pkg;
         }
 

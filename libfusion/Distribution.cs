@@ -288,7 +288,7 @@ namespace Fusion.Framework
         /// <returns>a package atom</returns>
         public override string ToString()
         {
-            return Atom.FormatPackageVersion(_package.FullName, _version);
+            return Atom.FormatPackageVersion(_package.FullName, _version, _slot);
         }
 
         /// <summary>

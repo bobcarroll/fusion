@@ -77,11 +77,6 @@ namespace fuse
 
                 atomset.AddRange(Atom.ParseAll(_atomlst.ToArray()));
 
-                /* slot number not allowed here */
-                Atom slotatom = atomset.Where(i => i.Slot > 0).FirstOrDefault();
-                if (slotatom != null)
-                    throw new BadAtomException(slotatom.ToString());
-
                 foreach (Atom atom in atomset) {
                     /* first find all installed packages matching the given atom */
                     Atom[] instarr = pkgmgr.FindPackages(atom).ToArray();
@@ -97,10 +92,10 @@ namespace fuse
                         throw new AmbiguousMatchException(atom.ToString());
 
                     try {
-                        /* if we're not updating, no version was specified, and there's a version
+                        /* if we're not updating, no version or slot was specified, and there's a version
                          * already installed then select the installed version */
                         IDistribution dist =
-                            (!_options.update && !atom.HasVersion && latestinst.Length > 0) ?
+                            (!_options.update && !atom.HasVersion && atom.Slot == 0 && latestinst.Length > 0) ?
                                 tree.Lookup(latestinst[0]) :
                                 tree.Lookup(atom);
                         mergeset.Add(dist);

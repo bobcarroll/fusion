@@ -36,6 +36,78 @@ namespace tests
         }
 
         [TestMethod]
+        public void parse_full_atom_without_version_with_slot()
+        {
+            Atom a = Atom.Parse("=foo/bar:2", AtomParseOptions.WithoutVersion);
+            Assert.AreEqual(a.Comparison, "=");
+            Assert.AreEqual(a.CategoryPart, "foo");
+            Assert.AreEqual(a.PackagePart, "bar");
+            Assert.AreEqual(a.PackageName, "foo/bar");
+            Assert.IsFalse(a.HasVersion);
+            Assert.AreEqual(a.Slot, (uint)2);
+        }
+
+        [TestMethod]
+        public void parse_short_name_atom_without_version_with_slot()
+        {
+            Atom a = Atom.Parse("=bar:2", AtomParseOptions.WithoutVersion);
+            Assert.AreEqual(a.Comparison, "=");
+            Assert.AreEqual(a.CategoryPart, null);
+            Assert.AreEqual(a.PackagePart, "bar");
+            Assert.AreEqual(a.PackageName, "bar");
+            Assert.IsFalse(a.HasVersion);
+            Assert.AreEqual(a.Slot, (uint)2);
+        }
+
+        [TestMethod]
+        public void parse_full_atom_without_version_with_bad_slot()
+        {
+            try {
+                Atom.Parse("=foo/bar:0", AtomParseOptions.WithoutVersion);
+            } catch (BadAtomException) {
+                return;
+            }
+
+            Assert.Fail();
+        }
+
+        [TestMethod]
+        public void parse_full_atom_without_version_with_bad_slot_demand_version()
+        {
+            try {
+                Atom.Parse("=foo/bar:2", AtomParseOptions.VersionRequired);
+            } catch (BadAtomException) {
+                return;
+            }
+
+            Assert.Fail();
+        }
+
+        [TestMethod]
+        public void parse_short_name_atom_without_version_with_bad_slot()
+        {
+            try {
+                Atom.Parse("=bar:0", AtomParseOptions.WithoutVersion);
+            } catch (BadAtomException) {
+                return;
+            }
+
+            Assert.Fail();
+        }
+
+        [TestMethod]
+        public void parse_short_name_atom_without_version_with_bad_slot_demand_version()
+        {
+            try {
+                Atom.Parse("=bar:2", AtomParseOptions.VersionRequired);
+            } catch (BadAtomException) {
+                return;
+            }
+
+            Assert.Fail();
+        }
+
+        [TestMethod]
         public void parse_atom_implicit_equals()
         {
             Atom a = Atom.Parse("foo/bar-1.2", AtomParseOptions.VersionRequired);
@@ -112,7 +184,7 @@ namespace tests
         }
 
         [TestMethod]
-        public void parse_atom_with_version_deman_without_version()
+        public void parse_atom_with_version_demand_without_version()
         {
             try {
                 Atom.Parse("=foo/bar-1.2", AtomParseOptions.WithoutVersion);

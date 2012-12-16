@@ -65,7 +65,7 @@ namespace Fusion.Framework
             if (pkg == null)
                 throw new PackageNotFoundException(atom.PackageName);
 
-            if (atom.HasVersion) {        /* find a specific version */
+            if (atom.HasVersion || atom.Slot > 0) {        /* find a specific version */
                 IDistribution[] matcharr = pkg.Distributions
                     .Where(i => atom.Match(i.Atom))
                     .OrderBy(i => i.Version)
