@@ -195,21 +195,20 @@ namespace fuse
             } catch (MaskedPackageException ex) {
                 Program.error_msg("\n!!! All packages that could satisfy '{0}' have been masked.", ex.Package);
             } catch (SlotConflictException ex) {
-                Dictionary<string, List<IDistribution>> distdict = new Dictionary<string, List<IDistribution>>();
-
-                foreach (string pkg in ex.Conflicts.Select(c => c.Package.FullName + ":" + c.Slot).Distinct())
-                    distdict.Add(pkg, new List<IDistribution>());
-
-                foreach (IDistribution dist in ex.Conflicts)
-                    distdict[dist.Package.FullName + ":" + dist.Slot].Add(dist);
-
                 Console.Write("\n");
 
-                foreach (KeyValuePair<string, List<IDistribution>> kvp in distdict) {
-                    Console.WriteLine(kvp.Key);
+                foreach (DependencyGraph.Conflict c in ex.Conflicts) {
+                    Console.WriteLine(Atom.FormatPackageVersion(c.Package.FullName, c.Slot));
 
-                    foreach (IDistribution dist in kvp.Value)
-                        Console.WriteLine("  {0}", dist.ToString());
+                    foreach (IDistribution dist in c.Distributions) {
+                        string[] pulledinby = c.ReverseMap[dist]
+                            .Select(i => i.ToString())
+                            .ToArray();
+                        Console.WriteLine(
+                            "  {0} (pulled in by: {1})",
+                            dist.ToString(),
+                            String.Join(", ", pulledinby));
+                    }
 
                     Console.Write("\n");
                 }

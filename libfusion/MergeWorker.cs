@@ -400,7 +400,7 @@ namespace Fusion.Framework
             DependencyGraph dg = DependencyGraph.Compute(distarr);
             IDistribution[] distdeparr = dg.SortedNodes.ToArray();
 
-            IDistribution[] conflicts = dg.FindSlotConflicts();
+            DependencyGraph.Conflict[] conflicts = dg.FindSlotConflicts();
             if (conflicts.Length > 0)
                 throw new SlotConflictException(conflicts);
 

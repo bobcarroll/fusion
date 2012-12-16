@@ -42,6 +42,17 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Slot conflict item.
+        /// </summary>
+        public struct Conflict
+        {
+            public IPackage Package;
+            public uint Slot;
+            public IDistribution[] Distributions;
+            public Dictionary<IDistribution, IDistribution[]> ReverseMap;
+        }
+
+        /// <summary>
         /// A dependency node structure.
         /// </summary>
         public class Node
@@ -251,7 +262,7 @@ namespace Fusion.Framework
         /// Finds any slot conflicts that cause unsatisfied dependencies.
         /// </summary>
         /// <returns>an array of conflicted distributions</returns>
-        public IDistribution[] FindSlotConflicts()
+        public Conflict[] FindSlotConflicts()
         {
             /* first, find all slot conflicts */
             IDistribution[] conflicts = _sorted
@@ -266,7 +277,7 @@ namespace Fusion.Framework
             foreach (IDistribution dist in conflicts)
                 pkgdict[dist.Package.FullName + ":" + dist.Slot].Add(dist);
 
-            List<IDistribution> results = new List<IDistribution>();
+            List<Conflict> results = new List<Conflict>();
 
             /* scan the conflicts table for packages that satisfy dependency requirements,
              * and add dists that fail the check to the results set */
@@ -280,8 +291,20 @@ namespace Fusion.Framework
                     }
                 }
 
-                if (!pass)
-                    results.AddRange(kvp.Value);
+                if (!pass) {
+                    IDistribution first = kvp.Value.First();
+                    Conflict c = new Conflict() {
+                        Package = first.Package,
+                        Slot = first.Slot,
+                        Distributions = kvp.Value.ToArray(),
+                        ReverseMap = new Dictionary<IDistribution, IDistribution[]>()
+                    };
+
+                    foreach (IDistribution d in kvp.Value)
+                        c.ReverseMap[d] = this.QueryPulledInBy(d);
+
+                    results.Add(c);
+                }
             }
 
             return results.ToArray();

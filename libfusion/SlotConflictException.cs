@@ -29,9 +29,9 @@ namespace Fusion.Framework
     /// </summary>
     public sealed class SlotConflictException : Exception
     {
-        private IDistribution[] _conflicts;
+        private DependencyGraph.Conflict[] _conflicts;
 
-        public SlotConflictException(IDistribution[] conflicts)
+        public SlotConflictException(DependencyGraph.Conflict[] conflicts)
             : base("Multiple package instances within a single package slot " +
                     "have been pulled into the dependency graph, resulting " +
                     "in a slot conflict.")
@@ -42,7 +42,7 @@ namespace Fusion.Framework
         /// <summary>
         /// Distributions with a slot conflict.
         /// </summary>
-        public IDistribution[] Conflicts
+        public DependencyGraph.Conflict[] Conflicts
         {
             get { return _conflicts; }
         }
