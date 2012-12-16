@@ -291,11 +291,17 @@ namespace Fusion.Framework
         /// <returns>true if l less than r, false otherwise</returns>
         public static bool operator <(PackageVersion l, PackageVersion r)
         {
-            if (PackageVersion.CompareVersion(l, r) < 0)
-                return true;
+            int result;
 
-            if (PackageVersion.CompareSuffix(l, r) < 0)
+            if ((result = PackageVersion.CompareVersion(l, r)) < 0)
                 return true;
+            else if (result > 0)
+                return false;
+
+            if ((result = PackageVersion.CompareSuffix(l, r)) < 0)
+                return true;
+            else if (result > 0)
+                return false;
 
             return l._revision < r._revision;
         }
@@ -308,11 +314,17 @@ namespace Fusion.Framework
         /// <returns>true if l less than or equal to r, false otherwise</returns>
         public static bool operator <=(PackageVersion l, PackageVersion r)
         {
-            if (PackageVersion.CompareVersion(l, r) <= 0)
-                return true;
+            int result;
 
-            if (PackageVersion.CompareSuffix(l, r) <= 0)
+            if ((result = PackageVersion.CompareVersion(l, r)) < 0)
                 return true;
+            else if (result > 0)
+                return false;
+
+            if ((result = PackageVersion.CompareSuffix(l, r)) < 0)
+                return true;
+            else if (result > 0)
+                return false;
 
             return l._revision <= r._revision;
         }
@@ -325,11 +337,17 @@ namespace Fusion.Framework
         /// <returns>true if l greater than r, false otherwise</returns>
         public static bool operator >(PackageVersion l, PackageVersion r)
         {
-            if (PackageVersion.CompareVersion(l, r) > 0)
-                return true;
+            int result;
 
-            if (PackageVersion.CompareSuffix(l, r) > 0)
+            if ((result = PackageVersion.CompareVersion(l, r)) > 0)
                 return true;
+            else if (result < 0)
+                return false;
+
+            if ((result = PackageVersion.CompareSuffix(l, r)) > 0)
+                return true;
+            else if (result < 0)
+                return false;
 
             return l._revision > r._revision;
         }
@@ -342,11 +360,17 @@ namespace Fusion.Framework
         /// <returns>true if l greater than or equal to r, false otherwise</returns>
         public static bool operator >=(PackageVersion l, PackageVersion r)
         {
-            if (PackageVersion.CompareVersion(l, r) >= 0)
-                return true;
+            int result;
 
-            if (PackageVersion.CompareSuffix(l, r) >= 0)
+            if ((result = PackageVersion.CompareVersion(l, r)) > 0)
                 return true;
+            else if (result < 0)
+                return false;
+
+            if ((result = PackageVersion.CompareSuffix(l, r)) > 0)
+                return true;
+            else if (result < 0)
+                return false;
 
             return l._revision >= r._revision;
         }
