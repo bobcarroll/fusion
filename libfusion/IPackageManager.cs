@@ -74,6 +74,12 @@ namespace Fusion.Framework
         Atom[] FindPackages(Atom atom);
 
         /// <summary>
+        /// Gets all installed packages recorded in the database.
+        /// </summary>
+        /// <returns>an array of package atoms</returns>
+        Atom[] GetInstalledPackages();
+
+        /// <summary>
         /// Gets the installer project for the given atom.
         /// </summary>
         /// <param name="atom">package atom with version and slot</param>

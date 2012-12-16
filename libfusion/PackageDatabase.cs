@@ -167,11 +167,21 @@ namespace Fusion.Framework
         /// <returns>an array of installed packages</returns>
         public Atom[] FindPackages(Atom atom)
         {
+            return this.GetInstalledPackages()
+                .Where(i => atom.Match(i))
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Gets all installed packages recorded in the database.
+        /// </summary>
+        /// <returns>an array of package atoms</returns>
+        public Atom[] GetInstalledPackages()
+        {
             return _ent.Packages
                 .AsEnumerable()
                 .Select(i => Atom.MakeAtomString(i.FullName, i.Version, (uint)i.Slot))
                 .Select(i => Atom.Parse(i, AtomParseOptions.VersionRequired))
-                .Where(i => atom.Match(i))
                 .ToArray();
         }
 

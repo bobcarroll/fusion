@@ -33,13 +33,22 @@ namespace fuse
     {
         private List<string> _atomlst;
         private Options _options;
+        private uint _delay;
 
         /// <summary>
         /// Initialises a new unmerge action.
         /// </summary>
         public UnmergeAction()
+            : this(5) { }
+
+        /// <summary>
+        /// Initialises a new unmerge action.
+        /// </summary>
+        /// <param name="delay">delay in seconds</param>
+        public UnmergeAction(uint delay)
         {
             _atomlst = new List<string>();
+            _delay = delay;
         }
 
         /// <summary>
@@ -51,66 +60,117 @@ namespace fuse
             Security.DemandNTAdmin();
 
             List<Atom> atomlst = Atom.ParseAll(_atomlst.ToArray()).ToList();
-            List<Atom> uninstlst = new List<Atom>();
+            List<Atom> allselected = new List<Atom>();
+            List<Atom> allprotected = new List<Atom>();
+            List<Atom> allomitted = new List<Atom>();
 
             foreach (Atom atom in atomlst) {
                 Atom[] instatoms = pkgmgr.FindPackages(atom);
 
-                if (instatoms.Length == 0) {
+                if (instatoms.Length == 0)
                     throw new PackageNotFoundException(atom.ToString());
-                } else if (instatoms.Length == 1) {
-                    uninstlst.Add(instatoms[0]);
-                } else if (instatoms.Length > 1) {
-                    Console.WriteLine("\nInstalled packages matching the given atom:");
-                    foreach (Atom ia in instatoms) {
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.Write("\n * ");
-                        Console.ResetColor();
-                        Console.Write(ia.ToString());
-                    }
-                    Console.Write("\n");
 
-                    throw new AmbiguousMatchException(atom.ToString());
-                }
+                allselected.AddRange(instatoms);
             }
 
-            Atom[] protectpkg = uninstlst.Where(i => pkgmgr.IsProtected(i)).ToArray();
-            if (protectpkg.Length > 0) {
-                Console.Write("\nThe following package(s) are ");
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write("protected");
+            allprotected = allselected
+                .Where(i => pkgmgr.IsProtected(i))
+                .ToList();
+            foreach (Atom a in allprotected)
+                allselected.Remove(a);
+
+            allomitted = pkgmgr.GetInstalledPackages()
+                .Where(i => allselected.Where(
+                    s => s.PackageName == i.PackageName).Count() > 0)
+                .Where(i => allselected.Where(
+                    s => s.PackageName == i.PackageName &&
+                         s.Version == i.Version).Count() == 0)
+                .ToList();
+
+            string[] allpackages = allselected
+                .Select(i => i.PackageName)
+                .Union(allprotected.Select(i => i.PackageName))
+                .Union(allomitted.Select(i => i.PackageName))
+                .OrderBy(i => i)
+                .ToArray();
+
+            foreach (string pkg in allpackages) {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("\n {0}", pkg);
                 Console.ResetColor();
-                Console.Write(" and will NOT be removed:\n");
 
-                foreach (Atom atom in protectpkg) {
-                    uninstlst.Remove(atom);
+                string[] pkgselected = allselected
+                    .Where(i => i.PackageName == pkg)
+                    .OrderBy(i => i.Version)
+                    .Select(i => i.Version.ToString())
+                    .ToArray();
+                string[] pkgprotected = allprotected
+                    .Where(i => i.PackageName == pkg)
+                    .OrderBy(i => i.Version)
+                    .Select(i => i.Version.ToString())
+                    .ToArray();
+                string[] pkgomitted = allomitted
+                    .Where(i => i.PackageName == pkg)
+                    .OrderBy(i => i.Version)
+                    .Select(i => i.Version.ToString())
+                    .ToArray();
 
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.Write("\n * ");
+                Console.Write("    selected: ");
+                if (pkgselected.Length > 0) {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(String.Join(" ", pkgselected));
                     Console.ResetColor();
-                    Console.Write(atom.ToString());
-                }
-                Console.Write("\n");
+                } else
+                    Console.WriteLine("none");
 
-                if (uninstlst.Count == 0) {
-                    Console.WriteLine("\nNothing to do, exitting...");
-                    return;
-                }
+                Console.Write("   protected: ");
+                if (pkgprotected.Length > 0) {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine(String.Join(" ", pkgprotected));
+                    Console.ResetColor();
+                } else
+                    Console.WriteLine("none");
+
+                Console.Write("     omitted: ");
+                if (pkgomitted.Length > 0) {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine(String.Join(" ", pkgomitted));
+                    Console.ResetColor();
+                } else
+                    Console.WriteLine("none");
             }
 
-            Console.WriteLine("\nThe following package(s) will be removed:");
-            foreach (Atom atom in uninstlst) {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write("\n * ");
-                Console.ResetColor();
-                Console.Write(atom.ToString());
-            }
+            Console.WriteLine(
+                "\nAll selected packages: {0}",
+                String.Join(" ", allselected.Select(i => i.ToString())));
 
-            Console.WriteLine("\n\n>>> Waiting 5 seconds before starting...");
+            Console.Write("\n>>> ");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write("Selected");
+            Console.ResetColor();
+            Console.WriteLine(" packages are scheduled for removal.");
+
+            Console.Write(">>> ");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("Protected");
+            Console.ResetColor();
+            Console.Write(" and ");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("omitted");
+            Console.ResetColor();
+            Console.WriteLine(" packages will not be removed.");
+
+            if (_options.pretend)
+                return;
+
+            Console.WriteLine(
+                "\n>>> Waiting {0} {1} before starting...",
+                _delay,
+                _delay == 1 ? "second" : "seconds");
             Console.WriteLine(">>> Press Control-C to abort");
             Console.Write(">>> Unmerging in ");
 
-            for (int i = 5; i > 0; i--) {
+            for (uint i = _delay; i > 0; i--) {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Write("{0} ", i);
                 Console.ResetColor();
@@ -123,7 +183,7 @@ namespace fuse
             MergeWorker mw = new MergeWorker(pkgmgr);
             mw.OnUnmerge += this.MergeWorker_OnUnmerge;
 
-            mw.Unmerge(uninstlst.ToArray());
+            mw.Unmerge(allselected.ToArray());
         }
 
         /// <summary>
