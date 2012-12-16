@@ -410,14 +410,14 @@ namespace Fusion.Framework
                     .FindPackages(Atom.Parse(dist.Package.FullName, AtomParseOptions.WithoutVersion))
                     .Where(n => n.Slot == dist.Slot)
                     .SingleOrDefault();
-                bool selected = !mopts.HasFlag(MergeOptions.OneShot) && distarr.Contains(dist);
+                bool realselect = distarr.Contains(dist);
 
-                if (!selected && current != null && !mopts.HasFlag(MergeOptions.Deep) && dg.CheckSatisfies(current))
+                if (!realselect && current != null && !mopts.HasFlag(MergeOptions.Deep) && dg.CheckSatisfies(current))
                     dist = dist.PortsTree.Lookup(current);
 
                 MergeEventArgs mea = new MergeEventArgs();
                 mea.Previous = current;
-                mea.Selected = selected;
+                mea.Selected = realselect && !mopts.HasFlag(MergeOptions.OneShot);
                 mea.Distribution = dist;
                 mea.FetchOnly = mopts.HasFlag(MergeOptions.FetchOnly);
 
@@ -451,8 +451,8 @@ namespace Fusion.Framework
                 else if (dist.FetchRestriction)
                     mea.Flags |= MergeFlags.FetchNeeded;
 
-                if (mea.Flags.HasFlag(MergeFlags.Replacing) && 
-                        (!mea.Selected || mopts.HasFlag(MergeOptions.NoReplace)) && !mopts.HasFlag(MergeOptions.EmptyTree))
+                if (mea.Flags.HasFlag(MergeFlags.Replacing) &&
+                        (!realselect || mopts.HasFlag(MergeOptions.NoReplace)) && !mopts.HasFlag(MergeOptions.EmptyTree))
                     continue;
 
                 if (mea.Flags.HasFlag(MergeFlags.FetchNeeded) && !mopts.HasFlag(MergeOptions.Pretend)) {
