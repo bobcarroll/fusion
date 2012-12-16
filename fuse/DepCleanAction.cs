@@ -45,8 +45,41 @@ namespace fuse
         /// <param name="pkgmgr">package manager instance</param>
         public void Execute(IPackageManager pkgmgr)
         {
-            /* TODO */
-            throw new NotImplementedException();
+            Atom[] unselected = pkgmgr.GetInstalledPackages()
+                .Where(i => !pkgmgr.IsSelected(i))
+                .ToArray();
+
+            AbstractTree tree = LocalRepository.Read();
+            List<IDistribution> worlddists = new List<IDistribution>();
+            foreach (Atom a in pkgmgr.WorldSet)
+                worlddists.Add(tree.Lookup(a));
+
+            DependencyGraph dg = DependencyGraph.Compute(worlddists.ToArray());
+            List<Atom> orphaned = new List<Atom>();
+
+            foreach (Atom a in unselected) {
+                try {
+                    dg.CheckSatisfies(a);
+                } catch (KeyNotFoundException) {
+                    orphaned.Add(a);
+                }
+            }
+
+            if (orphaned.Count == 0) {
+                Console.WriteLine("There are no packages to clean up. :)");
+                return;
+            }
+
+            if (_options.pretend) {
+                Console.ForegroundColor = ConsoleColor.DarkGreen;
+                Console.WriteLine("\n>>> These are the packages that would be removed:");
+                Console.ResetColor();
+            }
+
+            UnmergeAction ua = new UnmergeAction(10);
+            ua.Atoms.AddRange(orphaned.Select(i => i.ToString()));
+            ua.Options = _options;
+            ua.Execute(pkgmgr);
         }
 
         /// <summary>
