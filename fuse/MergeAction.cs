@@ -125,6 +125,8 @@ namespace fuse
                 mopts |= MergeOptions.EmptyTree;
             if (_options.fetchonly)
                 mopts |= MergeOptions.FetchOnly;
+            if (_options.deep)
+                mopts |= MergeOptions.Deep;
 
             try {
                 if (mopts.HasFlag(MergeOptions.Pretend)) {

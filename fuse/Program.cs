@@ -51,6 +51,10 @@ namespace fuse
                 Description = "Remove the selected package(s).",
                 InGroup = _groups[1] },
             new OptionExtra() { 
+                Option = new Option() { Name = "deep", Val = 'D' },
+                Description = "RWhen merging, consider the entire deep dependency graph for updates.",
+                InGroup = _groups[2] },
+            new OptionExtra() { 
                 Option = new Option() { Name = "depclean", Val = 'c' },
                 Description = "Remove packages that are not associated with any package in the world set.",
                 InGroup = _groups[1] },
@@ -146,6 +150,10 @@ namespace fuse
                     case 'c':
                         if (!set_action(new DepCleanAction(), ref act))
                             return 1;
+                        break;
+
+                    case 'D':
+                        opts.deep = true;
                         break;
 
                     case 'e':

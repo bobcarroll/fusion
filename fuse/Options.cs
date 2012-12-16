@@ -29,6 +29,7 @@ namespace fuse
     /// </summary>
     struct Options
     {
+        public bool deep;
         public bool exact;
         public bool emptytree;
         public bool fetchonly;
