@@ -52,7 +52,7 @@ namespace fuse
                 InGroup = _groups[1] },
             new OptionExtra() { 
                 Option = new Option() { Name = "deep", Val = 'D' },
-                Description = "RWhen merging, consider the entire deep dependency graph for updates.",
+                Description = "When merging, consider the entire deep dependency graph for updates.",
                 InGroup = _groups[2] },
             new OptionExtra() { 
                 Option = new Option() { Name = "depclean", Val = 'c' },
