@@ -88,6 +88,13 @@ namespace Fusion.Framework
         bool IsProtected(Atom atom);
 
         /// <summary>
+        /// Determines if the given package is in the world set.
+        /// </summary>
+        /// <param name="atom">the package to check</param>
+        /// <returns>true if selected, false otherwise</returns>
+        bool IsSelected(Atom atom);
+
+        /// <summary>
         /// Finds the installed version of the given package.
         /// </summary>
         /// <param name="atom">package atom without version</param>

@@ -446,6 +446,9 @@ namespace Fusion.Framework
                     mea.Flags |= MergeFlags.Interactive;
                 /* TODO block */
 
+                if (mea.Flags.HasFlag(MergeFlags.Updating))
+                    mea.Selected = _pkgmgr.IsSelected(dist.Atom);
+
                 if (dist.FetchRestriction && Distribution.CheckSourcesExist(dist, _cfg.DistFilesDir))
                     mea.Flags |= MergeFlags.FetchExists;
                 else if (dist.FetchRestriction)

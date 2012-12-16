@@ -245,6 +245,18 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Determines if the given package is in the world set.
+        /// </summary>
+        /// <param name="atom">the package to check</param>
+        /// <returns>true if selected, false otherwise</returns>
+        public bool IsSelected(Atom atom)
+        {
+            return this.WorldSet
+                .Where(i => i.PackageName == atom.PackageName && i.Slot == atom.Slot)
+                .Count() == 1;
+        }
+
+        /// <summary>
         /// Handles database connection state change events.
         /// </summary>
         /// <param name="sender">event sender</param>
