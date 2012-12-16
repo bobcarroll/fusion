@@ -160,7 +160,7 @@ namespace fuse
             Console.ResetColor();
             Console.WriteLine(" packages will not be removed.");
 
-            if (_options.pretend)
+            if (_options.pretend || allselected.Count == 0)
                 return;
 
             Console.WriteLine(
