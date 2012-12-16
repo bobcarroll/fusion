@@ -29,12 +29,8 @@ namespace Fusion.Framework
     /// </summary>
     public sealed class DistributionNotFoundException : Exception
     {
-        public DistributionNotFoundException(string package, string version)
-            : base("No package found matching the name '" + package + "-" + version + "'.")
-        { }
-
         public DistributionNotFoundException(Atom atom)
-            : this(atom.PackageName, atom.Version.ToString())
+            : base("No package found matching the atom '" + atom.ToString() + "'.")
         { }
     }
 }

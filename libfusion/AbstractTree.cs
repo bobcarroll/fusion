@@ -54,13 +54,27 @@ namespace Fusion.Framework
 
         /// <summary>
         /// Gets the package distribution referenced by the given atom.
+        /// If multiple distributions match, then the latest version is
+        /// returned.
         /// </summary>
         /// <param name="atom">the package atom to lookup</param>
         /// <returns>the matching distribution</returns>
         public virtual IDistribution Lookup(Atom atom)
         {
+            return this.LookupAll(atom)
+                .OrderBy(i => i.Version)
+                .Last();
+        }
+
+        /// <summary>
+        /// Gets all package distributions referenced by the given atom.
+        /// </summary>
+        /// <param name="atom">the package atom to lookup</param>
+        /// <returns>the matching distributions</returns>
+        public virtual IDistribution[] LookupAll(Atom atom)
+        {
             IPackage pkg = this.ResolvePackage(atom);
-            IDistribution result = null;
+            List<IDistribution> results = new List<IDistribution>();
 
             if (pkg == null)
                 throw new PackageNotFoundException(atom.PackageName);
@@ -74,39 +88,22 @@ namespace Fusion.Framework
                     throw new DistributionNotFoundException(atom);
 
                 if (atom.Comparison == "=")
-                    result = matcharr.SingleOrDefault();
+                    results.Add(matcharr.SingleOrDefault());
                 else {
                     IDistribution[] unmasked = matcharr
                         .Where(i => !i.PortsTree.IsMasked(i))
-                        .OrderBy(i => i.Version)
                         .ToArray();
-
-                    result = (unmasked.Length > 0) ?
-                        unmasked.LastOrDefault() :
-                        matcharr.LastOrDefault();
+                    results.AddRange(unmasked.Length > 0 ? unmasked : matcharr);
                 }
             } else {                        /* find the best version */
-                result = pkg.LatestUnmasked;
-                if (result == null)
-                    result = pkg.LatestAvailable;
-                if (result == null)
-                    throw new DistributionNotFoundException(atom.PackageName, "*");
+                if (pkg.LatestUnmasked != null)
+                    results.Add(pkg.LatestUnmasked);
+                else if (pkg.LatestAvailable != null)
+                    results.Add(pkg.LatestAvailable);
             }
 
-            return result;
-        }
-
-        /// <summary>
-        /// Gets the package distributions referenced by the given atoms.
-        /// </summary>
-        /// <param name="atoms">the package atoms to lookup</param>
-        /// <returns>the matching distributions</returns>
-        public IDistribution[] LookupAll(Atom[] atoms)
-        {
-            List<IDistribution> results = new List<IDistribution>();
-
-            foreach (Atom a in atoms)
-                results.Add(this.Lookup(a));
+            if (results.Count == 0)
+                throw new DistributionNotFoundException(atom);
 
             return results.ToArray();
         }

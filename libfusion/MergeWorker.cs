@@ -400,10 +400,7 @@ namespace Fusion.Framework
             DependencyGraph dg = DependencyGraph.Compute(distarr);
             IDistribution[] distdeparr = dg.SortedNodes.ToArray();
 
-            IDistribution[] conflicts = distdeparr
-                .Where(d => distdeparr.Where(
-                    dd => d.Package.FullName == dd.Package.FullName && d.Slot == dd.Slot).Count() > 1)
-                .ToArray();
+            IDistribution[] conflicts = dg.FindSlotConflicts();
             if (conflicts.Length > 0)
                 throw new SlotConflictException(conflicts);
 
@@ -413,10 +410,14 @@ namespace Fusion.Framework
                     .FindPackages(Atom.Parse(dist.Package.FullName, AtomParseOptions.WithoutVersion))
                     .Where(n => n.Slot == dist.Slot)
                     .SingleOrDefault();
+                bool selected = !mopts.HasFlag(MergeOptions.OneShot) && distarr.Contains(dist);
+
+                if (!selected && current != null && !mopts.HasFlag(MergeOptions.Deep) && dg.CheckSatisfies(current))
+                    dist = dist.PortsTree.Lookup(current);
 
                 MergeEventArgs mea = new MergeEventArgs();
                 mea.Previous = current;
-                mea.Selected = !mopts.HasFlag(MergeOptions.OneShot) && distarr.Contains(dist);
+                mea.Selected = selected;
                 mea.Distribution = dist;
                 mea.FetchOnly = mopts.HasFlag(MergeOptions.FetchOnly);
 

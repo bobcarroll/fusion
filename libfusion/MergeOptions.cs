@@ -54,6 +54,11 @@ namespace Fusion.Framework
         /// <summary>
         /// Instead of performing the install, download the packages that would be installed.
         /// </summary>
-        FetchOnly = 16
+        FetchOnly = 16,
+
+        /// <summary>
+        /// When merging, consider the entire deep dependency graph for updates.
+        /// </summary>
+        Deep = 32
     }
 }

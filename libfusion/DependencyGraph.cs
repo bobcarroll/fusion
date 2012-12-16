@@ -31,6 +31,17 @@ namespace Fusion.Framework
     public sealed class DependencyGraph
     {
         /// <summary>
+        /// Dependency item structure.
+        /// </summary>
+        public struct Dependency
+        {
+            public Atom Atom;
+            public IDistribution[] Matches;
+            public IDistribution Selected;
+            public IDistribution PulledInBy;
+        }
+
+        /// <summary>
         /// A dependency node structure.
         /// </summary>
         public class Node
@@ -42,14 +53,18 @@ namespace Fusion.Framework
 
         private IDistribution[] _sorted;
         private Node _root;
+        private Dictionary<string, List<Dependency>> _depmap;
 
         /// <summary>
         /// Initialises the dependency graph.
         /// </summary>
         /// <param name="transrel">a table of distribution transitive relationships</param>
-        private DependencyGraph(Dictionary<IDistribution, List<IDistribution>> transrel)
+        /// <param name="depmap">a mapping of package and dependency metadata</param>
+        private DependencyGraph(Dictionary<IDistribution, List<IDistribution>> transrel,
+            Dictionary<string, List<Dependency>> depmap)
         {
             _sorted = DependencyGraph.TopoSort(transrel);
+            _depmap = depmap;
 
             Dictionary<IDistribution, Node> nodemap = new Dictionary<IDistribution, Node>();
             List<Node> visited = new List<Node>();
@@ -111,11 +126,13 @@ namespace Fusion.Framework
 
             Dictionary<IDistribution, List<IDistribution>> transrel = 
                 new Dictionary<IDistribution, List<IDistribution>>();
+            Dictionary<string, List<Dependency>> depmap =
+                new Dictionary<string, List<Dependency>>();
             
-            DependencyGraph.DeepFind(distarr, transrel);
+            DependencyGraph.DeepFind(distarr, transrel, depmap);
             DependencyGraph.CheckForCycles(transrel);
 
-            return new DependencyGraph(transrel);
+            return new DependencyGraph(transrel, depmap);
         }
 
         /// <summary>
@@ -138,29 +155,68 @@ namespace Fusion.Framework
         }
 
         /// <summary>
+        /// Determines if the given distribution satisfies dependency requirements for
+        /// the current graph.
+        /// </summary>
+        /// <param name="dist">distribution atom to check</param>
+        /// <returns>true if satisfies, false otherwise</returns>
+        public bool CheckSatisfies(Atom atom)
+        {
+            if (!_depmap.ContainsKey(atom.PackageName))
+                throw new KeyNotFoundException("Package '" + atom.PackageName + "' is not a dependency.");
+
+            /* the given dist satisfies the requirement if it appears in all matches found */
+            foreach (Dependency d in _depmap[atom.PackageName]) {
+                if (d.Matches.Where(i => atom.Match(d.Atom)).Count() == 0)
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Finds all dependencies of the given distributions.
         /// </summary>
         /// <param name="distarr">the distributions to visit</param>
         /// <param name="transrel">an empty table for transitive relationships</param>
-        public static void DeepFind(IDistribution[] distarr, Dictionary<IDistribution, List<IDistribution>> transrel)
+        /// <param name="depmap">a mapping of package and dependency metadata</param>
+        public static void DeepFind(IDistribution[] distarr, Dictionary<IDistribution, List<IDistribution>> transrel,
+            Dictionary<string, List<Dependency>> depmap)
         {
             List<IDistribution> newdists = new List<IDistribution>();
 
             foreach (IDistribution dist in distarr) {
-                IDistribution[] mydeps = dist
-                    .PortsTree.LookupAll(dist.Dependencies)
-                    .ToArray();
+                List<IDistribution> mydeps = new List<IDistribution>();
+                foreach (Atom a in dist.Dependencies) {
+                    Dependency d = new Dependency() {
+                        Atom = a,
+                        Matches = dist.PortsTree.LookupAll(a),
+                        PulledInBy = dist
+                    };
+
+                    /* select the highest version returned */
+                    d.Selected = d.Matches
+                        .OrderBy(i => i.Version)
+                        .Last();
+                    mydeps.Add(d.Selected);
+
+                    /* cache all matching distributions */
+                    string pkgkey = d.Selected.Package.FullName;
+                    if (!depmap.ContainsKey(pkgkey))
+                        depmap.Add(pkgkey, new List<Dependency>());
+                    depmap[pkgkey].Add(d);
+                }
 
                 /* cache direct dependencies of the current dist */
                 if (!transrel.Keys.Contains(dist))
-                    transrel.Add(dist, mydeps.ToList());
+                    transrel.Add(dist, mydeps);
 
                 /* queue dependencies that haven't been visited */
                 newdists.AddRange(mydeps.Except(transrel.Keys));
             }
 
             if (newdists.Count > 0)
-                DependencyGraph.DeepFind(newdists.ToArray(), transrel);
+                DependencyGraph.DeepFind(newdists.ToArray(), transrel, depmap);
         }
 
         /// <summary>
@@ -189,6 +245,65 @@ namespace Fusion.Framework
 
                 transrel[kvp.Key] = alldeps;
             }
+        }
+
+        /// <summary>
+        /// Finds any slot conflicts that cause unsatisfied dependencies.
+        /// </summary>
+        /// <returns>an array of conflicted distributions</returns>
+        public IDistribution[] FindSlotConflicts()
+        {
+            /* first, find all slot conflicts */
+            IDistribution[] conflicts = _sorted
+                .Where(d => _sorted.Where(
+                    dd => d.Package.FullName == dd.Package.FullName && d.Slot == dd.Slot).Count() > 1)
+                .ToArray();
+
+            Dictionary<string, List<IDistribution>> pkgdict = new Dictionary<string, List<IDistribution>>();
+            foreach (string pkg in conflicts.Select(c => c.Package.FullName + ":" + c.Slot).Distinct())
+                pkgdict.Add(pkg, new List<IDistribution>());
+
+            foreach (IDistribution dist in conflicts)
+                pkgdict[dist.Package.FullName + ":" + dist.Slot].Add(dist);
+
+            List<IDistribution> results = new List<IDistribution>();
+
+            /* scan the conflicts table for packages that satisfy dependency requirements,
+             * and add dists that fail the check to the results set */
+            foreach (KeyValuePair<string, List<IDistribution>> kvp in pkgdict) {
+                bool pass = false;
+
+                foreach (IDistribution d in kvp.Value) {
+                    if (this.CheckSatisfies(d.Atom)) {
+                        pass = true;
+                        break;
+                    }
+                }
+
+                if (!pass)
+                    results.AddRange(kvp.Value);
+            }
+
+            return results.ToArray();
+        }
+
+        /// <summary>
+        /// Queries the dependency graph for the distributions that pulled in the
+        /// given distribution as a dependency.
+        /// </summary>
+        /// <param name="dist">dependency dist to query</param>
+        /// <returns>all distributions that pulled in dist</returns>
+        public IDistribution[] QueryPulledInBy(IDistribution dist)
+        {
+            List<IDistribution> results = new List<IDistribution>();
+
+            if (!_depmap.ContainsKey(dist.Package.FullName))
+                throw new KeyNotFoundException("Package '" + dist.Package.FullName + "' is not a dependency.");
+
+            foreach (Dependency d in _depmap[dist.Package.FullName].Where(i => i.Atom.Match(dist.Atom)))
+                results.Add(d.PulledInBy);
+
+            return results.Distinct().ToArray();
         }
 
         /// <summary>
