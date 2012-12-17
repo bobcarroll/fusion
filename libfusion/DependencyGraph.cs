@@ -64,17 +64,20 @@ namespace Fusion.Framework
 
         private IDistribution[] _sorted;
         private Node _root;
+        private IDistribution[] _selected;
         private Dictionary<string, List<Dependency>> _depmap;
 
         /// <summary>
         /// Initialises the dependency graph.
         /// </summary>
         /// <param name="transrel">a table of distribution transitive relationships</param>
+        /// <param name="selected">the set of selected (top-level) distributions</param>
         /// <param name="depmap">a mapping of package and dependency metadata</param>
         private DependencyGraph(Dictionary<IDistribution, List<IDistribution>> transrel,
-            Dictionary<string, List<Dependency>> depmap)
+            IDistribution[] selected, Dictionary<string, List<Dependency>> depmap)
         {
             _sorted = DependencyGraph.TopoSort(transrel);
+            _selected = selected;
             _depmap = depmap;
 
             Dictionary<IDistribution, Node> nodemap = new Dictionary<IDistribution, Node>();
@@ -143,7 +146,7 @@ namespace Fusion.Framework
             DependencyGraph.DeepFind(distarr, transrel, depmap);
             DependencyGraph.CheckForCycles(transrel);
 
-            return new DependencyGraph(transrel, depmap);
+            return new DependencyGraph(transrel, distarr, depmap);
         }
 
         /// <summary>
@@ -285,7 +288,7 @@ namespace Fusion.Framework
                 bool pass = false;
 
                 foreach (IDistribution d in kvp.Value) {
-                    if (this.CheckSatisfies(d.Atom)) {
+                    if (!_selected.Contains(d) && this.CheckSatisfies(d.Atom)) {
                         pass = true;
                         break;
                     }
@@ -320,7 +323,9 @@ namespace Fusion.Framework
         {
             List<IDistribution> results = new List<IDistribution>();
 
-            if (!_depmap.ContainsKey(dist.Package.FullName))
+            if (_selected.Contains(dist))
+                return new IDistribution[] { dist };
+            else if (!_depmap.ContainsKey(dist.Package.FullName))
                 throw new KeyNotFoundException("Package '" + dist.Package.FullName + "' is not a dependency.");
 
             foreach (Dependency d in _depmap[dist.Package.FullName].Where(i => i.Atom.Match(dist.Atom)))
